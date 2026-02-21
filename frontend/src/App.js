@@ -12,6 +12,8 @@ import Invitations from "@/pages/Invitations";
 import Billing from "@/pages/Billing";
 import Settings from "@/pages/Settings";
 import Bookings from "@/pages/Bookings";
+import Services from "@/pages/Services";
+import Analytics from "@/pages/Analytics";
 import InviteAccept from "@/pages/InviteAccept";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -32,6 +34,8 @@ function AppRouter() {
       <Route path="/staff" element={<StaffPage />} />
       <Route path="/expenses" element={<Expenses />} />
       <Route path="/bookings" element={<Bookings />} />
+      <Route path="/services" element={<Services />} />
+      <Route path="/analytics" element={<Analytics />} />
       <Route path="/invitations" element={<Invitations />} />
       <Route path="/billing" element={<Billing />} />
       <Route path="/settings" element={<Settings />} />
