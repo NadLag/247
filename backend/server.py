@@ -1612,12 +1612,12 @@ async def simulate_property_ota_sync(property_id: str, background_tasks: Backgro
         })
     
     return {
+    return {
         "message": f"Simulated {num_bookings} OTA bookings for {prop['name']}",
         "property": prop["name"],
         "synced": num_bookings,
         "bookings": synced_results
     }
-    return logs
 
 # ===== SEED DATA =====
 @api_router.post("/seed-demo-data")
