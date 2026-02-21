@@ -331,37 +331,58 @@ async def get_my_company(user=Depends(get_current_user)):
 @api_router.get("/dashboard/kpis")
 async def get_dashboard_kpis(user=Depends(get_current_user)):
     company_id = user.get("company_id")
+    role = user.get("role")
+    user_email = user.get("email")
+    
     if not company_id:
-        return {"revenue_mtd": 0, "revenue_last_month": 0, "net_income": 0, "occupancy_rate": 0,
+        return {"role": role, "revenue_mtd": 0, "revenue_last_month": 0, "net_income": 0, "occupancy_rate": 0,
                 "nights_booked": 0, "adr": 0, "revpan": 0, "active_properties": 0,
                 "total_properties": 0, "active_bookings": 0, "staff_payments_due": 0, "total_expenses": 0}
 
     now = datetime.now(timezone.utc)
     current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
+    today_str = now.isoformat()[:10]
 
+    # Role-based property filtering
+    if role == "owner":
+        properties = await db.properties.find({"company_id": company_id, "owner_email": user_email}, {"_id": 0}).to_list(1000)
+        property_ids = [p["id"] for p in properties]
+    elif role == "staff":
+        staff_doc = await db.staff.find_one({"company_id": company_id, "email": user_email}, {"_id": 0})
+        property_ids = staff_doc.get("assigned_properties", []) if staff_doc else []
+        properties = await db.properties.find({"company_id": company_id, "id": {"$in": property_ids}}, {"_id": 0}).to_list(1000)
+    else:
+        properties = await db.properties.find({"company_id": company_id}, {"_id": 0}).to_list(1000)
+        property_ids = [p["id"] for p in properties]
+
+    # Build booking query based on role
+    booking_query = {"company_id": company_id}
+    if role in ["owner", "staff"]:
+        booking_query["property_id"] = {"$in": property_ids}
+    
     current_bookings = await db.bookings.find(
-        {"company_id": company_id, "check_in": {"$gte": current_month_start.isoformat()[:10]}}, {"_id": 0}
+        {**booking_query, "check_in": {"$gte": current_month_start.isoformat()[:10]}}, {"_id": 0}
     ).to_list(1000)
     last_bookings = await db.bookings.find(
-        {"company_id": company_id, "check_in": {"$gte": last_month_start.isoformat()[:10], "$lt": current_month_start.isoformat()[:10]}}, {"_id": 0}
+        {**booking_query, "check_in": {"$gte": last_month_start.isoformat()[:10], "$lt": current_month_start.isoformat()[:10]}}, {"_id": 0}
     ).to_list(1000)
 
     current_revenue = sum(b.get("total_amount", 0) for b in current_bookings)
     last_revenue = sum(b.get("total_amount", 0) for b in last_bookings)
 
-    current_expenses = await db.expenses.find(
-        {"company_id": company_id, "date": {"$gte": current_month_start.isoformat()[:10]}}, {"_id": 0}
-    ).to_list(1000)
+    # Expenses query based on role
+    expense_query = {"company_id": company_id, "date": {"$gte": current_month_start.isoformat()[:10]}}
+    if role in ["owner", "staff"]:
+        expense_query["property_id"] = {"$in": property_ids}
+    current_expenses = await db.expenses.find(expense_query, {"_id": 0}).to_list(1000)
     total_expenses = sum(e.get("amount", 0) for e in current_expenses)
 
-    properties = await db.properties.find({"company_id": company_id}, {"_id": 0}).to_list(1000)
     active_properties = len([p for p in properties if p.get("active", True)])
     total_units = sum(p.get("units", 0) for p in properties)
 
-    active_bookings = await db.bookings.count_documents(
-        {"company_id": company_id, "status": {"$in": ["confirmed", "checked_in"]}}
-    )
+    active_bookings_query = {**booking_query, "status": {"$in": ["confirmed", "checked_in"]}}
+    active_bookings = await db.bookings.count_documents(active_bookings_query)
 
     nights_booked = 0
     for b in current_bookings:
@@ -381,10 +402,53 @@ async def get_dashboard_kpis(user=Depends(get_current_user)):
     adr = (current_revenue / nights_booked) if nights_booked > 0 else 0
     revpan = (current_revenue / total_available_nights) if total_available_nights > 0 else 0
 
-    staff_list = await db.staff.find({"company_id": company_id, "active": True}, {"_id": 0}).to_list(1000)
-    staff_payments_due = sum(s.get("salary", 0) for s in staff_list)
+    # Staff-specific: calculate their earnings
+    staff_payments_due = 0
+    staff_earnings = 0
+    tasks_completed = 0
+    upcoming_tasks = 0
+    
+    if role == "company_admin":
+        staff_list = await db.staff.find({"company_id": company_id, "active": True}, {"_id": 0}).to_list(1000)
+        staff_payments_due = sum(s.get("salary", 0) for s in staff_list)
+    elif role == "staff":
+        staff_doc = await db.staff.find_one({"company_id": company_id, "email": user_email}, {"_id": 0})
+        if staff_doc:
+            # Calculate earnings based on payment type
+            if staff_doc.get("payment_type") == "per_job":
+                checkin_rate = staff_doc.get("per_checkin_rate", 0) or 0
+                checkout_rate = staff_doc.get("per_checkout_rate", 0) or 0
+                # Count completed check-ins and check-outs this month
+                checkouts_this_month = await db.bookings.count_documents({
+                    "company_id": company_id,
+                    "property_id": {"$in": property_ids},
+                    "check_out": {"$gte": current_month_start.isoformat()[:10], "$lte": today_str},
+                    "status": "checked_out"
+                })
+                checkins_this_month = await db.bookings.count_documents({
+                    "company_id": company_id,
+                    "property_id": {"$in": property_ids},
+                    "check_in": {"$gte": current_month_start.isoformat()[:10], "$lte": today_str},
+                    "status": {"$in": ["checked_in", "checked_out"]}
+                })
+                staff_earnings = (checkins_this_month * checkin_rate) + (checkouts_this_month * checkout_rate)
+                tasks_completed = checkins_this_month + checkouts_this_month
+            else:
+                staff_earnings = staff_doc.get("salary", 0)
+            
+            # Calculate upcoming tasks (check-ins/check-outs in next 7 days)
+            next_week = (now + timedelta(days=7)).isoformat()[:10]
+            upcoming_tasks = await db.bookings.count_documents({
+                "company_id": company_id,
+                "property_id": {"$in": property_ids},
+                "$or": [
+                    {"check_in": {"$gte": today_str, "$lte": next_week}, "status": "confirmed"},
+                    {"check_out": {"$gte": today_str, "$lte": next_week}, "status": "checked_in"}
+                ]
+            })
 
-    return {
+    base_response = {
+        "role": role,
         "revenue_mtd": round(current_revenue, 2),
         "revenue_last_month": round(last_revenue, 2),
         "net_income": round(current_revenue - total_expenses, 2),
@@ -398,6 +462,14 @@ async def get_dashboard_kpis(user=Depends(get_current_user)):
         "staff_payments_due": round(staff_payments_due, 2),
         "total_expenses": round(total_expenses, 2),
     }
+    
+    # Add role-specific fields
+    if role == "staff":
+        base_response["staff_earnings"] = round(staff_earnings, 2)
+        base_response["tasks_completed"] = tasks_completed
+        base_response["upcoming_tasks"] = upcoming_tasks
+    
+    return base_response
 
 @api_router.get("/dashboard/revenue-trends")
 async def get_revenue_trends(user=Depends(get_current_user)):
