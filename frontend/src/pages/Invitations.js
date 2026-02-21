@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Trash2, Mail, Copy, Check } from "lucide-react";
+import { Plus, Trash2, Mail, Copy, Check, Send, RefreshCw } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -28,6 +28,7 @@ export default function Invitations() {
   const [manualEmail, setManualEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [resendingId, setResendingId] = useState(null);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
   useEffect(() => { if (!authLoading && user && user.role !== "company_admin") navigate("/dashboard"); }, [user, authLoading, navigate]);
@@ -88,7 +89,7 @@ export default function Invitations() {
         body: JSON.stringify({ email: resolvedEmail, role }),
       });
       if (res.ok) {
-        toast.success("Invitation created");
+        toast.success("Invitation created and email sent!");
         setDialogOpen(false); setSelectedPerson(""); setManualEmail(""); setRole("staff"); fetchData();
       } else { const err = await res.json(); toast.error(err.detail || "Failed"); }
     } catch (err) { toast.error("Error"); } finally { setSaving(false); }
@@ -99,6 +100,23 @@ export default function Invitations() {
       const res = await fetch(`${API}/api/invitations/${id}`, { method: "DELETE", credentials: "include" });
       if (res.ok) { toast.success("Invitation deleted"); fetchData(); }
     } catch (err) { toast.error("Error"); }
+  };
+
+  const handleResendEmail = async (id) => {
+    setResendingId(id);
+    try {
+      const res = await fetch(`${API}/api/invitations/${id}/resend`, { method: "POST", credentials: "include" });
+      if (res.ok) {
+        toast.success("Invitation email resent!");
+        fetchData();
+      } else {
+        toast.error("Failed to resend email");
+      }
+    } catch (err) {
+      toast.error("Error resending email");
+    } finally {
+      setResendingId(null);
+    }
   };
 
   const copyLink = (token) => {
@@ -138,6 +156,7 @@ export default function Invitations() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Email Sent</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -154,13 +173,40 @@ export default function Invitations() {
                           <Badge variant="secondary">Pending</Badge>
                         )}
                       </TableCell>
+                      <TableCell>
+                        {inv.email_sent ? (
+                          <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-0">
+                            <Check className="h-3 w-3 mr-1" />Sent
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-amber-600 dark:text-amber-400">
+                            Not sent
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{inv.created_at?.slice(0, 10)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           {!inv.used && (
-                            <Button variant="ghost" size="icon" onClick={() => copyLink(inv.token)} data-testid={`copy-link-${inv.id}`}>
-                              {copiedId === inv.token ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-                            </Button>
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleResendEmail(inv.id)} 
+                                disabled={resendingId === inv.id}
+                                title="Resend invitation email"
+                                data-testid={`resend-email-${inv.id}`}
+                              >
+                                {resendingId === inv.id ? (
+                                  <RefreshCw className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Send className="h-4 w-4" />
+                                )}
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => copyLink(inv.token)} data-testid={`copy-link-${inv.id}`}>
+                                {copiedId === inv.token ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                              </Button>
+                            </>
                           )}
                           <Button variant="ghost" size="icon" onClick={() => handleDelete(inv.id)} className="text-destructive" data-testid={`delete-invitation-${inv.id}`}><Trash2 className="h-4 w-4" /></Button>
                         </div>
@@ -177,7 +223,7 @@ export default function Invitations() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="font-heading">Send Invitation</DialogTitle>
-              <DialogDescription>Pick a staff member or owner from your existing records, or enter an email manually.</DialogDescription>
+              <DialogDescription>Pick a staff member or owner from your existing records, or enter an email manually. An invitation email will be sent automatically.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-2">
               {/* Role */}
@@ -228,10 +274,19 @@ export default function Invitations() {
                   </p>
                 </div>
               ) : null}
+              
+              {/* Email info */}
+              <div className="flex items-start gap-2 bg-blue-500/5 rounded-lg p-3 border border-blue-500/10">
+                <Mail className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  An invitation email will be sent automatically with a link to join your organization.
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button onClick={handleCreate} disabled={!resolvedEmail || saving} data-testid="send-invitation-btn">
+                <Mail className="mr-2 h-4 w-4" />
                 {saving ? "Sending..." : "Send Invitation"}
               </Button>
             </DialogFooter>
