@@ -39,6 +39,14 @@ class CompanySetup(BaseModel):
 class PropertyCreate(BaseModel):
     name: str
     address: str
+    property_type: str = ""
+    rooms: int = 0
+    suites: int = 0
+    bathrooms: int = 0
+    city: str = ""
+    country: str = ""
+    notes: str = ""
+    assigned_cohost: Optional[str] = None
     owner_first_name: str
     owner_last_name: str
     owner_phone: str
@@ -49,6 +57,14 @@ class PropertyCreate(BaseModel):
 class PropertyUpdate(BaseModel):
     name: Optional[str] = None
     address: Optional[str] = None
+    property_type: Optional[str] = None
+    rooms: Optional[int] = None
+    suites: Optional[int] = None
+    bathrooms: Optional[int] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
+    notes: Optional[str] = None
+    assigned_cohost: Optional[str] = None
     owner_first_name: Optional[str] = None
     owner_last_name: Optional[str] = None
     owner_phone: Optional[str] = None
