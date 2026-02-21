@@ -148,10 +148,19 @@ class CheckoutRequest(BaseModel):
     origin_url: str
 
 class OTASyncEvent(BaseModel):
-    source: str
+    source: str  # airbnb, booking, vrbo, etc.
     property_id: Optional[str] = None
-    event_type: str
+    event_type: str  # booking_created, booking_updated, booking_cancelled, availability_sync
     data: Dict
+    external_id: Optional[str] = None
+
+class OTASyncLogResponse(BaseModel):
+    id: str
+    source: str
+    event_type: str
+    status: str
+    message: Optional[str] = None
+    created_at: str
 
 SUBSCRIPTION_EXEMPT_PATHS = ["/api/auth/", "/api/subscription/", "/api/companies/", "/api/webhook/", "/api/invitations/validate/", "/api/seed-demo-data"]
 
