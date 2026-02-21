@@ -24,6 +24,8 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - Stripe subscription (Starter $29, Professional $79, Enterprise $199)
 
 ## What's Been Implemented (Feb 21, 2026)
+
+### Core Features
 - [x] Landing page with hero, features, CTAs
 - [x] Google OAuth authentication (Emergent Auth)
 - [x] Company setup flow for new users
@@ -31,7 +33,6 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] Properties CRUD (cards with owner details, units, status)
 - [x] Staff CRUD (table with salary, assignments, status)
 - [x] Expenses CRUD (fixed/variable tabs, property filter, recurring)
-- [x] Bookings CRUD (table with status management)
 - [x] Invitations system (create, copy link, validate, accept)
 - [x] Stripe subscription integration (3 plans, checkout, polling)
 - [x] Settings page (profile, company info, security)
@@ -39,45 +40,83 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] Responsive sidebar navigation with role-based items
 - [x] Demo data seeding endpoint
 - [x] MongoDB indexes for performance
-- [x] **Owner-specific dashboard view** (filtered by their properties)
-- [x] **Staff dashboard view** (earnings, tasks completed, upcoming tasks)
-- [x] **OTA Sync webhook endpoint** + background processor
-- [x] **Subscription status validation middleware** (auto-lock inactive)
+
+### Role-Based Features
+- [x] Owner-specific dashboard view (filtered by their properties)
+- [x] Staff dashboard view (earnings, tasks completed, upcoming tasks)
+- [x] OTA Sync webhook endpoint + background processor
+- [x] Subscription status validation middleware (auto-lock inactive)
+
+### New Features (Latest)
+- [x] **Bookings Page Redesign** - Split into 5 status tabs (Checked-in Today, Upcoming, Confirmed, Checked-out, Cancelled)
+- [x] **OTA Sync Button** - Manual sync trigger on bookings page
+- [x] **Services Page** - CRUD for add-on services with categories and provider assignment
+- [x] **Analytics Page** - Comprehensive analytics with KPIs, filters, and charts
 
 ## Test Results (Feb 21, 2026 - Latest)
-- Backend: 100% (17/17 new feature tests passed)
-- Frontend: 100% (All role-based dashboard views verified)
-- Integration: 100% (auth, CRUD, role-based KPIs, OTA webhook, subscription middleware)
+- Backend: 100% (18/18 new feature tests passed)
+- Frontend: 100% (All features verified via Playwright)
+- Integration: 100% (all modules working correctly)
 
-## New Features Added (Feb 21, 2026)
+## Feature Details
 
-### 1. Role-Based Dashboards
-- **Admin View**: All 8 KPIs (revenue, net income, occupancy, nights, ADR, RevPAN, properties, bookings), revenue trends chart, staff payments due card
-- **Owner View**: Filtered KPIs for owned properties only, owner-specific revenue trends, role badge
-- **Staff View**: Staff earnings (MTD), tasks completed, upcoming tasks (7 days), assigned properties, active bookings, upcoming work list
+### Bookings Page Redesign
+- **Status Tabs**: Checked-in Today, Upcoming, Confirmed, Checked-out, Cancelled
+- **Endpoint**: `GET /api/bookings/by-status` - returns bookings grouped by status
+- **OTA Sync**: Button to refresh bookings from external OTAs
+- **OTA Badge**: Shows source for OTA-synced bookings
 
-### 2. OTA Sync Webhook
-- **Endpoint**: `POST /api/ota-webhook/{company_id}`
-- **Events**: booking_created, booking_updated, booking_cancelled, availability_sync
-- **Features**: Background processing, sync logging, external_id tracking for OTA bookings
-- **Logs Endpoint**: `GET /api/ota-sync-logs` with filters for status and source
+### Services Page
+- **Categories**: Airport Transfer, Meals, Excursions, Spa, Transportation, Other
+- **Provider Types**: 
+  - Internal (assign to staff member)
+  - External (third-party with name, phone, email)
+- **Price Types**: Fixed, Per Person, Per Hour
+- **Endpoints**: Full CRUD at `/api/services`
+- **Booking Services**: Add services to bookings via `/api/booking-services`
 
-### 3. Subscription Middleware
-- **Validates** subscription status on all API requests
-- **Trial/Active**: Allow all operations
-- **Inactive/Cancelled**: Block POST/PUT/DELETE with 402 error, allow GET
-- **Exempt paths**: /api/auth/, /api/subscription/, /api/companies/, /api/webhook/
+### Analytics Page
+- **KPIs**: Revenue MTD, Net Income, Occupancy Rate, Nights Booked, ADR, RevPAN, Active Properties, Total Bookings
+- **Comparisons**: Current vs previous month with percentage changes
+- **Filters**: Property, Month, Year
+- **Charts**: 
+  - Revenue & Expenses Trend (12 months)
+  - Occupancy Rate Trend
+  - ADR Trend
+  - Nights Booked vs Total Bookings
+- **Endpoint**: `GET /api/analytics?property_id=&year=&month=`
+
+## Navigation Structure
+### Admin Sidebar
+1. Dashboard
+2. Properties
+3. Staff
+4. Bookings
+5. Services
+6. Expenses
+7. Analytics
+8. Invitations
+9. Billing
+10. Settings
+
+### Owner Sidebar
+1. Dashboard
+2. Properties
+3. Analytics
+4. Settings
+
+### Staff Sidebar
+1. Dashboard
+2. Bookings
+3. Settings
 
 ## Prioritized Backlog
-### P0 (Next - User Requested)
-- Redesign Bookings Page into status sections (Checked-in Today, Upcoming, Confirmed, Checked-out, Cancelled)
-- Create Services Page (Airport Transfer, Meals, Excursions with staff/provider assignment)
-- Create Analytics Page (earnings/performance graphs, filterable by month/year/property)
 
-### P1
+### P1 (Next)
 - JWT authentication migration (Phase 2)
 - Audit logs for all CRUD operations
 - Download reports (PDF/CSV)
+- Real OTA integration (Airbnb, Booking.com, VRBO APIs)
 
 ### P2
 - AI revenue forecasting
@@ -86,20 +125,33 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - Automated owner payouts
 - Smart expense categorization
 - CSRF protection + rate limiting
-
-## Key API Endpoints
-### Dashboard
-- `GET /api/dashboard/kpis` - Role-aware KPIs
-- `GET /api/dashboard/revenue-trends` - 6-month trend data
-
-### OTA Integration
-- `POST /api/ota-webhook/{company_id}` - Receive OTA events
-- `GET /api/ota-sync-logs` - List sync logs with filters
-
-### Core CRUD
-- Properties, Staff, Bookings, Expenses, Invitations (all support GET, POST, PUT, DELETE)
+- Email notifications for OTA syncs
 
 ## Database Collections
 - users, companies, user_sessions
 - properties, staff, bookings, expenses, invitations
 - payment_transactions, ota_sync_logs
+- services, booking_services
+
+## Key API Endpoints
+
+### Bookings
+- `GET /api/bookings` - List all bookings
+- `GET /api/bookings/by-status` - Bookings grouped by status
+- `POST /api/bookings` - Create booking
+- `PUT /api/bookings/{id}` - Update booking
+
+### Services
+- `GET /api/services` - List services (with category filter)
+- `POST /api/services` - Create service
+- `PUT /api/services/{id}` - Update service
+- `DELETE /api/services/{id}` - Delete service
+- `GET /api/booking-services/{booking_id}` - Get services for a booking
+- `POST /api/booking-services` - Add service to booking
+
+### Analytics
+- `GET /api/analytics?property_id=&year=&month=` - Get comprehensive analytics
+
+### OTA Integration
+- `POST /api/ota-webhook/{company_id}` - Receive OTA events
+- `GET /api/ota-sync-logs` - List sync logs
