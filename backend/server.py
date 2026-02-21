@@ -481,6 +481,13 @@ async def create_staff(data: StaffCreate, user=Depends(require_admin)):
     await db.staff.insert_one(staff)
     return await db.staff.find_one({"id": staff["id"]}, {"_id": 0})
 
+@api_router.get("/staff/cohosts")
+async def list_cohosts(user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    return await db.staff.find({"company_id": company_id, "staff_role": "co_host", "active": True}, {"_id": 0}).to_list(1000)
+
 @api_router.put("/staff/{staff_id}")
 async def update_staff(staff_id: str, data: StaffUpdate, user=Depends(require_admin)):
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
