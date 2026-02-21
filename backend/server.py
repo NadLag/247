@@ -1455,6 +1455,170 @@ async def list_ota_sync_logs(
     logs = await db.ota_sync_logs.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
     return logs
 
+# ===== MOCK OTA SIMULATION =====
+OTA_SOURCES = ["airbnb", "booking.com", "vrbo", "expedia"]
+GUEST_NAMES = ["Emma Thompson", "James Wilson", "Sophie Chen", "Michael Brown", "Olivia Garcia", "Liam Martinez", "Isabella Lee", "Noah Johnson", "Ava Williams", "Ethan Davis"]
+
+@api_router.post("/ota/simulate-sync")
+async def simulate_ota_sync(background_tasks: BackgroundTasks, user=Depends(require_admin), property_id: Optional[str] = None):
+    """Simulate receiving bookings from OTAs (for testing/demo purposes)"""
+    company_id = user["company_id"]
+    
+    # Get properties to sync
+    query = {"company_id": company_id, "active": True}
+    if property_id:
+        query["id"] = property_id
+    properties = await db.properties.find(query, {"_id": 0}).to_list(100)
+    
+    if not properties:
+        return {"message": "No active properties to sync", "synced": 0}
+    
+    synced_count = 0
+    sync_results = []
+    
+    for prop in properties:
+        # Simulate 0-2 new bookings per property
+        num_bookings = random.randint(0, 2)
+        
+        for _ in range(num_bookings):
+            source = random.choice(OTA_SOURCES)
+            guest_name = random.choice(GUEST_NAMES)
+            
+            # Generate realistic dates
+            check_in_offset = random.randint(1, 30)
+            nights = random.randint(2, 10)
+            check_in = (datetime.now(timezone.utc) + timedelta(days=check_in_offset)).strftime("%Y-%m-%d")
+            check_out = (datetime.now(timezone.utc) + timedelta(days=check_in_offset + nights)).strftime("%Y-%m-%d")
+            
+            # Generate realistic pricing
+            base_rate = random.randint(100, 350)
+            total_amount = base_rate * nights
+            
+            external_id = f"{source}_{uuid.uuid4().hex[:8]}"
+            
+            # Create the OTA event
+            event = OTASyncEvent(
+                source=source,
+                property_id=prop["id"],
+                event_type="booking_created",
+                external_id=external_id,
+                data={
+                    "guest_name": guest_name,
+                    "check_in": check_in,
+                    "check_out": check_out,
+                    "total_amount": total_amount,
+                    "guests_count": random.randint(1, 4),
+                }
+            )
+            
+            # Create sync log
+            log_id = f"ota_{uuid.uuid4().hex[:12]}"
+            sync_log = {
+                "id": log_id,
+                "company_id": company_id,
+                "source": source,
+                "property_id": prop["id"],
+                "event_type": "booking_created",
+                "external_id": external_id,
+                "data": event.data,
+                "status": "pending",
+                "message": None,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "processed_at": None,
+            }
+            await db.ota_sync_logs.insert_one(sync_log)
+            
+            # Process in background
+            background_tasks.add_task(process_ota_sync, log_id, event, company_id)
+            
+            synced_count += 1
+            sync_results.append({
+                "property": prop["name"],
+                "source": source,
+                "guest": guest_name,
+                "check_in": check_in,
+                "check_out": check_out,
+            })
+    
+    return {
+        "message": f"Simulated {synced_count} OTA bookings from {len(OTA_SOURCES)} sources",
+        "synced": synced_count,
+        "results": sync_results
+    }
+
+@api_router.post("/ota/simulate-property-sync/{property_id}")
+async def simulate_property_ota_sync(property_id: str, background_tasks: BackgroundTasks, user=Depends(require_admin)):
+    """Simulate OTA sync for a specific property"""
+    company_id = user["company_id"]
+    
+    prop = await db.properties.find_one({"id": property_id, "company_id": company_id}, {"_id": 0})
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Generate 1-3 mock bookings for this property
+    num_bookings = random.randint(1, 3)
+    synced_results = []
+    
+    for _ in range(num_bookings):
+        source = random.choice(OTA_SOURCES)
+        guest_name = random.choice(GUEST_NAMES)
+        
+        check_in_offset = random.randint(1, 30)
+        nights = random.randint(2, 7)
+        check_in = (datetime.now(timezone.utc) + timedelta(days=check_in_offset)).strftime("%Y-%m-%d")
+        check_out = (datetime.now(timezone.utc) + timedelta(days=check_in_offset + nights)).strftime("%Y-%m-%d")
+        
+        base_rate = random.randint(100, 350)
+        total_amount = base_rate * nights
+        external_id = f"{source}_{uuid.uuid4().hex[:8]}"
+        
+        event = OTASyncEvent(
+            source=source,
+            property_id=property_id,
+            event_type="booking_created",
+            external_id=external_id,
+            data={
+                "guest_name": guest_name,
+                "check_in": check_in,
+                "check_out": check_out,
+                "total_amount": total_amount,
+                "guests_count": random.randint(1, 4),
+            }
+        )
+        
+        log_id = f"ota_{uuid.uuid4().hex[:12]}"
+        sync_log = {
+            "id": log_id,
+            "company_id": company_id,
+            "source": source,
+            "property_id": property_id,
+            "event_type": "booking_created",
+            "external_id": external_id,
+            "data": event.data,
+            "status": "pending",
+            "message": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "processed_at": None,
+        }
+        await db.ota_sync_logs.insert_one(sync_log)
+        background_tasks.add_task(process_ota_sync, log_id, event, company_id)
+        
+        synced_results.append({
+            "source": source,
+            "guest": guest_name,
+            "check_in": check_in,
+            "check_out": check_out,
+            "amount": total_amount,
+        })
+    
+    return {
+        "message": f"Simulated {num_bookings} OTA bookings for {prop['name']}",
+        "property": prop["name"],
+        "synced": num_bookings,
+        "bookings": synced_results
+    }
+    return logs
+
 # ===== SEED DATA =====
 @api_router.post("/seed-demo-data")
 async def seed_demo_data(user=Depends(require_admin)):
