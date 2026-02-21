@@ -456,53 +456,77 @@ class PropertyManagementAPITester:
         self.run_test("Delete test property", "DELETE", f"api/properties/{property_id}", 200)
 
     def test_bookings_crud(self):
-        """Test Bookings CRUD operations"""
-        print("\n🔍 Testing Bookings CRUD...")
+        """Test Bookings CRUD operations with new fields"""
+        print("\n🔍 Testing Bookings CRUD with new fields...")
         if not self.token:
             self.log_result("Bookings CRUD requires auth", False, "No auth token")
             return
             
-        # Create a property first for bookings
-        property_data = {
-            "name": "Booking Test Property",
-            "address": "123 Booking St",
-            "owner_first_name": "Test",
-            "owner_last_name": "Owner",
-            "owner_phone": "+1111111111",
-            "owner_email": "test@example.com",
-            "units": 1,
-            "active": True
-        }
-        
-        created_property = self.run_test("Create property for bookings", "POST", "api/properties", 200, property_data)
-        if not created_property:
-            return
+        # Use existing test property if available, or create new one
+        property_id = getattr(self, 'test_property_id', None)
+        if not property_id:
+            # Create a property for bookings
+            property_data = {
+                "name": "Booking Test Property",
+                "address": "123 Booking St",
+                "owner_first_name": "Test",
+                "owner_last_name": "Owner",
+                "owner_phone": "+1111111111",
+                "owner_email": "test@example.com", 
+                "units": 1,
+                "active": True
+            }
             
-        property_id = created_property.get('id')
+            created_property = self.run_test("Create property for bookings", "POST", "api/properties", 200, property_data)
+            if not created_property:
+                return
+            property_id = created_property.get('id')
         
         # List bookings
         self.run_test("List bookings", "GET", "api/bookings", 200)
         
-        # Create booking
+        # Create booking with new fields
+        cohost_id = getattr(self, 'test_cohost_id', None)
         booking_data = {
             "property_id": property_id,
-            "guest_name": "Test Guest",
+            "guest_name": "Test Guest Family",
             "check_in": "2024-02-01",
             "check_out": "2024-02-05",
-            "total_amount": 800.00,
+            "total_amount": 1200.00,
+            "guests_count": 4,
+            "assigned_cohost": cohost_id,
             "status": "confirmed"
         }
         
-        created_booking = self.run_test("Create booking", "POST", "api/bookings", 200, booking_data)
+        created_booking = self.run_test("Create booking with new fields", "POST", "api/bookings", 200, booking_data)
         if created_booking:
             booking_id = created_booking.get('id')
             if booking_id:
-                # Update booking
-                update_data = {"status": "checked_in"}
-                self.run_test("Update booking", "PUT", f"api/bookings/{booking_id}", 200, update_data)
+                # Verify new fields are saved
+                if (created_booking.get('guests_count') == 4 and
+                    created_booking.get('assigned_cohost') == cohost_id):
+                    self.log_result("Booking new fields saved correctly", True)
+                else:
+                    self.log_result("Booking new fields saved correctly", False, f"Field mismatch: {created_booking}")
+                
+                # Update booking with new fields
+                update_data = {
+                    "status": "checked_in",
+                    "guests_count": 6,
+                    "total_amount": 1500.00
+                }
+                updated_booking = self.run_test("Update booking new fields", "PUT", f"api/bookings/{booking_id}", 200, update_data)
+                
+                if updated_booking:
+                    if (updated_booking.get('guests_count') == 6 and
+                        updated_booking.get('status') == 'checked_in'):
+                        self.log_result("Booking new fields updated correctly", True)
+                    else:
+                        self.log_result("Booking new fields updated correctly", False, "Update field mismatch")
         
-        # Cleanup property (bookings will be cleaned up automatically due to foreign key constraints or similar)
-        self.run_test("Delete booking test property", "DELETE", f"api/properties/{property_id}", 200)
+        # Clean up if we created the property here
+        if not hasattr(self, 'test_property_id'):
+            self.run_test("Delete booking test property", "DELETE", f"api/properties/{property_id}", 200)
 
     def test_invitations_crud(self):
         """Test Invitations CRUD operations"""
