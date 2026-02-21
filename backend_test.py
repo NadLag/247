@@ -321,7 +321,7 @@ class PropertyManagementAPITester:
             "assigned_properties": []
         }
         
-        created_cohost = self.run_test("Create co-host with rates", "POST", "api/staff", 200, cohost_data)
+        created_cohost = self.run_test("Create co-host with rates", "POST", "api/staff", 201, cohost_data)
         if created_cohost:
             cohost_id = created_cohost.get('id')
             if cohost_id:
