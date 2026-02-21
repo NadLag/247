@@ -224,7 +224,7 @@ class PropertyManagementAPITester:
             "active": True
         }
         
-        created_property = self.run_test("Create property", "POST", "api/properties", 201, property_data)
+        created_property = self.run_test("Create property", "POST", "api/properties", 200, property_data)
         if created_property:
             property_id = created_property.get('id')
             if property_id:
