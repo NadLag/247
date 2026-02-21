@@ -353,6 +353,54 @@ class PropertyManagementAPITester:
                 self.test_cohost_id = cohost_id
                 return cohost_id
 
+    def test_cohosts_endpoint(self):
+        """Test GET /api/staff/cohosts endpoint"""
+        print("\n🔍 Testing Co-hosts Endpoint...")
+        if not self.token:
+            self.log_result("Co-hosts endpoint requires auth", False, "No auth token")
+            return
+            
+        cohosts_result = self.run_test("List co-hosts only", "GET", "api/staff/cohosts", 200)
+        if cohosts_result is not None:
+            # Should only contain staff with staff_role = 'co_host'
+            if isinstance(cohosts_result, list):
+                cohost_roles = [staff.get('staff_role') for staff in cohosts_result]
+                if all(role == 'co_host' for role in cohost_roles):
+                    self.log_result("Co-hosts endpoint returns only co-hosts", True)
+                else:
+                    self.log_result("Co-hosts endpoint returns only co-hosts", False, f"Found non-cohost roles: {cohost_roles}")
+                
+                # Check if our created co-host is in the list
+                if hasattr(self, 'test_cohost_id'):
+                    cohost_ids = [staff.get('id') for staff in cohosts_result]
+                    if self.test_cohost_id in cohost_ids:
+                        self.log_result("Created co-host found in cohosts list", True)
+                    else:
+                        self.log_result("Created co-host found in cohosts list", False, "Co-host not in list")
+            else:
+                self.log_result("Co-hosts endpoint returns list", False, f"Expected list, got: {type(cohosts_result)}")
+
+    def test_property_cohost_assignment(self):
+        """Test assigning co-host to property"""
+        print("\n🔍 Testing Property Co-host Assignment...")
+        if not self.token:
+            self.log_result("Property assignment requires auth", False, "No auth token")
+            return
+            
+        if not hasattr(self, 'test_property_id') or not hasattr(self, 'test_cohost_id'):
+            self.log_result("Property co-host assignment test", False, "Missing test property or co-host")
+            return
+            
+        # Update property to assign co-host
+        update_data = {"assigned_cohost": self.test_cohost_id}
+        updated_property = self.run_test("Assign co-host to property", "PUT", f"api/properties/{self.test_property_id}", 200, update_data)
+        
+        if updated_property:
+            if updated_property.get('assigned_cohost') == self.test_cohost_id:
+                self.log_result("Co-host assigned to property successfully", True)
+            else:
+                self.log_result("Co-host assigned to property successfully", False, f"Assignment failed: {updated_property.get('assigned_cohost')}")
+
     def test_expenses_crud(self):
         """Test Expenses CRUD operations"""
         print("\n🔍 Testing Expenses CRUD...")
