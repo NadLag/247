@@ -498,7 +498,7 @@ class PropertyManagementAPITester:
             "status": "confirmed"
         }
         
-        created_booking = self.run_test("Create booking with new fields", "POST", "api/bookings", 200, booking_data)
+        created_booking = self.run_test("Create booking with new fields", "POST", "api/bookings", 201, booking_data)
         if created_booking:
             booking_id = created_booking.get('id')
             if booking_id:
