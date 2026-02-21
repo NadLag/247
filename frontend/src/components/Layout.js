@@ -12,15 +12,17 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { LayoutDashboard, Building2, Users, Receipt, CalendarDays, Mail, CreditCard, Settings, Sun, Moon, Menu, LogOut, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Building2, Users, Receipt, CalendarDays, Mail, CreditCard, Settings, Sun, Moon, Menu, LogOut, ChevronRight, Package, BarChart3 } from "lucide-react";
 
 const navConfig = {
   company_admin: [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Properties", path: "/properties", icon: Building2 },
     { name: "Staff", path: "/staff", icon: Users },
-    { name: "Expenses", path: "/expenses", icon: Receipt },
     { name: "Bookings", path: "/bookings", icon: CalendarDays },
+    { name: "Services", path: "/services", icon: Package },
+    { name: "Expenses", path: "/expenses", icon: Receipt },
+    { name: "Analytics", path: "/analytics", icon: BarChart3 },
     { name: "Invitations", path: "/invitations", icon: Mail },
     { name: "Billing", path: "/billing", icon: CreditCard },
     { name: "Settings", path: "/settings", icon: Settings },
@@ -28,10 +30,12 @@ const navConfig = {
   owner: [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Properties", path: "/properties", icon: Building2 },
+    { name: "Analytics", path: "/analytics", icon: BarChart3 },
     { name: "Settings", path: "/settings", icon: Settings },
   ],
   staff: [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+    { name: "Bookings", path: "/bookings", icon: CalendarDays },
     { name: "Settings", path: "/settings", icon: Settings },
   ],
 };
