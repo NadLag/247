@@ -289,6 +289,8 @@ export default function Properties() {
                 isAdmin={isAdmin}
                 onEdit={openEdit}
                 onDelete={handleDelete}
+                onOTASync={handleOTASyncProperty}
+                syncingPropId={syncingPropId}
                 getCohostName={getCohostName}
               />
             ))}
