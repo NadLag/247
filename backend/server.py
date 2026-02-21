@@ -504,13 +504,6 @@ async def delete_staff(staff_id: str, user=Depends(require_admin)):
         raise HTTPException(status_code=404, detail="Staff not found")
     return {"message": "Staff deleted"}
 
-@api_router.get("/staff/cohosts")
-async def list_cohosts(user=Depends(get_current_user)):
-    company_id = user.get("company_id")
-    if not company_id:
-        return []
-    return await db.staff.find({"company_id": company_id, "staff_role": "co_host", "active": True}, {"_id": 0}).to_list(1000)
-
 # ===== EXPENSE ROUTES =====
 @api_router.get("/expenses")
 async def list_expenses(
