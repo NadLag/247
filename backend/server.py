@@ -147,6 +147,14 @@ class CheckoutRequest(BaseModel):
     plan: str
     origin_url: str
 
+class OTASyncEvent(BaseModel):
+    source: str
+    property_id: Optional[str] = None
+    event_type: str
+    data: Dict
+
+SUBSCRIPTION_EXEMPT_PATHS = ["/api/auth/", "/api/subscription/", "/api/companies/", "/api/webhook/", "/api/invitations/validate/", "/api/seed-demo-data"]
+
 SUBSCRIPTION_PLANS = {
     "starter": {"name": "Starter", "price": 29.00, "max_properties": 5},
     "professional": {"name": "Professional", "price": 79.00, "max_properties": 20},
