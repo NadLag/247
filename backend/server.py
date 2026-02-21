@@ -10,6 +10,7 @@ import secrets
 import httpx
 import random
 import asyncio
+import resend
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
@@ -23,6 +24,12 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 stripe_api_key = os.environ.get('STRIPE_API_KEY')
+resend_api_key = os.environ.get('RESEND_API_KEY')
+sender_email = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
+
+# Initialize Resend
+if resend_api_key:
+    resend.api_key = resend_api_key
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
