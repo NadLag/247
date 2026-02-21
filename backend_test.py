@@ -270,8 +270,8 @@ class PropertyManagementAPITester:
                 return property_id
 
     def test_staff_crud(self):
-        """Test Staff CRUD operations"""
-        print("\n🔍 Testing Staff CRUD...")
+        """Test Staff CRUD operations with new fields"""
+        print("\n🔍 Testing Staff CRUD with new fields...")
         if not self.token:
             self.log_result("Staff CRUD requires auth", False, "No auth token")
             return
@@ -279,7 +279,7 @@ class PropertyManagementAPITester:
         # List staff
         self.run_test("List staff", "GET", "api/staff", 200)
         
-        # Create staff
+        # Create regular staff with new fields
         staff_data = {
             "first_name": "Jane",
             "last_name": "Smith",
@@ -287,19 +287,71 @@ class PropertyManagementAPITester:
             "email": "jane@example.com",
             "salary": 3500.00,
             "payment_terms": "Monthly",
+            "payment_type": "salary",
+            "staff_role": "housekeeper",
             "assigned_properties": []
         }
         
-        created_staff = self.run_test("Create staff", "POST", "api/staff", 200, staff_data)
+        created_staff = self.run_test("Create housekeeper staff", "POST", "api/staff", 200, staff_data)
         if created_staff:
             staff_id = created_staff.get('id')
             if staff_id:
-                # Update staff
-                update_data = {"salary": 4000.00}
-                self.run_test("Update staff", "PUT", f"api/staff/{staff_id}", 200, update_data)
+                # Verify new fields are saved
+                if (created_staff.get('payment_type') == 'salary' and
+                    created_staff.get('staff_role') == 'housekeeper'):
+                    self.log_result("Staff new fields saved correctly", True)
+                else:
+                    self.log_result("Staff new fields saved correctly", False, f"Field mismatch: {created_staff}")
                 
-                # Delete staff
-                self.run_test("Delete staff", "DELETE", f"api/staff/{staff_id}", 200)
+                # Delete regular staff
+                self.run_test("Delete housekeeper staff", "DELETE", f"api/staff/{staff_id}", 200)
+        
+        # Create co-host with per-job rates
+        cohost_data = {
+            "first_name": "Mike",
+            "last_name": "Johnson", 
+            "phone": "+1555123456",
+            "email": "mike@example.com",
+            "salary": 2000.00,
+            "payment_terms": "Per Job",
+            "payment_type": "per_job",
+            "staff_role": "co_host",
+            "per_checkin_rate": 50.00,
+            "per_checkout_rate": 75.00,
+            "assigned_properties": []
+        }
+        
+        created_cohost = self.run_test("Create co-host with rates", "POST", "api/staff", 200, cohost_data)
+        if created_cohost:
+            cohost_id = created_cohost.get('id')
+            if cohost_id:
+                # Verify co-host specific fields
+                if (created_cohost.get('staff_role') == 'co_host' and
+                    created_cohost.get('payment_type') == 'per_job' and
+                    created_cohost.get('per_checkin_rate') == 50.00 and
+                    created_cohost.get('per_checkout_rate') == 75.00):
+                    self.log_result("Co-host rates saved correctly", True)
+                else:
+                    self.log_result("Co-host rates saved correctly", False, f"Rate mismatch: {created_cohost}")
+                
+                # Update co-host rates
+                update_data = {
+                    "per_checkin_rate": 60.00,
+                    "per_checkout_rate": 80.00,
+                    "payment_type": "commission"
+                }
+                updated_cohost = self.run_test("Update co-host rates", "PUT", f"api/staff/{cohost_id}", 200, update_data)
+                
+                if updated_cohost:
+                    if (updated_cohost.get('per_checkin_rate') == 60.00 and
+                        updated_cohost.get('payment_type') == 'commission'):
+                        self.log_result("Co-host fields updated correctly", True)
+                    else:
+                        self.log_result("Co-host fields updated correctly", False, "Update field mismatch")
+                
+                # Keep co-host for property assignment and cohosts endpoint test
+                self.test_cohost_id = cohost_id
+                return cohost_id
 
     def test_expenses_crud(self):
         """Test Expenses CRUD operations"""
