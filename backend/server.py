@@ -125,6 +125,8 @@ class BookingCreate(BaseModel):
     check_in: str
     check_out: str
     total_amount: float
+    guests_count: int = 1
+    assigned_cohost: Optional[str] = None
     status: str = "confirmed"
 
 class BookingUpdate(BaseModel):
@@ -132,6 +134,8 @@ class BookingUpdate(BaseModel):
     check_in: Optional[str] = None
     check_out: Optional[str] = None
     total_amount: Optional[float] = None
+    guests_count: Optional[int] = None
+    assigned_cohost: Optional[str] = None
     status: Optional[str] = None
 
 class InvitationCreate(BaseModel):
