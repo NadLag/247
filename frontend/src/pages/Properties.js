@@ -26,7 +26,9 @@ const empty = {
   units: 1, active: true,
 };
 
-function PropertyCard({ prop, isAdmin, onEdit, onDelete, getCohostName }) {
+function PropertyCard({ prop, isAdmin, onEdit, onDelete, onOTASync, syncingPropId, getCohostName }) {
+  const isSyncing = syncingPropId === prop.id;
+  
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col" data-testid={`property-card-${prop.id}`}>
       <div className="h-2 bg-primary shrink-0" />
@@ -101,11 +103,15 @@ function PropertyCard({ prop, isAdmin, onEdit, onDelete, getCohostName }) {
         {/* Actions - Fixed at bottom */}
         {isAdmin && (
           <div className="flex gap-2 pt-3 mt-auto border-t">
-            <Button variant="outline" size="sm" className="flex-1" onClick={() => onEdit(prop)} data-testid={`edit-property-${prop.id}`}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+            <Button variant="outline" size="sm" className="flex-1" onClick={() => onOTASync(prop.id)} disabled={isSyncing} data-testid={`sync-property-${prop.id}`}>
+              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? "animate-spin" : ""}`} />
+              {isSyncing ? "Syncing..." : "Sync OTA"}
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/5" onClick={() => onDelete(prop.id)} data-testid={`delete-property-${prop.id}`}>
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
+            <Button variant="outline" size="sm" onClick={() => onEdit(prop)} data-testid={`edit-property-${prop.id}`}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/5" onClick={() => onDelete(prop.id)} data-testid={`delete-property-${prop.id}`}>
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         )}
@@ -124,6 +130,8 @@ export default function Properties() {
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [syncingAll, setSyncingAll] = useState(false);
+  const [syncingPropId, setSyncingPropId] = useState(null);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
