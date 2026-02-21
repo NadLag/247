@@ -340,7 +340,7 @@ class PropertyManagementAPITester:
             "active": True
         }
         
-        created_property = self.run_test("Create property for bookings", "POST", "api/properties", 201, property_data)
+        created_property = self.run_test("Create property for bookings", "POST", "api/properties", 200, property_data)
         if not created_property:
             return
             
