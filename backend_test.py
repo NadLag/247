@@ -524,8 +524,6 @@ class PropertyManagementAPITester:
                     else:
                         self.log_result("Booking new fields updated correctly", False, "Update field mismatch")
         
-        # Clean up if we created the property here
-        if not hasattr(self, 'test_property_id'):
             self.run_test("Delete booking test property", "DELETE", f"api/properties/{property_id}", 200)
 
     def test_invitations_crud(self):
