@@ -1042,6 +1042,72 @@ async def seed_demo_data(user=Depends(require_admin)):
 # ===== INCLUDE ROUTER =====
 app.include_router(api_router)
 
+# ===== SUBSCRIPTION VALIDATION MIDDLEWARE =====
+class SubscriptionMiddleware(BaseHTTPMiddleware):
+    """Middleware to validate subscription status and block access for inactive subscriptions"""
+    
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        
+        # Skip middleware for exempt paths
+        for exempt in SUBSCRIPTION_EXEMPT_PATHS:
+            if path.startswith(exempt):
+                return await call_next(request)
+        
+        # Skip for non-API paths
+        if not path.startswith("/api/"):
+            return await call_next(request)
+        
+        # Try to get session token
+        session_token = request.cookies.get("session_token")
+        if not session_token:
+            auth_header = request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                session_token = auth_header.split(" ")[1]
+        
+        # If no session, let the auth dependency handle it
+        if not session_token:
+            return await call_next(request)
+        
+        try:
+            # Get session
+            session_doc = await db.user_sessions.find_one({"session_token": session_token}, {"_id": 0})
+            if not session_doc:
+                return await call_next(request)
+            
+            # Get user
+            user_doc = await db.users.find_one({"user_id": session_doc["user_id"]}, {"_id": 0})
+            if not user_doc or not user_doc.get("company_id"):
+                return await call_next(request)
+            
+            # Get company subscription status
+            company = await db.companies.find_one({"company_id": user_doc["company_id"]}, {"_id": 0})
+            if not company:
+                return await call_next(request)
+            
+            subscription_status = company.get("subscription_status", "trial")
+            
+            # Allow trial and active subscriptions
+            if subscription_status in ["trial", "active"]:
+                return await call_next(request)
+            
+            # Block inactive/cancelled/expired subscriptions
+            # Still allow GET requests for viewing data
+            if request.method in ["POST", "PUT", "DELETE", "PATCH"]:
+                return Response(
+                    content='{"detail": "Subscription inactive. Please renew your subscription to continue."}',
+                    status_code=402,
+                    media_type="application/json"
+                )
+            
+            return await call_next(request)
+            
+        except Exception as e:
+            logger.error(f"Subscription middleware error: {e}")
+            return await call_next(request)
+
+app.add_middleware(SubscriptionMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
