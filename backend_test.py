@@ -203,8 +203,8 @@ class PropertyManagementAPITester:
         self.run_test("Get revenue trends", "GET", "api/dashboard/revenue-trends", 200)
 
     def test_properties_crud(self):
-        """Test Properties CRUD operations"""
-        print("\n🔍 Testing Properties CRUD...")
+        """Test Properties CRUD operations with new fields"""
+        print("\n🔍 Testing Properties CRUD with new fields...")
         if not self.token:
             self.log_result("Properties CRUD requires auth", False, "No auth token")
             return
@@ -212,28 +212,62 @@ class PropertyManagementAPITester:
         # List properties (should be empty initially)
         properties = self.run_test("List properties", "GET", "api/properties", 200)
         
-        # Create property
+        # Create property with new fields
         property_data = {
-            "name": "Test Property",
+            "name": "Test Villa Property",
             "address": "123 Test St, Test City",
+            "property_type": "Villa",
+            "rooms": 4,
+            "suites": 2,
+            "bathrooms": 3,
+            "city": "Miami",
+            "country": "United States",
+            "notes": "Beautiful waterfront villa with amazing views",
+            "assigned_cohost": None,  # Will assign later after creating co-host
             "owner_first_name": "John",
-            "owner_last_name": "Doe",
+            "owner_last_name": "Doe", 
             "owner_phone": "+1234567890",
             "owner_email": "john@example.com",
             "units": 5,
             "active": True
         }
         
-        created_property = self.run_test("Create property", "POST", "api/properties", 200, property_data)
+        created_property = self.run_test("Create property with new fields", "POST", "api/properties", 200, property_data)
         if created_property:
             property_id = created_property.get('id')
             if property_id:
-                # Update property
-                update_data = {"name": "Updated Test Property", "units": 10}
-                self.run_test("Update property", "PUT", f"api/properties/{property_id}", 200, update_data)
+                # Verify new fields are saved
+                if (created_property.get('property_type') == 'Villa' and
+                    created_property.get('rooms') == 4 and
+                    created_property.get('city') == 'Miami' and
+                    created_property.get('notes') == 'Beautiful waterfront villa with amazing views'):
+                    self.log_result("Property new fields saved correctly", True)
+                else:
+                    self.log_result("Property new fields saved correctly", False, f"Field mismatch: {created_property}")
                 
-                # Delete property
-                self.run_test("Delete property", "DELETE", f"api/properties/{property_id}", 200)
+                # Update property with new fields
+                update_data = {
+                    "name": "Updated Test Villa",
+                    "property_type": "Resort",
+                    "rooms": 6,
+                    "suites": 3,
+                    "bathrooms": 4,
+                    "city": "Orlando",
+                    "notes": "Updated: Premium resort with luxury amenities"
+                }
+                updated_property = self.run_test("Update property new fields", "PUT", f"api/properties/{property_id}", 200, update_data)
+                
+                if updated_property:
+                    if (updated_property.get('property_type') == 'Resort' and
+                        updated_property.get('rooms') == 6 and
+                        updated_property.get('city') == 'Orlando'):
+                        self.log_result("Property new fields updated correctly", True)
+                    else:
+                        self.log_result("Property new fields updated correctly", False, "Update field mismatch")
+                
+                # Keep property for co-host assignment test
+                self.test_property_id = property_id
+                return property_id
 
     def test_staff_crud(self):
         """Test Staff CRUD operations"""
