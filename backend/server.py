@@ -1025,8 +1025,90 @@ async def get_analytics(
 async def list_invitations(user=Depends(require_admin)):
     return await db.invitations.find({"company_id": user["company_id"]}, {"_id": 0}).to_list(1000)
 
+async def send_invitation_email(email: str, role: str, token: str, company_name: str, inviter_name: str, base_url: str):
+    """Send invitation email using Resend"""
+    if not resend_api_key:
+        logger.warning("Resend API key not configured, skipping email send")
+        return False
+    
+    invite_link = f"{base_url}/invite/{token}"
+    role_display = "Property Owner" if role == "owner" else "Staff Member"
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+            <tr>
+                <td style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
+                    <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">PropStack</h1>
+                    <p style="margin: 8px 0 0; color: #94a3b8; font-size: 14px;">Property & Hospitality Management</p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 40px 30px;">
+                    <h2 style="margin: 0 0 16px; color: #1e293b; font-size: 20px; font-weight: 600;">You're Invited!</h2>
+                    <p style="margin: 0 0 24px; color: #64748b; font-size: 16px; line-height: 1.6;">
+                        <strong>{inviter_name}</strong> has invited you to join <strong>{company_name}</strong> as a <strong>{role_display}</strong>.
+                    </p>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td style="padding: 20px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                <p style="margin: 0 0 8px; color: #1e293b; font-size: 14px; font-weight: 600;">Your Role: {role_display}</p>
+                                <p style="margin: 0; color: #64748b; font-size: 14px;">
+                                    {"View financials, properties, and analytics for your portfolio." if role == "owner" else "Access assigned properties, manage bookings, and track your tasks."}
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top: 32px;">
+                        <tr>
+                            <td style="text-align: center;">
+                                <a href="{invite_link}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Accept Invitation</a>
+                            </td>
+                        </tr>
+                    </table>
+                    <p style="margin: 24px 0 0; color: #94a3b8; font-size: 13px; text-align: center;">
+                        Or copy this link: <br>
+                        <span style="color: #64748b; word-break: break-all;">{invite_link}</span>
+                    </p>
+                    <p style="margin: 24px 0 0; color: #94a3b8; font-size: 13px; text-align: center;">
+                        This invitation expires in 7 days.
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 24px 30px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0;">
+                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                        © {datetime.now().year} PropStack. Smart Property Operations.
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+    
+    try:
+        params = {
+            "from": sender_email,
+            "to": [email],
+            "subject": f"You're invited to join {company_name} on PropStack",
+            "html": html_content
+        }
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Invitation email sent to {email}, ID: {result.get('id')}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send invitation email to {email}: {str(e)}")
+        return False
+
 @api_router.post("/invitations", status_code=201)
-async def create_invitation(data: InvitationCreate, user=Depends(require_admin)):
+async def create_invitation(data: InvitationCreate, request: Request, background_tasks: BackgroundTasks, user=Depends(require_admin)):
     if data.role not in ["owner", "staff"]:
         raise HTTPException(status_code=400, detail="Role must be 'owner' or 'staff'")
     existing = await db.invitations.find_one(
@@ -1043,11 +1125,66 @@ async def create_invitation(data: InvitationCreate, user=Depends(require_admin))
         "role": data.role,
         "token": token,
         "used": False,
+        "email_sent": False,
         "expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.invitations.insert_one(invitation)
+    
+    # Get company and user info for email
+    company = await db.companies.find_one({"company_id": user["company_id"]}, {"_id": 0})
+    company_name = company.get("name", "Your Company") if company else "Your Company"
+    inviter_name = user.get("name", user.get("email", "Admin"))
+    
+    # Get base URL from request
+    base_url = str(request.base_url).rstrip("/")
+    if "/api" in base_url:
+        base_url = base_url.split("/api")[0]
+    
+    # Send email in background
+    background_tasks.add_task(
+        send_invitation_email_and_update,
+        invitation["id"],
+        data.email,
+        data.role,
+        token,
+        company_name,
+        inviter_name,
+        base_url
+    )
+    
     return await db.invitations.find_one({"id": invitation["id"]}, {"_id": 0})
+
+async def send_invitation_email_and_update(inv_id: str, email: str, role: str, token: str, company_name: str, inviter_name: str, base_url: str):
+    """Send email and update invitation status"""
+    success = await send_invitation_email(email, role, token, company_name, inviter_name, base_url)
+    if success:
+        await db.invitations.update_one({"id": inv_id}, {"$set": {"email_sent": True}})
+
+@api_router.post("/invitations/{inv_id}/resend")
+async def resend_invitation_email(inv_id: str, request: Request, background_tasks: BackgroundTasks, user=Depends(require_admin)):
+    """Resend invitation email"""
+    invitation = await db.invitations.find_one({"id": inv_id, "company_id": user["company_id"], "used": False}, {"_id": 0})
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found or already used")
+    
+    company = await db.companies.find_one({"company_id": user["company_id"]}, {"_id": 0})
+    company_name = company.get("name", "Your Company") if company else "Your Company"
+    inviter_name = user.get("name", user.get("email", "Admin"))
+    base_url = str(request.base_url).rstrip("/").split("/api")[0]
+    
+    background_tasks.add_task(
+        send_invitation_email_and_update,
+        inv_id,
+        invitation["email"],
+        invitation["role"],
+        invitation["token"],
+        company_name,
+        inviter_name,
+        base_url
+    )
+    
+    return {"message": "Invitation email queued for resend"}
 
 @api_router.delete("/invitations/{inv_id}")
 async def delete_invitation(inv_id: str, user=Depends(require_admin)):
