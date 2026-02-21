@@ -719,7 +719,302 @@ async def update_booking(booking_id: str, data: BookingUpdate, user=Depends(requ
         raise HTTPException(status_code=404, detail="Booking not found")
     return await db.bookings.find_one({"id": booking_id}, {"_id": 0})
 
-# ===== INVITATION ROUTES =====
+@api_router.get("/bookings/by-status")
+async def list_bookings_by_status(user=Depends(get_current_user)):
+    """Get bookings grouped by status with today's check-ins highlighted"""
+    company_id = user.get("company_id")
+    if not company_id:
+        return {"checked_in_today": [], "upcoming": [], "confirmed": [], "checked_out": [], "cancelled": []}
+    
+    today = datetime.now(timezone.utc).isoformat()[:10]
+    tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()[:10]
+    
+    all_bookings = await db.bookings.find({"company_id": company_id}, {"_id": 0}).to_list(1000)
+    
+    result = {
+        "checked_in_today": [],
+        "upcoming": [],
+        "confirmed": [],
+        "checked_out": [],
+        "cancelled": []
+    }
+    
+    for b in all_bookings:
+        check_in = b.get("check_in", "")
+        status = b.get("status", "")
+        
+        if status == "cancelled":
+            result["cancelled"].append(b)
+        elif status == "checked_out":
+            result["checked_out"].append(b)
+        elif status == "checked_in":
+            # Currently checked in - check if check-in was today
+            if check_in == today:
+                result["checked_in_today"].append(b)
+            else:
+                result["confirmed"].append(b)  # Show in confirmed as "in-house"
+        elif status == "confirmed":
+            if check_in == today:
+                result["checked_in_today"].append(b)  # Due to check in today
+            elif check_in > today:
+                result["upcoming"].append(b)
+            else:
+                result["confirmed"].append(b)
+    
+    # Sort each list by check_in date
+    for key in result:
+        result[key].sort(key=lambda x: x.get("check_in", ""), reverse=(key in ["checked_out", "cancelled"]))
+    
+    return result
+
+# ===== SERVICE ROUTES =====
+@api_router.get("/services")
+async def list_services(user=Depends(get_current_user), category: Optional[str] = None, active_only: bool = True):
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    query = {"company_id": company_id}
+    if category:
+        query["category"] = category
+    if active_only:
+        query["active"] = True
+    return await db.services.find(query, {"_id": 0}).to_list(1000)
+
+@api_router.post("/services", status_code=201)
+async def create_service(data: ServiceCreate, user=Depends(require_admin)):
+    service = {
+        "id": f"svc_{uuid.uuid4().hex[:12]}",
+        "company_id": user["company_id"],
+        **data.model_dump(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.services.insert_one(service)
+    return await db.services.find_one({"id": service["id"]}, {"_id": 0})
+
+@api_router.put("/services/{service_id}")
+async def update_service(service_id: str, data: ServiceUpdate, user=Depends(require_admin)):
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    result = await db.services.update_one({"id": service_id, "company_id": user["company_id"]}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return await db.services.find_one({"id": service_id}, {"_id": 0})
+
+@api_router.delete("/services/{service_id}")
+async def delete_service(service_id: str, user=Depends(require_admin)):
+    result = await db.services.delete_one({"id": service_id, "company_id": user["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return {"message": "Service deleted"}
+
+# ===== BOOKING SERVICES (Add-ons) =====
+@api_router.get("/booking-services/{booking_id}")
+async def list_booking_services(booking_id: str, user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    # Verify booking belongs to company
+    booking = await db.bookings.find_one({"id": booking_id, "company_id": company_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    booking_services = await db.booking_services.find({"booking_id": booking_id}, {"_id": 0}).to_list(100)
+    # Enrich with service details
+    for bs in booking_services:
+        service = await db.services.find_one({"id": bs["service_id"]}, {"_id": 0})
+        if service:
+            bs["service_name"] = service.get("name")
+            bs["service_price"] = service.get("price")
+            bs["service_category"] = service.get("category")
+    return booking_services
+
+@api_router.post("/booking-services", status_code=201)
+async def add_booking_service(data: BookingServiceCreate, user=Depends(require_admin)):
+    # Verify booking and service belong to company
+    booking = await db.bookings.find_one({"id": data.booking_id, "company_id": user["company_id"]}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    service = await db.services.find_one({"id": data.service_id, "company_id": user["company_id"]}, {"_id": 0})
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    booking_service = {
+        "id": f"bsvc_{uuid.uuid4().hex[:12]}",
+        "company_id": user["company_id"],
+        **data.model_dump(),
+        "total_price": service.get("price", 0) * data.quantity,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.booking_services.insert_one(booking_service)
+    return await db.booking_services.find_one({"id": booking_service["id"]}, {"_id": 0})
+
+@api_router.put("/booking-services/{bs_id}")
+async def update_booking_service(bs_id: str, data: BookingServiceUpdate, user=Depends(require_admin)):
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Recalculate total price if quantity changed
+    if "quantity" in update_data:
+        bs = await db.booking_services.find_one({"id": bs_id, "company_id": user["company_id"]}, {"_id": 0})
+        if bs:
+            service = await db.services.find_one({"id": bs["service_id"]}, {"_id": 0})
+            if service:
+                update_data["total_price"] = service.get("price", 0) * update_data["quantity"]
+    
+    result = await db.booking_services.update_one({"id": bs_id, "company_id": user["company_id"]}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Booking service not found")
+    return await db.booking_services.find_one({"id": bs_id}, {"_id": 0})
+
+@api_router.delete("/booking-services/{bs_id}")
+async def delete_booking_service(bs_id: str, user=Depends(require_admin)):
+    result = await db.booking_services.delete_one({"id": bs_id, "company_id": user["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Booking service not found")
+    return {"message": "Booking service deleted"}
+
+# ===== ANALYTICS ROUTES =====
+@api_router.get("/analytics")
+async def get_analytics(
+    user=Depends(get_current_user),
+    property_id: Optional[str] = None,
+    year: Optional[int] = None,
+    month: Optional[int] = None
+):
+    """Get comprehensive analytics with comparison to previous period"""
+    company_id = user.get("company_id")
+    if not company_id:
+        return {"current": {}, "previous": {}, "trends": []}
+    
+    now = datetime.now(timezone.utc)
+    
+    # Default to current month/year
+    target_year = year or now.year
+    target_month = month or now.month
+    
+    # Calculate date ranges
+    current_month_start = datetime(target_year, target_month, 1, tzinfo=timezone.utc)
+    if target_month == 12:
+        current_month_end = datetime(target_year + 1, 1, 1, tzinfo=timezone.utc)
+    else:
+        current_month_end = datetime(target_year, target_month + 1, 1, tzinfo=timezone.utc)
+    
+    # Previous month
+    if target_month == 1:
+        prev_month_start = datetime(target_year - 1, 12, 1, tzinfo=timezone.utc)
+        prev_month_end = current_month_start
+    else:
+        prev_month_start = datetime(target_year, target_month - 1, 1, tzinfo=timezone.utc)
+        prev_month_end = current_month_start
+    
+    # Build query filters
+    base_query = {"company_id": company_id}
+    if property_id:
+        base_query["property_id"] = property_id
+    
+    # Get properties for the query
+    prop_query = {"company_id": company_id}
+    if property_id:
+        prop_query["id"] = property_id
+    properties = await db.properties.find(prop_query, {"_id": 0}).to_list(1000)
+    property_ids = [p["id"] for p in properties]
+    total_units = sum(p.get("units", 0) for p in properties)
+    active_properties = len([p for p in properties if p.get("active", True)])
+    
+    # Helper to calculate metrics for a period
+    async def calc_period_metrics(start: datetime, end: datetime):
+        booking_query = {**base_query, "check_in": {"$gte": start.isoformat()[:10], "$lt": end.isoformat()[:10]}}
+        if property_id:
+            booking_query["property_id"] = property_id
+        else:
+            booking_query["property_id"] = {"$in": property_ids}
+            
+        bookings = await db.bookings.find(booking_query, {"_id": 0}).to_list(1000)
+        
+        expense_query = {"company_id": company_id, "date": {"$gte": start.isoformat()[:10], "$lt": end.isoformat()[:10]}}
+        if property_id:
+            expense_query["property_id"] = property_id
+        expenses = await db.expenses.find(expense_query, {"_id": 0}).to_list(1000)
+        
+        revenue = sum(b.get("total_amount", 0) for b in bookings)
+        expense_total = sum(e.get("amount", 0) for e in expenses)
+        
+        nights_booked = 0
+        for b in bookings:
+            try:
+                ci = datetime.fromisoformat(b["check_in"])
+                co = datetime.fromisoformat(b["check_out"])
+                nights_booked += (co - ci).days
+            except:
+                pass
+        
+        days_in_month = (end - start).days
+        total_available_nights = total_units * days_in_month
+        occupancy_rate = (nights_booked / total_available_nights * 100) if total_available_nights > 0 else 0
+        adr = (revenue / nights_booked) if nights_booked > 0 else 0
+        revpan = (revenue / total_available_nights) if total_available_nights > 0 else 0
+        
+        return {
+            "revenue": round(revenue, 2),
+            "expenses": round(expense_total, 2),
+            "net_income": round(revenue - expense_total, 2),
+            "occupancy_rate": round(occupancy_rate, 1),
+            "nights_booked": nights_booked,
+            "adr": round(adr, 2),
+            "revpan": round(revpan, 2),
+            "active_bookings": len([b for b in bookings if b.get("status") in ["confirmed", "checked_in"]]),
+            "total_bookings": len(bookings),
+            "active_properties": active_properties,
+            "total_properties": len(properties),
+        }
+    
+    current_metrics = await calc_period_metrics(current_month_start, current_month_end)
+    previous_metrics = await calc_period_metrics(prev_month_start, prev_month_end)
+    
+    # Calculate percentage changes
+    def calc_change(curr, prev):
+        if prev == 0:
+            return 100 if curr > 0 else 0
+        return round(((curr - prev) / prev) * 100, 1)
+    
+    changes = {
+        "revenue_change": calc_change(current_metrics["revenue"], previous_metrics["revenue"]),
+        "expenses_change": calc_change(current_metrics["expenses"], previous_metrics["expenses"]),
+        "occupancy_change": calc_change(current_metrics["occupancy_rate"], previous_metrics["occupancy_rate"]),
+        "adr_change": calc_change(current_metrics["adr"], previous_metrics["adr"]),
+        "bookings_change": calc_change(current_metrics["total_bookings"], previous_metrics["total_bookings"]),
+    }
+    
+    # Get 12-month trends
+    trends = []
+    for i in range(11, -1, -1):
+        trend_date = now - timedelta(days=30 * i)
+        trend_month_start = trend_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if trend_month_start.month == 12:
+            trend_month_end = trend_month_start.replace(year=trend_month_start.year + 1, month=1)
+        else:
+            trend_month_end = trend_month_start.replace(month=trend_month_start.month + 1)
+        
+        trend_metrics = await calc_period_metrics(trend_month_start, trend_month_end)
+        trends.append({
+            "month": trend_month_start.strftime("%b %Y"),
+            "month_num": trend_month_start.month,
+            "year": trend_month_start.year,
+            **trend_metrics
+        })
+    
+    return {
+        "current": current_metrics,
+        "previous": previous_metrics,
+        "changes": changes,
+        "trends": trends,
+        "period": {
+            "current_month": current_month_start.strftime("%B %Y"),
+            "previous_month": prev_month_start.strftime("%B %Y"),
+        }
+    }
 @api_router.get("/invitations")
 async def list_invitations(user=Depends(require_admin)):
     return await db.invitations.find({"company_id": user["company_id"]}, {"_id": 0}).to_list(1000)
