@@ -177,6 +177,45 @@ export default function Properties() {
     } catch (err) { toast.error("Error deleting property"); }
   };
 
+  const handleOTASyncAll = async () => {
+    setSyncingAll(true);
+    try {
+      toast.info("Syncing all properties with OTAs...");
+      const res = await fetch(`${API}/api/ota/simulate-sync`, { method: "POST", credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.synced > 0) {
+          toast.success(`Synced ${data.synced} bookings from OTAs`);
+        } else {
+          toast.info("No new bookings from OTAs");
+        }
+      } else {
+        toast.error("Sync failed");
+      }
+    } catch (err) {
+      toast.error("Sync failed");
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
+  const handleOTASyncProperty = async (propertyId) => {
+    setSyncingPropId(propertyId);
+    try {
+      const res = await fetch(`${API}/api/ota/simulate-property-sync/${propertyId}`, { method: "POST", credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Synced ${data.synced} bookings for ${data.property}`);
+      } else {
+        toast.error("Sync failed");
+      }
+    } catch (err) {
+      toast.error("Sync failed");
+    } finally {
+      setSyncingPropId(null);
+    }
+  };
+
   const openEdit = (prop) => {
     setForm({
       name: prop.name, address: prop.address, property_type: prop.property_type || "",
