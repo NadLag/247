@@ -39,21 +39,43 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] Responsive sidebar navigation with role-based items
 - [x] Demo data seeding endpoint
 - [x] MongoDB indexes for performance
+- [x] **Owner-specific dashboard view** (filtered by their properties)
+- [x] **Staff dashboard view** (earnings, tasks completed, upcoming tasks)
+- [x] **OTA Sync webhook endpoint** + background processor
+- [x] **Subscription status validation middleware** (auto-lock inactive)
 
-## Test Results
-- Backend: 98% (34/35 tests passed)
-- Frontend: 100% (18/18 UI features)
-- Integration: 100% (auth, CRUD, navigation)
+## Test Results (Feb 21, 2026 - Latest)
+- Backend: 100% (17/17 new feature tests passed)
+- Frontend: 100% (All role-based dashboard views verified)
+- Integration: 100% (auth, CRUD, role-based KPIs, OTA webhook, subscription middleware)
+
+## New Features Added (Feb 21, 2026)
+
+### 1. Role-Based Dashboards
+- **Admin View**: All 8 KPIs (revenue, net income, occupancy, nights, ADR, RevPAN, properties, bookings), revenue trends chart, staff payments due card
+- **Owner View**: Filtered KPIs for owned properties only, owner-specific revenue trends, role badge
+- **Staff View**: Staff earnings (MTD), tasks completed, upcoming tasks (7 days), assigned properties, active bookings, upcoming work list
+
+### 2. OTA Sync Webhook
+- **Endpoint**: `POST /api/ota-webhook/{company_id}`
+- **Events**: booking_created, booking_updated, booking_cancelled, availability_sync
+- **Features**: Background processing, sync logging, external_id tracking for OTA bookings
+- **Logs Endpoint**: `GET /api/ota-sync-logs` with filters for status and source
+
+### 3. Subscription Middleware
+- **Validates** subscription status on all API requests
+- **Trial/Active**: Allow all operations
+- **Inactive/Cancelled**: Block POST/PUT/DELETE with 402 error, allow GET
+- **Exempt paths**: /api/auth/, /api/subscription/, /api/companies/, /api/webhook/
 
 ## Prioritized Backlog
-### P0 (Next)
-- Owner-specific dashboard view (filtered by their properties)
-- Staff dashboard view (tasks, earnings, payout status)
-- OTA Sync webhook endpoint + background processor
+### P0 (Next - User Requested)
+- Redesign Bookings Page into status sections (Checked-in Today, Upcoming, Confirmed, Checked-out, Cancelled)
+- Create Services Page (Airport Transfer, Meals, Excursions with staff/provider assignment)
+- Create Analytics Page (earnings/performance graphs, filterable by month/year/property)
 
 ### P1
 - JWT authentication migration (Phase 2)
-- Subscription status validation middleware (auto-lock inactive)
 - Audit logs for all CRUD operations
 - Download reports (PDF/CSV)
 
@@ -64,3 +86,20 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - Automated owner payouts
 - Smart expense categorization
 - CSRF protection + rate limiting
+
+## Key API Endpoints
+### Dashboard
+- `GET /api/dashboard/kpis` - Role-aware KPIs
+- `GET /api/dashboard/revenue-trends` - 6-month trend data
+
+### OTA Integration
+- `POST /api/ota-webhook/{company_id}` - Receive OTA events
+- `GET /api/ota-sync-logs` - List sync logs with filters
+
+### Core CRUD
+- Properties, Staff, Bookings, Expenses, Invitations (all support GET, POST, PUT, DELETE)
+
+## Database Collections
+- users, companies, user_sessions
+- properties, staff, bookings, expenses, invitations
+- payment_transactions, ota_sync_logs
