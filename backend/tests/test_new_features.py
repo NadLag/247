@@ -567,15 +567,16 @@ class TestOTASyncLogs:
                 assert log.get('source') == 'airbnb', f"Expected source 'airbnb', got {log.get('source')}"
 
 
+@pytest.fixture(scope="module")
+def inactive_company_user():
+    """Create user with inactive subscription"""
+    creds = TestSetup.create_test_user("company_admin", "inactive")
+    assert creds is not None, "Failed to create inactive subscription user"
+    yield creds
+
+
 class TestSubscriptionMiddleware:
     """Test subscription validation middleware"""
-    
-    @pytest.fixture(scope="class")
-    def inactive_company_user(self):
-        """Create user with inactive subscription"""
-        creds = TestSetup.create_test_user("company_admin", "inactive")
-        assert creds is not None, "Failed to create inactive subscription user"
-        yield creds
     
     def test_trial_subscription_allows_requests(self, admin_session):
         """Trial subscription should allow all requests"""
