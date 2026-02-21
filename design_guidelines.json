@@ -1,0 +1,207 @@
+{
+  "identity": {
+    "name": "PropStack AI",
+    "persona": "The Swiss Utility",
+    "vibe": "Professional, minimalist, data-dense, authoritative yet hospitable.",
+    "principles": [
+      "Density with Breath: High data density in dashboards, but macro spacing in marketing.",
+      "Swiss Grid: Strict alignment, reliable layouts, no floating elements without purpose.",
+      "Texture over Gradient: Use subtle noise or matte finishes instead of shiny gradients.",
+      "Function is Beauty: If it doesn't help the user manage property, remove it."
+    ]
+  },
+  "typography": {
+    "instructions": "Import these fonts in your main CSS file or index.html from Google Fonts.",
+    "primary_font": {
+      "name": "Manrope",
+      "usage": "Headings, Navigation, Buttons",
+      "weights": ["400", "500", "600", "700", "800"],
+      "source": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+    },
+    "secondary_font": {
+      "name": "Public Sans",
+      "usage": "Body text, form inputs, long reading",
+      "weights": ["400", "500"],
+      "source": "https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500&display=swap"
+    },
+    "mono_font": {
+      "name": "JetBrains Mono",
+      "usage": "KPIs, Financial Data, IDs, Code",
+      "weights": ["400", "500"],
+      "source": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+    },
+    "rules": [
+      "HEADINGS: Use Manrope. Tracking tight (-0.02em). Bold (700) for H1/H2.",
+      "BODY: Use Public Sans. Leading relaxed (1.6).",
+      "DATA: All currency and percentage numbers MUST be JetBrains Mono."
+    ]
+  },
+  "colors": {
+    "palette_name": "Deep Harbor",
+    "mode_strategy": "System preference default, with manual toggle in settings/navbar.",
+    "light_theme": {
+      "background": "0 0% 100%",
+      "foreground": "222 47% 11%",
+      "card": "0 0% 100%",
+      "card_foreground": "222 47% 11%",
+      "popover": "0 0% 100%",
+      "popover_foreground": "222 47% 11%",
+      "primary": "222 47% 11%", 
+      "primary_foreground": "210 40% 98%",
+      "secondary": "210 40% 96.1%",
+      "secondary_foreground": "222 47% 11%",
+      "muted": "210 40% 96.1%",
+      "muted_foreground": "215.4 16.3% 46.9%",
+      "accent": "210 40% 96.1%",
+      "accent_foreground": "222 47% 11%",
+      "destructive": "0 84.2% 60.2%",
+      "destructive_foreground": "210 40% 98%",
+      "border": "214.3 31.8% 91.4%",
+      "input": "214.3 31.8% 91.4%",
+      "ring": "222 47% 11%",
+      "chart_1": "222 47% 11%",
+      "chart_2": "217 91% 60%",
+      "chart_3": "199 89% 48%",
+      "chart_4": "171 77% 64%",
+      "chart_5": "45 93% 47%"
+    },
+    "dark_theme": {
+      "background": "222 47% 6%",
+      "foreground": "210 40% 98%",
+      "card": "222 47% 8%",
+      "card_foreground": "210 40% 98%",
+      "popover": "222 47% 8%",
+      "popover_foreground": "210 40% 98%",
+      "primary": "210 40% 98%",
+      "primary_foreground": "222 47% 11%",
+      "secondary": "217.2 32.6% 17.5%",
+      "secondary_foreground": "210 40% 98%",
+      "muted": "217.2 32.6% 17.5%",
+      "muted_foreground": "215 20.2% 65.1%",
+      "accent": "217.2 32.6% 17.5%",
+      "accent_foreground": "210 40% 98%",
+      "destructive": "0 62.8% 30.6%",
+      "destructive_foreground": "210 40% 98%",
+      "border": "217.2 32.6% 17.5%",
+      "input": "217.2 32.6% 17.5%",
+      "ring": "212.7 26.8% 83.9%",
+      "chart_1": "220 70% 50%",
+      "chart_2": "160 60% 45%",
+      "chart_3": "30 80% 55%",
+      "chart_4": "280 65% 60%",
+      "chart_5": "340 75% 55%"
+    },
+    "usage_rules": [
+      "PRIMARY COLOR is strictly for Brand Identity and Primary Actions.",
+      "Use 'Electric Blue' (Chart 2 in light, Chart 1 in dark) for active states and data highlights.",
+      "NEVER use gradients for backgrounds. Use flat colors or subtle noise.",
+      "Borders should be subtle. Use 'border' variable."
+    ]
+  },
+  "layout": {
+    "spacing_scale": {
+      "xs": "0.25rem",
+      "sm": "0.5rem",
+      "md": "1rem",
+      "lg": "1.5rem",
+      "xl": "2rem",
+      "2xl": "3rem",
+      "3xl": "4rem",
+      "section": "6rem"
+    },
+    "border_radius": "0.5rem",
+    "container_max_width": "1400px",
+    "grid_system": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-4",
+      "landing": "grid grid-cols-1 md:grid-cols-12 gap-8"
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "variants": {
+        "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+        "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        "outline": "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        "ghost": "hover:bg-accent hover:text-accent-foreground"
+      }
+    },
+    "cards": {
+      "style": "rounded-lg border bg-card text-card-foreground shadow-sm",
+      "dashboard_card": "p-6 flex flex-col justify-between h-full"
+    },
+    "inputs": {
+      "style": "h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    },
+    "sidebar": {
+      "style": "w-64 border-r bg-card h-screen fixed left-0 top-0 hidden md:block",
+      "item": "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+    },
+    "charts": {
+      "library": "Recharts (via Shadcn Chart)",
+      "style": "Minimalist, thin lines, custom tooltips with high contrast."
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-xl bg-background/80 border border-white/20 shadow-lg",
+    "noise_texture": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")",
+    "shadows": {
+      "sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      "md": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+      "lg": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)"
+    }
+  },
+  "image_urls": {
+    "landing_hero": {
+      "url": "https://images.unsplash.com/photo-1768223933860-6d62bc5b2ff3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTN8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBsdXh1cnklMjBob3RlbCUyMGFyY2hpdGVjdHVyZSUyMG1pbmltYWxpc3R8ZW58MHx8fHwxNzcxNjk1Mzc4fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Modern hotel glass facade",
+      "category": "Hero"
+    },
+    "auth_bg": {
+      "url": "https://images.pexels.com/photos/15010963/pexels-photo-15010963.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Modern lounge interior",
+      "category": "Auth"
+    },
+    "feature_property": {
+      "url": "https://images.unsplash.com/photo-1763708204354-365647bcf21e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTN8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjBsdXh1cnklMjBob3RlbCUyMGFyY2hpdGVjdHVyZSUyMG1pbmltYWxpc3R8ZW58MHx8fHwxNzcxNjk1Mzc4fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "White minimalist building",
+      "category": "Feature"
+    },
+    "testimonial_avatar": {
+      "url": "https://images.pexels.com/photos/7641831/pexels-photo-7641831.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Property Manager Professional",
+      "category": "Testimonial"
+    }
+  },
+  "pages_structure": {
+    "dashboard": {
+      "layout": "Bento Grid (Grid Cols 12)",
+      "widgets": [
+        {"name": "Revenue MTD", "span": "col-span-12 md:col-span-4", "type": "Metric Card"},
+        {"name": "Occupancy Rate", "span": "col-span-6 md:col-span-2", "type": "Metric Card"},
+        {"name": "Active Bookings", "span": "col-span-6 md:col-span-2", "type": "Metric Card"},
+        {"name": "Net Income", "span": "col-span-12 md:col-span-4", "type": "Metric Card"},
+        {"name": "Revenue Trends", "span": "col-span-12 md:col-span-8 row-span-2", "type": "Chart (Area)"},
+        {"name": "Recent Bookings", "span": "col-span-12 md:col-span-4 row-span-2", "type": "List"}
+      ]
+    },
+    "properties": {
+      "layout": "Grid of Cards with Image Header",
+      "card_style": "Image top (h-48), Content bottom. Badge for status (Occupied/Vacant)."
+    }
+  },
+  "accessibility_checklist": [
+    "Ensure 4.5:1 contrast for all text.",
+    "Interactive elements must have focus rings.",
+    "Use semantic HTML (main, section, nav, button).",
+    "All images must have alt text."
+  ],
+  "universal_guidelines": [
+    "Do not use generic gradients.",
+    "Use Lucide React for icons.",
+    "Animation: Use framer-motion for page transitions and list entrances.",
+    "Toasts: Use Sonner.",
+    "Forms: Use Shadcn Form + React Hook Form + Zod.",
+    "Data Test IDs: All interactive elements must have data-testid attributes."
+  ]
+}
