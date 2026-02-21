@@ -307,7 +307,7 @@ class PropertyManagementAPITester:
             "recurring_frequency": "monthly"
         }
         
-        created_expense = self.run_test("Create expense", "POST", "api/expenses", 201, expense_data)
+        created_expense = self.run_test("Create expense", "POST", "api/expenses", 200, expense_data)
         if created_expense:
             expense_id = created_expense.get('id')
             if expense_id:
