@@ -9,16 +9,28 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Building2, MapPin, User, Phone, Mail } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, MapPin, User, Phone, Mail, BedDouble, Bath, FileText, UserCheck } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
-const empty = { name: "", address: "", owner_first_name: "", owner_last_name: "", owner_phone: "", owner_email: "", units: 1, active: true };
+
+const PROPERTY_TYPES = ["Apartment", "Villa", "Hotel", "Resort", "Cabin", "Townhouse", "Condo", "House", "Studio", "Penthouse"];
+const COUNTRIES = ["United States", "United Kingdom", "Canada", "Australia", "France", "Germany", "Spain", "Italy", "Portugal", "Greece", "Turkey", "UAE", "Thailand", "Mexico", "Brazil", "Japan", "Indonesia", "South Africa", "Morocco", "Egypt", "Saudi Arabia", "Switzerland", "Netherlands", "Austria", "Sweden"];
+
+const empty = {
+  name: "", address: "", property_type: "", rooms: 1, suites: 0, bathrooms: 1,
+  city: "", country: "", notes: "", assigned_cohost: "",
+  owner_first_name: "", owner_last_name: "", owner_phone: "", owner_email: "",
+  units: 1, active: true,
+};
 
 export default function Properties() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
+  const [cohosts, setCohosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(empty);
@@ -27,31 +39,37 @@ export default function Properties() {
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
-  const fetchProperties = async () => {
+  const fetchData = async () => {
     try {
-      const res = await fetch(`${API}/api/properties`, { credentials: "include" });
-      if (res.ok) setProperties(await res.json());
+      const [propRes, cohostRes] = await Promise.all([
+        fetch(`${API}/api/properties`, { credentials: "include" }),
+        fetch(`${API}/api/staff/cohosts`, { credentials: "include" }),
+      ]);
+      if (propRes.ok) setProperties(await propRes.json());
+      if (cohostRes.ok) setCohosts(await cohostRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (user?.company_id) fetchProperties(); }, [user]);
+  useEffect(() => { if (user?.company_id) fetchData(); }, [user]); // eslint-disable-line
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const method = editing ? "PUT" : "POST";
       const url = editing ? `${API}/api/properties/${editing}` : `${API}/api/properties`;
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ ...form, units: parseInt(form.units) || 1 }) });
+      const body = {
+        ...form,
+        units: parseInt(form.units) || 1,
+        rooms: parseInt(form.rooms) || 0,
+        suites: parseInt(form.suites) || 0,
+        bathrooms: parseInt(form.bathrooms) || 0,
+        assigned_cohost: form.assigned_cohost || null,
+      };
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) });
       if (res.ok) {
         toast.success(editing ? "Property updated" : "Property created");
-        setDialogOpen(false);
-        setForm(empty);
-        setEditing(null);
-        fetchProperties();
-      } else {
-        const err = await res.json();
-        toast.error(err.detail || "Failed to save");
-      }
+        setDialogOpen(false); setForm(empty); setEditing(null); fetchData();
+      } else { const err = await res.json(); toast.error(err.detail || "Failed to save"); }
     } catch (err) { toast.error("Error saving property"); } finally { setSaving(false); }
   };
 
@@ -59,18 +77,31 @@ export default function Properties() {
     if (!window.confirm("Delete this property?")) return;
     try {
       const res = await fetch(`${API}/api/properties/${id}`, { method: "DELETE", credentials: "include" });
-      if (res.ok) { toast.success("Property deleted"); fetchProperties(); }
+      if (res.ok) { toast.success("Property deleted"); fetchData(); }
     } catch (err) { toast.error("Error deleting property"); }
   };
 
   const openEdit = (prop) => {
-    setForm({ name: prop.name, address: prop.address, owner_first_name: prop.owner_first_name, owner_last_name: prop.owner_last_name, owner_phone: prop.owner_phone, owner_email: prop.owner_email, units: prop.units, active: prop.active });
-    setEditing(prop.id);
-    setDialogOpen(true);
+    setForm({
+      name: prop.name, address: prop.address, property_type: prop.property_type || "",
+      rooms: prop.rooms || 0, suites: prop.suites || 0, bathrooms: prop.bathrooms || 0,
+      city: prop.city || "", country: prop.country || "", notes: prop.notes || "",
+      assigned_cohost: prop.assigned_cohost || "",
+      owner_first_name: prop.owner_first_name, owner_last_name: prop.owner_last_name,
+      owner_phone: prop.owner_phone, owner_email: prop.owner_email,
+      units: prop.units, active: prop.active,
+    });
+    setEditing(prop.id); setDialogOpen(true);
+  };
+
+  const getCohostName = (id) => {
+    const ch = cohosts.find(c => c.id === id);
+    return ch ? `${ch.first_name} ${ch.last_name}` : null;
   };
 
   if (authLoading || !user) return <div className="h-screen flex items-center justify-center bg-background"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   const isAdmin = user?.role === "company_admin";
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   return (
     <Layout>
@@ -101,20 +132,35 @@ export default function Properties() {
             {properties.map((prop) => (
               <Card key={prop.id} className="overflow-hidden hover:shadow-md transition-shadow" data-testid={`property-card-${prop.id}`}>
                 <div className="h-3 bg-primary" />
-                <CardContent className="p-5 space-y-4">
+                <CardContent className="p-5 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-heading font-semibold text-base">{prop.name}</h3>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3 w-3" />{prop.address}</p>
+                      {prop.property_type && <Badge variant="outline" className="text-xs mt-1">{prop.property_type}</Badge>}
                     </div>
                     <Badge variant={prop.active ? "default" : "secondary"}>{prop.active ? "Active" : "Inactive"}</Badge>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{prop.city && prop.country ? `${prop.city}, ${prop.country}` : prop.address}</p>
+                  <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><BedDouble className="h-3 w-3" />{prop.rooms || 0} Rooms</span>
+                    <span className="flex items-center gap-1"><BedDouble className="h-3 w-3" />{prop.suites || 0} Suites</span>
+                    <span className="flex items-center gap-1"><Bath className="h-3 w-3" />{prop.bathrooms || 0} Baths</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="flex items-center gap-1.5 text-muted-foreground"><User className="h-3.5 w-3.5" />{prop.owner_first_name} {prop.owner_last_name}</div>
                     <div className="flex items-center gap-1.5 text-muted-foreground"><Building2 className="h-3.5 w-3.5" />{prop.units} units</div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground"><Phone className="h-3.5 w-3.5" /><span className="truncate">{prop.owner_phone}</span></div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground"><Mail className="h-3.5 w-3.5" /><span className="truncate">{prop.owner_email}</span></div>
                   </div>
+                  {getCohostName(prop.assigned_cohost) && (
+                    <div className="flex items-center gap-1.5 text-xs bg-muted/50 rounded px-2 py-1.5">
+                      <UserCheck className="h-3.5 w-3.5 text-primary" />
+                      <span className="font-medium">Co-Host:</span> {getCohostName(prop.assigned_cohost)}
+                    </div>
+                  )}
+                  {prop.notes && (
+                    <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                      <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span className="line-clamp-2">{prop.notes}</span>
+                    </div>
+                  )}
                   {isAdmin && (
                     <div className="flex gap-2 pt-2 border-t">
                       <Button variant="outline" size="sm" onClick={() => openEdit(prop)} data-testid={`edit-property-${prop.id}`}><Pencil className="h-3.5 w-3.5 mr-1" />Edit</Button>
@@ -128,24 +174,68 @@ export default function Properties() {
         )}
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle className="font-heading">{editing ? "Edit Property" : "Add Property"}</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-2">
+              {/* Basic Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Property Name</Label><Input data-testid="prop-name-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Property name" /></div>
-                <div className="space-y-2"><Label>Units</Label><Input data-testid="prop-units-input" type="number" min="1" value={form.units} onChange={e => setForm(p => ({ ...p, units: e.target.value }))} /></div>
+                <div className="space-y-2"><Label>Property Name *</Label><Input data-testid="prop-name-input" value={form.name} onChange={e => set("name", e.target.value)} placeholder="Property name" /></div>
+                <div className="space-y-2">
+                  <Label>Property Type</Label>
+                  <Select value={form.property_type} onValueChange={v => set("property_type", v)}>
+                    <SelectTrigger data-testid="prop-type-select"><SelectValue placeholder="Select type..." /></SelectTrigger>
+                    <SelectContent>{PROPERTY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2"><Label>Address</Label><Input data-testid="prop-address-input" value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} placeholder="Full address" /></div>
+              {/* Rooms */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="space-y-2"><Label>Rooms</Label><Input data-testid="prop-rooms-input" type="number" min="0" value={form.rooms} onChange={e => set("rooms", e.target.value)} /></div>
+                <div className="space-y-2"><Label>Suites</Label><Input data-testid="prop-suites-input" type="number" min="0" value={form.suites} onChange={e => set("suites", e.target.value)} /></div>
+                <div className="space-y-2"><Label>Bathrooms</Label><Input data-testid="prop-bathrooms-input" type="number" min="0" value={form.bathrooms} onChange={e => set("bathrooms", e.target.value)} /></div>
+                <div className="space-y-2"><Label>Units</Label><Input data-testid="prop-units-input" type="number" min="1" value={form.units} onChange={e => set("units", e.target.value)} /></div>
+              </div>
+              {/* Location */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2"><Label>City</Label><Input data-testid="prop-city-input" value={form.city} onChange={e => set("city", e.target.value)} placeholder="City" /></div>
+                <div className="space-y-2">
+                  <Label>Country</Label>
+                  <Select value={form.country} onValueChange={v => set("country", v)}>
+                    <SelectTrigger data-testid="prop-country-select"><SelectValue placeholder="Select country..." /></SelectTrigger>
+                    <SelectContent>{COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2"><Label>Address</Label><Input data-testid="prop-address-input" value={form.address} onChange={e => set("address", e.target.value)} placeholder="Full address" /></div>
+              {/* Owner */}
+              <p className="text-sm font-medium text-muted-foreground pt-2 border-t">Owner Details</p>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Owner First Name</Label><Input data-testid="prop-owner-fn-input" value={form.owner_first_name} onChange={e => setForm(p => ({ ...p, owner_first_name: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>Owner Last Name</Label><Input data-testid="prop-owner-ln-input" value={form.owner_last_name} onChange={e => setForm(p => ({ ...p, owner_last_name: e.target.value }))} /></div>
+                <div className="space-y-2"><Label>First Name</Label><Input data-testid="prop-owner-fn-input" value={form.owner_first_name} onChange={e => set("owner_first_name", e.target.value)} /></div>
+                <div className="space-y-2"><Label>Last Name</Label><Input data-testid="prop-owner-ln-input" value={form.owner_last_name} onChange={e => set("owner_last_name", e.target.value)} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Owner Phone</Label><Input data-testid="prop-owner-phone-input" value={form.owner_phone} onChange={e => setForm(p => ({ ...p, owner_phone: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>Owner Email</Label><Input data-testid="prop-owner-email-input" value={form.owner_email} onChange={e => setForm(p => ({ ...p, owner_email: e.target.value }))} /></div>
+                <div className="space-y-2"><Label>Phone</Label><Input data-testid="prop-owner-phone-input" value={form.owner_phone} onChange={e => set("owner_phone", e.target.value)} /></div>
+                <div className="space-y-2"><Label>Email</Label><Input data-testid="prop-owner-email-input" value={form.owner_email} onChange={e => set("owner_email", e.target.value)} /></div>
+              </div>
+              {/* Co-Host */}
+              <div className="space-y-2">
+                <Label>Assigned Co-Host</Label>
+                <Select value={form.assigned_cohost} onValueChange={v => set("assigned_cohost", v)}>
+                  <SelectTrigger data-testid="prop-cohost-select"><SelectValue placeholder="Select co-host..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Co-Host</SelectItem>
+                    {cohosts.map(ch => <SelectItem key={ch.id} value={ch.id}>{ch.first_name} {ch.last_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {cohosts.length === 0 && <p className="text-xs text-muted-foreground">No co-hosts available. Add staff with the Co-Host role first.</p>}
+              </div>
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea data-testid="prop-notes-input" value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Additional notes about the property..." rows={3} />
               </div>
               <div className="flex items-center gap-3">
-                <Switch data-testid="prop-active-switch" checked={form.active} onCheckedChange={v => setForm(p => ({ ...p, active: v }))} />
+                <Switch data-testid="prop-active-switch" checked={form.active} onCheckedChange={v => set("active", v)} />
                 <Label>Active</Label>
               </div>
             </div>
