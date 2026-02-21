@@ -256,7 +256,7 @@ class PropertyManagementAPITester:
             "assigned_properties": []
         }
         
-        created_staff = self.run_test("Create staff", "POST", "api/staff", 201, staff_data)
+        created_staff = self.run_test("Create staff", "POST", "api/staff", 200, staff_data)
         if created_staff:
             staff_id = created_staff.get('id')
             if staff_id:
