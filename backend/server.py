@@ -531,7 +531,7 @@ async def list_bookings(user=Depends(get_current_user)):
         return []
     return await db.bookings.find({"company_id": company_id}, {"_id": 0}).sort("check_in", -1).to_list(1000)
 
-@api_router.post("/bookings")
+@api_router.post("/bookings", status_code=201)
 async def create_booking(data: BookingCreate, user=Depends(require_admin)):
     booking = {
         "id": f"book_{uuid.uuid4().hex[:12]}",
