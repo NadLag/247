@@ -77,8 +77,12 @@ class StaffCreate(BaseModel):
     last_name: str
     phone: str
     email: str
-    salary: float
-    payment_terms: str
+    salary: float = 0
+    payment_terms: str = "Monthly"
+    payment_type: str = "salary"
+    staff_role: str = "housekeeper"
+    per_checkin_rate: Optional[float] = None
+    per_checkout_rate: Optional[float] = None
     assigned_properties: List[str] = []
 
 class StaffUpdate(BaseModel):
@@ -88,6 +92,10 @@ class StaffUpdate(BaseModel):
     email: Optional[str] = None
     salary: Optional[float] = None
     payment_terms: Optional[str] = None
+    payment_type: Optional[str] = None
+    staff_role: Optional[str] = None
+    per_checkin_rate: Optional[float] = None
+    per_checkout_rate: Optional[float] = None
     assigned_properties: Optional[List[str]] = None
     active: Optional[bool] = None
 
