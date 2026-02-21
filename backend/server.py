@@ -727,7 +727,6 @@ async def list_bookings_by_status(user=Depends(get_current_user)):
         return {"checked_in_today": [], "upcoming": [], "confirmed": [], "checked_out": [], "cancelled": []}
     
     today = datetime.now(timezone.utc).isoformat()[:10]
-    tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()[:10]
     
     all_bookings = await db.bookings.find({"company_id": company_id}, {"_id": 0}).to_list(1000)
     
