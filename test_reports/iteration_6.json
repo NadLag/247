@@ -1,0 +1,98 @@
+{
+  "summary": "Tested 3 new features: OTA Mock Simulation (Airbnb, Booking.com, VRBO, Expedia), OTA Sync buttons on Properties and Bookings pages, and Invitation Email via Resend with email_sent tracking. Backend: 14/14 tests passed. Frontend: All UI components verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ota_invitations.py",
+    "/app/test_reports/pytest/pytest_ota_invitations.xml"
+  ],
+  "passed_tests": [
+    "✅ POST /api/ota/simulate-sync - creates mock bookings from random OTA sources (airbnb, booking.com, vrbo, expedia)",
+    "✅ POST /api/ota/simulate-property-sync/{property_id} - creates mock bookings for specific property (1-3 bookings)",
+    "✅ POST /api/ota/simulate-property-sync/{invalid_id} - returns 404 for invalid property",
+    "✅ GET /api/ota-sync-logs - returns sync logs with status (pending, completed, failed)",
+    "✅ GET /api/ota-sync-logs?status=completed - filters by status",
+    "✅ GET /api/ota-sync-logs?source=airbnb - filters by source",
+    "✅ POST /api/invitations - creates invitation with email_sent field (boolean)",
+    "✅ POST /api/invitations - owner role invitation works",
+    "✅ GET /api/invitations - shows email_sent status for each invitation",
+    "✅ POST /api/invitations/{id}/resend - queues invitation email for resend",
+    "✅ POST /api/invitations/{invalid_id}/resend - returns 404 for invalid invitation",
+    "✅ POST /api/invitations (duplicate) - returns 400 for duplicate pending email",
+    "✅ OTA sync creates bookings with ota_source field (booking has ota_source and ota_external_id)",
+    "✅ GET /api/bookings/by-status - includes OTA synced bookings in appropriate categories",
+    "✅ Frontend: Properties page 'Sync All OTA' button in header works",
+    "✅ Frontend: Properties page 'Sync OTA' button on each property card works",
+    "✅ Frontend: Toast shows 'Synced X bookings from OTAs' on sync success",
+    "✅ Frontend: Bookings page 'Sync OTA' button triggers simulation and refreshes data",
+    "✅ Frontend: Bookings display OTA source badge next to guest name (airbnb, booking.com, vrbo, expedia)",
+    "✅ Frontend: Invitations page has 'Email Sent' column (shows 'Sent' or 'Not sent' status)",
+    "✅ Frontend: Invitations page 'Resend' button (paper plane icon) triggers email resend",
+    "✅ Frontend: Toast shows 'Invitation email resent!' on resend success",
+    "✅ Frontend: Send Invitation dialog mentions 'An invitation email will be sent automatically'"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "OTA integrations are MOCKED - simulate-sync endpoints generate fake bookings, not real OTA connections",
+    "Resend email integration uses test API key (re_123456789) - emails not actually sent but flow is correct",
+    "email_sent field stays 'false' because Resend test key doesn't actually send emails"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ota_invitations.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100% (All UI features verified)"
+  },
+  "seed_data_creation": "Demo data seeded via /api/seed-demo-data endpoint. OTA simulate-sync added 40+ bookings with OTA sources.",
+  "test_credentials": {
+    "admin_session_token": "test_ota_session_1771708166483",
+    "company_id": "comp_ota_1771708166483"
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "New features verified: (1) OTA Mock Simulation creates fake bookings from Airbnb/Booking.com/VRBO/Expedia with realistic guest names, dates, and amounts. (2) Properties page has 'Sync All OTA' button in header and 'Sync OTA' on each card. (3) Bookings page has 'Sync OTA' button and displays OTA source badges on bookings. (4) Invitations now have email_sent tracking field and resend email capability via /api/invitations/{id}/resend endpoint.",
+  "features_tested": {
+    "ota_mock_simulation": {
+      "endpoints": [
+        "POST /api/ota/simulate-sync",
+        "POST /api/ota/simulate-property-sync/{property_id}",
+        "GET /api/ota-sync-logs"
+      ],
+      "ota_sources": ["airbnb", "booking.com", "vrbo", "expedia"],
+      "booking_fields": ["guest_name", "check_in", "check_out", "total_amount", "guests_count", "ota_source", "ota_external_id"],
+      "mocked": true
+    },
+    "ota_ui_buttons": {
+      "properties_page": {
+        "sync_all_ota_btn": "[data-testid='sync-all-ota-btn']",
+        "sync_property_btn": "[data-testid='sync-property-{prop_id}']"
+      },
+      "bookings_page": {
+        "sync_ota_btn": "[data-testid='ota-sync-btn']",
+        "ota_source_badge": "Displays next to guest name in table"
+      }
+    },
+    "invitation_email": {
+      "endpoint_create": "POST /api/invitations (creates invitation, triggers background email)",
+      "endpoint_resend": "POST /api/invitations/{id}/resend (resends invitation email)",
+      "new_field": "email_sent (boolean) - tracks if email was sent",
+      "ui_column": "'Email Sent' column shows 'Sent' (blue) or 'Not sent' (amber) badge",
+      "resend_button": "Paper plane icon in Actions column",
+      "dialog_notice": "Shows 'An invitation email will be sent automatically with a link to join your organization'",
+      "resend_configured": true,
+      "using_test_key": true
+    }
+  },
+  "mocked_integrations": {
+    "ota_sync": "Fully MOCKED - generates random bookings, not connected to real OTAs",
+    "resend_email": "Configured with test API key (re_123456789) - flow works but emails not actually delivered"
+  }
+}
