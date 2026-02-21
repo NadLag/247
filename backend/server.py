@@ -839,6 +839,143 @@ async def stripe_webhook(request: Request):
         logger.error(f"Webhook error: {e}")
         return {"status": "error", "detail": str(e)}
 
+# ===== OTA SYNC WEBHOOK =====
+async def process_ota_sync(log_id: str, event: OTASyncEvent, company_id: str):
+    """Background task to process OTA sync events"""
+    try:
+        logger.info(f"Processing OTA sync: {event.source} - {event.event_type}")
+        
+        if event.event_type == "booking_created":
+            # Create a new booking from OTA data
+            booking_data = event.data
+            booking = {
+                "id": f"book_{uuid.uuid4().hex[:12]}",
+                "company_id": company_id,
+                "property_id": event.property_id,
+                "guest_name": booking_data.get("guest_name", "OTA Guest"),
+                "check_in": booking_data.get("check_in"),
+                "check_out": booking_data.get("check_out"),
+                "total_amount": booking_data.get("total_amount", 0),
+                "guests_count": booking_data.get("guests_count", 1),
+                "status": "confirmed",
+                "ota_source": event.source,
+                "ota_external_id": event.external_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            await db.bookings.insert_one(booking)
+            await db.ota_sync_logs.update_one(
+                {"id": log_id},
+                {"$set": {"status": "completed", "message": f"Booking {booking['id']} created", "processed_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+        elif event.event_type == "booking_updated":
+            # Update existing booking
+            if event.external_id:
+                existing = await db.bookings.find_one({"ota_external_id": event.external_id, "company_id": company_id}, {"_id": 0})
+                if existing:
+                    update_data = {k: v for k, v in event.data.items() if k in ["check_in", "check_out", "total_amount", "guests_count"]}
+                    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+                    await db.bookings.update_one({"id": existing["id"]}, {"$set": update_data})
+                    await db.ota_sync_logs.update_one(
+                        {"id": log_id},
+                        {"$set": {"status": "completed", "message": f"Booking {existing['id']} updated", "processed_at": datetime.now(timezone.utc).isoformat()}}
+                    )
+                else:
+                    await db.ota_sync_logs.update_one(
+                        {"id": log_id},
+                        {"$set": {"status": "failed", "message": "Booking not found for update", "processed_at": datetime.now(timezone.utc).isoformat()}}
+                    )
+                    
+        elif event.event_type == "booking_cancelled":
+            if event.external_id:
+                result = await db.bookings.update_one(
+                    {"ota_external_id": event.external_id, "company_id": company_id},
+                    {"$set": {"status": "cancelled", "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+                if result.modified_count > 0:
+                    await db.ota_sync_logs.update_one(
+                        {"id": log_id},
+                        {"$set": {"status": "completed", "message": "Booking cancelled", "processed_at": datetime.now(timezone.utc).isoformat()}}
+                    )
+                else:
+                    await db.ota_sync_logs.update_one(
+                        {"id": log_id},
+                        {"$set": {"status": "failed", "message": "Booking not found for cancellation", "processed_at": datetime.now(timezone.utc).isoformat()}}
+                    )
+                    
+        elif event.event_type == "availability_sync":
+            # Just log availability sync requests for now
+            await db.ota_sync_logs.update_one(
+                {"id": log_id},
+                {"$set": {"status": "completed", "message": "Availability sync acknowledged", "processed_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        else:
+            await db.ota_sync_logs.update_one(
+                {"id": log_id},
+                {"$set": {"status": "failed", "message": f"Unknown event type: {event.event_type}", "processed_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+    except Exception as e:
+        logger.error(f"OTA sync processing error: {e}")
+        await db.ota_sync_logs.update_one(
+            {"id": log_id},
+            {"$set": {"status": "failed", "message": str(e), "processed_at": datetime.now(timezone.utc).isoformat()}}
+        )
+
+@api_router.post("/ota-webhook/{company_id}")
+async def ota_sync_webhook(company_id: str, event: OTASyncEvent, background_tasks: BackgroundTasks, request: Request):
+    """Receive sync events from OTAs (Airbnb, Booking.com, VRBO, etc.)"""
+    # Validate company exists
+    company = await db.companies.find_one({"company_id": company_id}, {"_id": 0})
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Validate property if provided
+    if event.property_id:
+        prop = await db.properties.find_one({"id": event.property_id, "company_id": company_id}, {"_id": 0})
+        if not prop:
+            raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Create sync log
+    log_id = f"ota_{uuid.uuid4().hex[:12]}"
+    sync_log = {
+        "id": log_id,
+        "company_id": company_id,
+        "source": event.source,
+        "property_id": event.property_id,
+        "event_type": event.event_type,
+        "external_id": event.external_id,
+        "data": event.data,
+        "status": "pending",
+        "message": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "processed_at": None,
+    }
+    await db.ota_sync_logs.insert_one(sync_log)
+    
+    # Process in background
+    background_tasks.add_task(process_ota_sync, log_id, event, company_id)
+    
+    return {"status": "received", "log_id": log_id}
+
+@api_router.get("/ota-sync-logs")
+async def list_ota_sync_logs(
+    user=Depends(require_admin),
+    status: Optional[str] = None,
+    source: Optional[str] = None,
+    limit: int = 50
+):
+    """List OTA sync logs for the company"""
+    query = {"company_id": user["company_id"]}
+    if status:
+        query["status"] = status
+    if source:
+        query["source"] = source
+    
+    logs = await db.ota_sync_logs.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    return logs
+
 # ===== SEED DATA =====
 @api_router.post("/seed-demo-data")
 async def seed_demo_data(user=Depends(require_admin)):
