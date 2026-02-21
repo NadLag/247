@@ -163,6 +163,47 @@ class OTASyncLogResponse(BaseModel):
     message: Optional[str] = None
     created_at: str
 
+# ===== SERVICE MODELS =====
+class ServiceCreate(BaseModel):
+    name: str
+    description: str = ""
+    category: str  # airport_transfer, meals, excursions, cleaning, spa, tours, other
+    price: float = 0
+    price_type: str = "fixed"  # fixed, per_person, per_hour
+    provider_type: str = "internal"  # internal (staff) or external (third-party)
+    assigned_staff_id: Optional[str] = None
+    external_provider_name: Optional[str] = None
+    external_provider_phone: Optional[str] = None
+    external_provider_email: Optional[str] = None
+    active: bool = True
+
+class ServiceUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    price: Optional[float] = None
+    price_type: Optional[str] = None
+    provider_type: Optional[str] = None
+    assigned_staff_id: Optional[str] = None
+    external_provider_name: Optional[str] = None
+    external_provider_phone: Optional[str] = None
+    external_provider_email: Optional[str] = None
+    active: Optional[bool] = None
+
+class BookingServiceCreate(BaseModel):
+    booking_id: str
+    service_id: str
+    quantity: int = 1
+    notes: Optional[str] = None
+    scheduled_date: Optional[str] = None
+    status: str = "pending"  # pending, confirmed, completed, cancelled
+
+class BookingServiceUpdate(BaseModel):
+    quantity: Optional[int] = None
+    notes: Optional[str] = None
+    scheduled_date: Optional[str] = None
+    status: Optional[str] = None
+
 SUBSCRIPTION_EXEMPT_PATHS = ["/api/auth/", "/api/subscription/", "/api/companies/", "/api/webhook/", "/api/invitations/validate/", "/api/seed-demo-data"]
 
 SUBSCRIPTION_PLANS = {
