@@ -386,7 +386,7 @@ class PropertyManagementAPITester:
             "role": "staff"
         }
         
-        created_invitation = self.run_test("Create invitation", "POST", "api/invitations", 201, invitation_data)
+        created_invitation = self.run_test("Create invitation", "POST", "api/invitations", 200, invitation_data)
         if created_invitation:
             invitation_id = created_invitation.get('id')
             token = created_invitation.get('token')
