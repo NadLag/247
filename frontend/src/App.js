@@ -1,53 +1,56 @@
-import { useEffect } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import AuthCallback from "@/components/AuthCallback";
+import LandingPage from "@/pages/LandingPage";
+import Dashboard from "@/pages/Dashboard";
+import Properties from "@/pages/Properties";
+import StaffPage from "@/pages/Staff";
+import Expenses from "@/pages/Expenses";
+import Invitations from "@/pages/Invitations";
+import Billing from "@/pages/Billing";
+import Settings from "@/pages/Settings";
+import Bookings from "@/pages/Bookings";
+import InviteAccept from "@/pages/InviteAccept";
+import { Toaster } from "@/components/ui/sonner";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+function AppRouter() {
+  const location = useLocation();
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+  // CRITICAL: Check URL fragment for session_id synchronously during render
+  // This prevents race conditions by processing new session_id FIRST
+  if (location.hash?.includes("session_id=")) {
+    return <AuthCallback />;
+  }
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/properties" element={<Properties />} />
+      <Route path="/staff" element={<StaffPage />} />
+      <Route path="/expenses" element={<Expenses />} />
+      <Route path="/bookings" element={<Bookings />} />
+      <Route path="/invitations" element={<Invitations />} />
+      <Route path="/billing" element={<Billing />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/invite/:token" element={<InviteAccept />} />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
-};
+}
 
 function App() {
   return (
-    <div className="App">
+    <ThemeProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <AppRouter />
+          <Toaster richColors position="top-right" />
+        </AuthProvider>
       </BrowserRouter>
-    </div>
+    </ThemeProvider>
   );
 }
 
