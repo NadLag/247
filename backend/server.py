@@ -495,7 +495,7 @@ async def list_expenses(
         query["date"] = date_q
     return await db.expenses.find(query, {"_id": 0}).to_list(1000)
 
-@api_router.post("/expenses")
+@api_router.post("/expenses", status_code=201)
 async def create_expense(data: ExpenseCreate, user=Depends(require_admin)):
     expense = {
         "id": f"exp_{uuid.uuid4().hex[:12]}",
