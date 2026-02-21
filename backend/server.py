@@ -440,7 +440,7 @@ async def list_staff(user=Depends(get_current_user)):
         return await db.staff.find({"company_id": company_id, "email": user["email"]}, {"_id": 0}).to_list(10)
     return await db.staff.find({"company_id": company_id}, {"_id": 0}).to_list(1000)
 
-@api_router.post("/staff")
+@api_router.post("/staff", status_code=201)
 async def create_staff(data: StaffCreate, user=Depends(require_admin)):
     staff = {
         "id": f"staff_{uuid.uuid4().hex[:12]}",
