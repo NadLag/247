@@ -26,6 +26,94 @@ const empty = {
   units: 1, active: true,
 };
 
+function PropertyCard({ prop, isAdmin, onEdit, onDelete, getCohostName }) {
+  return (
+    <Card className="overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col" data-testid={`property-card-${prop.id}`}>
+      <div className="h-2 bg-primary shrink-0" />
+      <CardContent className="p-5 flex flex-col flex-1">
+        {/* Header - Fixed height section */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-heading font-semibold text-base truncate">{prop.name}</h3>
+            {prop.property_type && (
+              <Badge variant="outline" className="text-xs mt-1">{prop.property_type}</Badge>
+            )}
+          </div>
+          <Badge variant={prop.active ? "default" : "secondary"} className="shrink-0">
+            {prop.active ? "Active" : "Inactive"}
+          </Badge>
+        </div>
+
+        {/* Location */}
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+          <MapPin className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">
+            {prop.city && prop.country ? `${prop.city}, ${prop.country}` : prop.address || "No location set"}
+          </span>
+        </div>
+
+        {/* Room stats - Fixed grid */}
+        <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-3 pb-3 border-b">
+          <div className="flex items-center gap-1">
+            <BedDouble className="h-3.5 w-3.5 shrink-0" />
+            <span>{prop.rooms || 0} Rooms</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <BedDouble className="h-3.5 w-3.5 shrink-0" />
+            <span>{prop.suites || 0} Suites</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Bath className="h-3.5 w-3.5 shrink-0" />
+            <span>{prop.bathrooms || 0} Baths</span>
+          </div>
+        </div>
+
+        {/* Owner & Units - Fixed grid */}
+        <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+          <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
+            <User className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{prop.owner_first_name} {prop.owner_last_name}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Building2 className="h-3.5 w-3.5 shrink-0" />
+            <span>{prop.units} unit{prop.units !== 1 ? "s" : ""}</span>
+          </div>
+        </div>
+
+        {/* Flexible content area - grows to fill space */}
+        <div className="flex-1 space-y-2 min-h-[48px]">
+          {getCohostName(prop.assigned_cohost) && (
+            <div className="flex items-center gap-1.5 text-xs bg-primary/5 rounded-md px-2.5 py-2 border border-primary/10">
+              <UserCheck className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="truncate">
+                <span className="font-medium">Co-Host:</span> {getCohostName(prop.assigned_cohost)}
+              </span>
+            </div>
+          )}
+          {prop.notes && (
+            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span className="line-clamp-2">{prop.notes}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Actions - Fixed at bottom */}
+        {isAdmin && (
+          <div className="flex gap-2 pt-3 mt-auto border-t">
+            <Button variant="outline" size="sm" className="flex-1" onClick={() => onEdit(prop)} data-testid={`edit-property-${prop.id}`}>
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+            </Button>
+            <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/5" onClick={() => onDelete(prop.id)} data-testid={`delete-property-${prop.id}`}>
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Properties() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -119,56 +207,37 @@ export default function Properties() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1,2,3].map(i => <Card key={i}><CardContent className="p-6 h-48 animate-pulse bg-muted" /></Card>)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1,2,3].map(i => (
+              <Card key={i} className="h-[280px]">
+                <CardContent className="p-6 h-full animate-pulse bg-muted rounded-lg" />
+              </Card>
+            ))}
           </div>
         ) : properties.length === 0 ? (
-          <Card className="border-dashed"><CardContent className="p-12 text-center">
-            <Building2 className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No properties yet</p>
-          </CardContent></Card>
+          <Card className="border-dashed">
+            <CardContent className="p-12 text-center">
+              <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="font-heading font-semibold text-lg mb-1">No properties yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">Add your first property to get started</p>
+              {isAdmin && (
+                <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }}>
+                  <Plus className="mr-2 h-4 w-4" /> Add Property
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {properties.map((prop) => (
-              <Card key={prop.id} className="overflow-hidden hover:shadow-md transition-shadow" data-testid={`property-card-${prop.id}`}>
-                <div className="h-3 bg-primary" />
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-heading font-semibold text-base">{prop.name}</h3>
-                      {prop.property_type && <Badge variant="outline" className="text-xs mt-1">{prop.property_type}</Badge>}
-                    </div>
-                    <Badge variant={prop.active ? "default" : "secondary"}>{prop.active ? "Active" : "Inactive"}</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{prop.city && prop.country ? `${prop.city}, ${prop.country}` : prop.address}</p>
-                  <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><BedDouble className="h-3 w-3" />{prop.rooms || 0} Rooms</span>
-                    <span className="flex items-center gap-1"><BedDouble className="h-3 w-3" />{prop.suites || 0} Suites</span>
-                    <span className="flex items-center gap-1"><Bath className="h-3 w-3" />{prop.bathrooms || 0} Baths</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center gap-1.5 text-muted-foreground"><User className="h-3.5 w-3.5" />{prop.owner_first_name} {prop.owner_last_name}</div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground"><Building2 className="h-3.5 w-3.5" />{prop.units} units</div>
-                  </div>
-                  {getCohostName(prop.assigned_cohost) && (
-                    <div className="flex items-center gap-1.5 text-xs bg-muted/50 rounded px-2 py-1.5">
-                      <UserCheck className="h-3.5 w-3.5 text-primary" />
-                      <span className="font-medium">Co-Host:</span> {getCohostName(prop.assigned_cohost)}
-                    </div>
-                  )}
-                  {prop.notes && (
-                    <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                      <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span className="line-clamp-2">{prop.notes}</span>
-                    </div>
-                  )}
-                  {isAdmin && (
-                    <div className="flex gap-2 pt-2 border-t">
-                      <Button variant="outline" size="sm" onClick={() => openEdit(prop)} data-testid={`edit-property-${prop.id}`}><Pencil className="h-3.5 w-3.5 mr-1" />Edit</Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(prop.id)} className="text-destructive hover:text-destructive" data-testid={`delete-property-${prop.id}`}><Trash2 className="h-3.5 w-3.5 mr-1" />Delete</Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <PropertyCard 
+                key={prop.id}
+                prop={prop}
+                isAdmin={isAdmin}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+                getCohostName={getCohostName}
+              />
             ))}
           </div>
         )}
