@@ -183,10 +183,22 @@ export default function Bookings() {
   const handleOTASync = async () => {
     setSyncing(true);
     try {
-      // This would trigger a manual OTA sync - for now just refresh
-      toast.info("Checking for OTA updates...");
-      await fetchData();
-      toast.success("Bookings refreshed");
+      toast.info("Simulating OTA sync...");
+      const res = await fetch(`${API}/api/ota/simulate-sync`, { 
+        method: "POST", 
+        credentials: "include" 
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.synced > 0) {
+          toast.success(`Synced ${data.synced} bookings from OTAs`);
+        } else {
+          toast.info("No new bookings from OTAs");
+        }
+        await fetchData();
+      } else {
+        toast.error("Sync failed");
+      }
     } catch (err) {
       toast.error("Sync failed");
     } finally {
