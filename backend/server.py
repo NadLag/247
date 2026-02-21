@@ -557,7 +557,7 @@ async def update_booking(booking_id: str, data: BookingUpdate, user=Depends(requ
 async def list_invitations(user=Depends(require_admin)):
     return await db.invitations.find({"company_id": user["company_id"]}, {"_id": 0}).to_list(1000)
 
-@api_router.post("/invitations")
+@api_router.post("/invitations", status_code=201)
 async def create_invitation(data: InvitationCreate, user=Depends(require_admin)):
     if data.role not in ["owner", "staff"]:
         raise HTTPException(status_code=400, detail="Role must be 'owner' or 'staff'")
