@@ -566,6 +566,17 @@ class PropertyManagementAPITester:
             
         self.run_test("Seed demo data", "POST", "api/seed-demo-data", 200)
 
+    def cleanup_test_data(self):
+        """Clean up test data"""
+        print("\n🔍 Cleaning up test data...")
+        
+        # Clean up in reverse order of creation
+        if hasattr(self, 'test_property_id'):
+            self.run_test("Delete test property", "DELETE", f"api/properties/{self.test_property_id}", 200)
+        
+        if hasattr(self, 'test_cohost_id'):
+            self.run_test("Delete test co-host", "DELETE", f"api/staff/{self.test_cohost_id}", 200)
+
     def run_all_tests(self):
         """Run all tests"""
         print("🚀 Starting Property Management API Tests...")
