@@ -5,7 +5,7 @@ from datetime import datetime
 import time
 
 class PropertyManagementAPITester:
-    def __init__(self, base_url="https://revenue-dashboard-38.preview.emergentagent.com"):
+    def __init__(self, base_url="https://booking-hub-169.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.user_id = None

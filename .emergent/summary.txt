@@ -1,0 +1,182 @@
+<analysis>**original_problem_statement:**
+The user wants to build a multi-tenant Property & Hospitality Management SaaS platform.
+
+**Phase 1 requirements (Initial Build):**
+- **Authentication:** Google OAuth 2.0 with a session-based backend, designed for future migration to JWT.
+- **Public Page:** A landing page with a clear headline (Smart Property Operations. Financial Clarity in Real Time.) and Sign In/Up with Google CTAs.
+- **Architecture:** Multi-tenant with a shared database, using a  for row-level data isolation on all tables.
+- **RBAC:** Three roles: Company Admin (full control), Owner (view-only financials), and Staff (task-oriented view).
+- **Dashboard:** KPIs for Admins (Revenue, Occupancy, etc.) and a Staff Payments Due widget.
+- **Modules:** CRUD functionality for Properties, Staff (with assignments), and Expenses (Fixed/Variable).
+- **Invitations:** Admins must invite Owners and Staff via secure, one-time links.
+- **Integrations:** Stripe for subscriptions with webhook listeners and status validation middleware.
+- **Infrastructure:** Must be cloud-native, Dockerized, and scalable.
+
+**Subsequent Feature Requests (Implemented):**
+1.  **Properties Form:** Add fields for property type, rooms, suites, bathrooms, city, country, notes, and assigned co-host.
+2.  **Staff Form:** Add payment terms (per job, salary, commission), specific roles (Housekeeper, Co-Host), and conditional pay rates for Co-Hosts.
+3.  **Bookings Form:** Auto-calculate nights from check-in/out dates, add guest count, and assign a co-host.
+4.  **Invitations Page:** Change the invite input from a manual email field to a dropdown selector for existing staff and owners.
+
+**User's preferred language**: English
+
+**what currently exists?**
+A full-stack application has been built from scratch based on the user's initial problem statement. It features a React frontend, a FastAPI backend, and a MongoDB database. The core functionalities including Google OAuth for authentication, a multi-tenant data structure, and role-based access control (RBAC) foundation are in place. The UI for the landing page, dashboard, and modules for Properties, Staff, Bookings, and Expenses have been created.
+
+All four of the user's subsequent modification requests have also been successfully implemented and verified via automated testing and manual screenshot verification. The application supports both light and dark modes.
+
+**Last working item**:
+- **Last item agent was working:** The agent began implementing three new features requested by the user:
+    1.  Owner-specific and Staff-specific dashboard views (currently only an Admin view exists).
+    2.  An OTA (Online Travel Agency) Sync webhook endpoint with a background job processor.
+    3.  A Stripe subscription status validation middleware to auto-lock the platform for inactive subscriptions.
+    The agent had started creating the necessary backend models (, ) and API endpoints in  before being interrupted by a new set of user requests.
+- **Status:** IN PROGRESS
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** both
+- **User Testing Done:** N
+
+**All Pending/In progress Issue list**:
+There are no known bugs or issues. The pending work consists of new feature requests.
+
+**In progress Task List**:
+These are the tasks the agent was working on before being interrupted. The user's latest message suggests these might be superseded, which needs clarification.
+
+- **Task 1: Implement role-specific dashboards (Owner/Staff)**
+    - **Where to resume:** Continue building out the logic in  to return different KPI data based on the logged-in user's role. Create corresponding frontend components on the dashboard page () to render the role-specific views.
+    - **What will be achieved with this?** Users with Owner and Staff roles will see a dashboard tailored to their permissions, as defined in the PRD, instead of the current admin-only view.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** both
+    - **Blocked on something:** User clarification on priority vs. the newest requests.
+
+- **Task 2: Implement OTA Sync Webhook**
+    - **Where to resume:** The agent created a  model. The next step is to complete the  endpoint logic in  to process incoming data, and implement a background job processor (e.g., using FastAPI's ).
+    - **What will be achieved with this?** The system will have an endpoint to receive synchronization data from external OTAs, with logging for tracking and debugging.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** backend
+    - **Blocked on something:** User clarification on priority.
+
+- **Task 3: Build Subscription Status Middleware**
+    - **Where to resume:** The agent created a  model. The next step is to write the FastAPI middleware in  that checks a user's company subscription status on relevant API calls and returns an error if the subscription is inactive.
+    - **What will be achieved with this?** The platform will be able to restrict access for companies with lapsed Stripe subscriptions.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** backend
+    - **Blocked on something:** User clarification on priority.
+
+**Upcoming and Future Tasks**
+The user provided a new list of tasks, interrupting the agent. These are now the highest priority.
+
+**Upcoming Tasks:**
+-   **P0: Redesign Bookings Page:** Split the bookings page into four filterable sections: Checked-in Today, Upcoming, Confirmed, Checked-out, and Cancelled. This will likely involve changes to  and potentially a new backend endpoint to fetch bookings by status.
+-   **P1: Create a Services Page:** Add a new page and corresponding backend functionality to manage services offered (e.g., Airport Transfer, Meals, Excursions). It should be possible to assign these services to staff members or third-party providers.
+-   **P2: Create an Analytics Page:** Build a new page to visualize earnings, performance, and other data with graphs, filterable by month, year, and property. This will require new backend aggregation endpoints and a frontend page with charting libraries.
+
+**Future Tasks (from original PRD):**
+-   JWT authentication migration
+-   AI revenue forecasting
+-   Multi-currency support
+-   Multi-language support
+-   Automated owner payouts
+-   Smart expense categorization
+
+**Completed work in this session**
+- **Full Application Scaffolding:**
+  - Implemented Google OAuth 2.0 with a session-based flow.
+  - Created a multi-tenant architecture with  isolation.
+  - Built the public landing page.
+  - Set up backend structure in  with models and API endpoints for all core modules.
+  - Developed the frontend structure with pages for Dashboard, Properties, Staff, Bookings, Expenses, and Invitations in .
+- **User-Requested Modifications (All Done & Verified):**
+  - **Properties Form:** Added type, rooms, suites, bathrooms, location, and co-host fields.
+  - **Staff Form:** Added detailed payment terms and role-specific options.
+  - **Bookings Form:** Implemented auto-calculation for nights and added guest/co-host fields.
+  - **Invitations UI:** Replaced manual input with a dropdown selector of existing users.
+
+**Earlier issues found/mentioned but not fixed**
+None.
+
+**Known issue recurrence from previous fork**
+None. This is the first session.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Backend:** FastAPI, MongoDB (using ),  for Google OAuth.
+-   **Frontend:** React, Tailwind CSS,  for API calls.
+-   **UI Library:** Shadcn/UI components.
+-   **Authentication:** Session-based authentication via HTTP-only cookies.
+-   **Architecture:** Full-stack, multi-tenant SaaS.
+
+**key DB schema**
+-   **users:** 
+-   **properties:** 
+-   **staff:** 
+-   **bookings:** 
+-   **expenses:** 
+-   **invitations:** 
+-   **subscriptions:**  (In Progress)
+-   **ota_sync_logs:**  (In Progress)
+
+**changes in tech stack**
+None.
+
+**All files of reference**
+-   : Contains all backend logic, including models, API routes, and authentication flow.
+-   : Contains the UI for each feature (e.g., , ).
+-   : Defines the application's routes and theme.
+-   : Contains the product requirements document.
+-   : The report from the last successful test run.
+
+**Areas that need refactoring**:
+-   The  file has become a monolith containing all models, routes, and business logic. It should be refactored into a more organized structure with separate directories for , , and  to improve maintainability.
+
+**key api endpoints**
+-   , , , 
+-   
+-    (GET, POST, PUT, DELETE)
+-    (GET, POST, PUT, DELETE)
+-    (GET)
+-    (GET, POST)
+-    (GET, POST)
+-    (GET, POST)
+-    (POST, In Progress)
+
+**Critical Info for New Agent**
+The user has provided conflicting instructions. The agent was actively working on implementing role-based dashboards, OTA sync, and subscription middleware (). However, the user's very last message introduced a completely new set of high-priority tasks ().
+
+Your first action should be to clarify with the user which set of tasks to prioritize. It's recommended to address the latest user request (Booking page redesign, Services page, Analytics page) first, as it is the most recent instruction.
+
+**documents and test reports created in this job**
+-   
+-   
+-   
+-   
+-   
+-   
+
+**Last 10 User Messages and any pending HUMAN messages**
+-   **User (Msg 148, 150, 151):** Requested implementation of Owner/Staff dashboards, OTA sync webhook, and subscription middleware. (In Progress)
+-   **User (Msg 153, 155):** Interrupted the agent and requested a new set of features: redesign the booking page into status sections, add a Services page, and add an Analytics page. (New, P0 priority)
+-   **Pending HUMAN message:** The agent needs to clarify which set of features to work on next. The tasks from message 153 should be considered the highest priority unless the user states otherwise.
+
+**Project Health Check:**
+-   **Working:** The application is fully functional with all features completed up to the first set of modifications.
+-   **Broken:** Nothing is broken.
+-   **Mocked:** No mocked components.
+
+**3rd Party Integrations**
+-   **Google OAuth 2.0:** Integrated for user authentication using the  library.
+-   **Stripe:** Scaffolding is in place, but the subscription validation middleware is still in progress.
+
+**Testing status**
+-   **Testing agent used after significant changes:** YES ( was run twice).
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** None. Testing was done via the testing agent and manual verification.
+-   **Known regressions:** None.
+
+**Credentials to test flow:**
+Use the Sign in with Google button on the landing page. The Google OAuth flow will handle authentication. A test user () was used previously, and you can follow the same flow to create a new test user if needed.
+
+**What agent forgot to execute**
+The agent did not forget anything but was interrupted mid-task by the user. The work on role-based dashboards, OTA sync, and subscription middleware is incomplete because the user provided a new, superseding set of requirements.</analysis>
