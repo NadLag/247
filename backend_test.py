@@ -593,15 +593,20 @@ class PropertyManagementAPITester:
             self.test_company_endpoints()
             self.test_dashboard_endpoints()
             
-            # CRUD operations
+            # CRUD operations with new fields
             self.test_properties_crud()
-            self.test_staff_crud() 
+            self.test_staff_crud()
+            self.test_cohosts_endpoint()
+            self.test_property_cohost_assignment()
             self.test_expenses_crud()
             self.test_bookings_crud()
             self.test_invitations_crud()
             
             # Seed data
             self.test_seed_demo_data()
+            
+            # Clean up test data
+            self.cleanup_test_data()
         else:
             print("❌ Skipping authenticated tests due to user creation failure")
         
