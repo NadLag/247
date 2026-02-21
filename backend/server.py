@@ -402,7 +402,7 @@ async def list_properties(user=Depends(get_current_user)):
     properties = await db.properties.find(query, {"_id": 0}).to_list(1000)
     return properties
 
-@api_router.post("/properties")
+@api_router.post("/properties", status_code=201)
 async def create_property(data: PropertyCreate, user=Depends(require_admin)):
     prop = {
         "id": f"prop_{uuid.uuid4().hex[:12]}",
