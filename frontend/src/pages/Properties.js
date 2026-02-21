@@ -247,9 +247,15 @@ export default function Properties() {
             <p className="text-sm text-muted-foreground mt-1">{properties.length} properties</p>
           </div>
           {isAdmin && (
-            <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-property-btn">
-              <Plus className="mr-2 h-4 w-4" /> Add Property
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleOTASyncAll} disabled={syncingAll} data-testid="sync-all-ota-btn">
+                <RefreshCw className={`mr-2 h-4 w-4 ${syncingAll ? "animate-spin" : ""}`} />
+                {syncingAll ? "Syncing..." : "Sync All OTA"}
+              </Button>
+              <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-property-btn">
+                <Plus className="mr-2 h-4 w-4" /> Add Property
+              </Button>
+            </div>
           )}
         </div>
 
