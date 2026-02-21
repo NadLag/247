@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
@@ -19,35 +19,77 @@ export default function Invitations() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [invitations, setInvitations] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [email, setEmail] = useState("");
   const [role, setRole] = useState("staff");
+  const [selectedPerson, setSelectedPerson] = useState("");
+  const [manualEmail, setManualEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
   useEffect(() => { if (!authLoading && user && user.role !== "company_admin") navigate("/dashboard"); }, [user, authLoading, navigate]);
 
-  const fetchInvitations = async () => {
+  const fetchData = async () => {
     try {
-      const res = await fetch(`${API}/api/invitations`, { credentials: "include" });
-      if (res.ok) setInvitations(await res.json());
+      const [invRes, staffRes, propRes] = await Promise.all([
+        fetch(`${API}/api/invitations`, { credentials: "include" }),
+        fetch(`${API}/api/staff`, { credentials: "include" }),
+        fetch(`${API}/api/properties`, { credentials: "include" }),
+      ]);
+      if (invRes.ok) setInvitations(await invRes.json());
+      if (staffRes.ok) setStaff(await staffRes.json());
+      if (propRes.ok) setProperties(await propRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (user?.company_id) fetchInvitations(); }, [user]);
+  useEffect(() => { if (user?.company_id) fetchData(); }, [user]); // eslint-disable-line
+
+  // Build unique owners from properties
+  const owners = useMemo(() => {
+    const map = new Map();
+    properties.forEach(p => {
+      if (p.owner_email) {
+        const key = p.owner_email;
+        if (!map.has(key)) {
+          map.set(key, { email: p.owner_email, name: `${p.owner_first_name} ${p.owner_last_name}`, properties: [p.name] });
+        } else {
+          map.get(key).properties.push(p.name);
+        }
+      }
+    });
+    return Array.from(map.values());
+  }, [properties]);
+
+  // People list based on role
+  const people = useMemo(() => {
+    if (role === "staff") {
+      return staff.map(s => ({ id: s.id, name: `${s.first_name} ${s.last_name}`, email: s.email, detail: s.staff_role?.replace("_", " ") || "" }));
+    }
+    return owners.map((o, i) => ({ id: `owner_${i}`, name: o.name, email: o.email, detail: o.properties.join(", ") }));
+  }, [role, staff, owners]);
+
+  const resolvedEmail = useMemo(() => {
+    if (selectedPerson && selectedPerson !== "manual") {
+      const person = people.find(p => p.id === selectedPerson);
+      return person?.email || "";
+    }
+    return manualEmail;
+  }, [selectedPerson, manualEmail, people]);
 
   const handleCreate = async () => {
+    if (!resolvedEmail) { toast.error("Email is required"); return; }
     setSaving(true);
     try {
       const res = await fetch(`${API}/api/invitations`, {
         method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
-        body: JSON.stringify({ email, role }),
+        body: JSON.stringify({ email: resolvedEmail, role }),
       });
       if (res.ok) {
         toast.success("Invitation created");
-        setDialogOpen(false); setEmail(""); setRole("staff"); fetchInvitations();
+        setDialogOpen(false); setSelectedPerson(""); setManualEmail(""); setRole("staff"); fetchData();
       } else { const err = await res.json(); toast.error(err.detail || "Failed"); }
     } catch (err) { toast.error("Error"); } finally { setSaving(false); }
   };
@@ -55,7 +97,7 @@ export default function Invitations() {
   const handleDelete = async (id) => {
     try {
       const res = await fetch(`${API}/api/invitations/${id}`, { method: "DELETE", credentials: "include" });
-      if (res.ok) { toast.success("Invitation deleted"); fetchInvitations(); }
+      if (res.ok) { toast.success("Invitation deleted"); fetchData(); }
     } catch (err) { toast.error("Error"); }
   };
 
@@ -77,7 +119,7 @@ export default function Invitations() {
             <h1 className="font-heading text-2xl font-bold">Invitations</h1>
             <p className="text-sm text-muted-foreground mt-1">Invite owners and staff to your organization</p>
           </div>
-          <Button onClick={() => setDialogOpen(true)} data-testid="create-invitation-btn"><Plus className="mr-2 h-4 w-4" />Send Invitation</Button>
+          <Button onClick={() => { setSelectedPerson(""); setManualEmail(""); setRole("staff"); setDialogOpen(true); }} data-testid="create-invitation-btn"><Plus className="mr-2 h-4 w-4" />Send Invitation</Button>
         </div>
 
         {loading ? (
@@ -135,13 +177,13 @@ export default function Invitations() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="font-heading">Send Invitation</DialogTitle>
-              <DialogDescription>The invited user will receive a link to join your organization.</DialogDescription>
+              <DialogDescription>Pick a staff member or owner from your existing records, or enter an email manually.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-2">
-              <div className="space-y-2"><Label>Email</Label><Input data-testid="invite-email-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="user@example.com" /></div>
+              {/* Role */}
               <div className="space-y-2">
                 <Label>Role</Label>
-                <Select value={role} onValueChange={setRole}>
+                <Select value={role} onValueChange={(v) => { setRole(v); setSelectedPerson(""); }}>
                   <SelectTrigger data-testid="invite-role-select"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="owner">Owner (View Only)</SelectItem>
@@ -149,10 +191,49 @@ export default function Invitations() {
                   </SelectContent>
                 </Select>
               </div>
+              {/* Person Picker */}
+              <div className="space-y-2">
+                <Label>Select {role === "staff" ? "Staff Member" : "Property Owner"}</Label>
+                <Select value={selectedPerson} onValueChange={setSelectedPerson}>
+                  <SelectTrigger data-testid="invite-person-select"><SelectValue placeholder={`Pick a ${role}...`} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manual">Enter email manually</SelectItem>
+                    {people.map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        <div className="flex flex-col">
+                          <span>{p.name}</span>
+                          <span className="text-xs text-muted-foreground">{p.email}{p.detail ? ` - ${p.detail}` : ""}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                    {people.length === 0 && (
+                      <SelectItem value="manual" disabled>
+                        No {role === "staff" ? "staff members" : "property owners"} found
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Manual email or resolved display */}
+              {selectedPerson === "manual" ? (
+                <div className="space-y-2">
+                  <Label>Email Address</Label>
+                  <Input data-testid="invite-email-input" type="email" value={manualEmail} onChange={e => setManualEmail(e.target.value)} placeholder="user@example.com" />
+                </div>
+              ) : selectedPerson ? (
+                <div className="bg-muted/50 rounded-lg p-3 border">
+                  <p className="text-sm"><span className="font-medium">Will send to:</span> {resolvedEmail}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {people.find(p => p.id === selectedPerson)?.name} — {people.find(p => p.id === selectedPerson)?.detail}
+                  </p>
+                </div>
+              ) : null}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={!email.trim() || saving} data-testid="send-invitation-btn">{saving ? "Sending..." : "Send Invitation"}</Button>
+              <Button onClick={handleCreate} disabled={!resolvedEmail || saving} data-testid="send-invitation-btn">
+                {saving ? "Sending..." : "Send Invitation"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
