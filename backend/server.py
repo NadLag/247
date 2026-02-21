@@ -946,7 +946,7 @@ async def get_analytics(
                 ci = datetime.fromisoformat(b["check_in"])
                 co = datetime.fromisoformat(b["check_out"])
                 nights_booked += (co - ci).days
-            except:
+            except (ValueError, KeyError):
                 pass
         
         days_in_month = (end - start).days
