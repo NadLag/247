@@ -411,12 +411,35 @@ export default function Dashboard() {
   }
 
   const revenueTrend = kpis && kpis.revenue_last_month > 0 ? ((kpis.revenue_mtd - kpis.revenue_last_month) / kpis.revenue_last_month) * 100 : null;
+  const userRole = kpis?.role || user?.role || "company_admin";
+
+  // Get role-specific title
+  const getDashboardTitle = () => {
+    switch (userRole) {
+      case "owner":
+        return "Owner Dashboard";
+      case "staff":
+        return "Staff Dashboard";
+      default:
+        return "Dashboard";
+    }
+  };
 
   return (
     <Layout>
       <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="dashboard-page">
-        {/* Empty state */}
-        {kpis && kpis.total_properties === 0 && user?.role === "company_admin" && (
+        {/* Role indicator for non-admin users */}
+        {userRole !== "company_admin" && (
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs" data-testid="role-badge">
+              {userRole === "owner" ? "Property Owner" : "Staff Member"}
+            </Badge>
+            <h1 className="text-lg font-heading font-semibold">{getDashboardTitle()}</h1>
+          </div>
+        )}
+
+        {/* Empty state - only for admins */}
+        {kpis && kpis.total_properties === 0 && userRole === "company_admin" && (
           <Card className="border-dashed" data-testid="empty-state-card">
             <CardContent className="p-6 text-center space-y-4">
               <Home className="h-10 w-10 mx-auto text-muted-foreground" />
@@ -435,7 +458,7 @@ export default function Dashboard() {
           </Card>
         )}
 
-        {/* KPI Grid */}
+        {/* Loading state */}
         {loadingData ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (
@@ -444,95 +467,30 @@ export default function Dashboard() {
           </div>
         ) : kpis && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <KPICard title="Revenue MTD" value={fmt(kpis.revenue_mtd)} icon={DollarSign} trend={revenueTrend} subtitle={`Last month: ${fmt(kpis.revenue_last_month)}`} testId="kpi-revenue" />
-              <KPICard title="Net Income" value={fmt(kpis.net_income)} icon={TrendingUp} subtitle={`Expenses: ${fmt(kpis.total_expenses)}`} testId="kpi-net-income" />
-              <KPICard title="Occupancy Rate" value={`${kpis.occupancy_rate}%`} icon={Percent} testId="kpi-occupancy" />
-              <KPICard title="Nights Booked" value={kpis.nights_booked} icon={CalendarDays} testId="kpi-nights" />
-              <KPICard title="ADR" value={fmt(kpis.adr)} icon={BarChart3} subtitle="Avg Daily Rate" testId="kpi-adr" />
-              <KPICard title="RevPAN" value={fmt(kpis.revpan)} icon={TrendingDown} subtitle="Rev Per Available Night" testId="kpi-revpan" />
-              <KPICard title="Active Properties" value={`${kpis.active_properties} / ${kpis.total_properties}`} icon={Home} testId="kpi-properties" />
-              <KPICard title="Active Bookings" value={kpis.active_bookings} icon={CalendarDays} testId="kpi-bookings" />
-            </div>
-
-            {/* Charts & Lists */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              {/* Revenue Trends */}
-              <Card className="lg:col-span-8" data-testid="revenue-trends-chart">
-                <CardHeader className="pb-2">
-                  <CardTitle className="font-heading text-base font-semibold">Revenue Trends</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={trends} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="month" tick={{ fontSize: 12 }} className="text-muted-foreground" />
-                        <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                        <Tooltip
-                          contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
-                          formatter={(value) => [fmt(value)]}
-                        />
-                        <Area type="monotone" dataKey="revenue" stroke="hsl(var(--chart-2))" fill="url(#colorRevenue)" strokeWidth={2} />
-                        <Area type="monotone" dataKey="expenses" stroke="hsl(var(--chart-5))" fill="transparent" strokeWidth={1.5} strokeDasharray="4 4" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Bookings */}
-              <Card className="lg:col-span-4" data-testid="recent-bookings">
-                <CardHeader className="pb-2">
-                  <CardTitle className="font-heading text-base font-semibold">Recent Bookings</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  {bookings.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-8 text-center">No bookings yet</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {bookings.map((b) => (
-                        <div key={b.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{b.guest_name}</p>
-                            <p className="text-xs text-muted-foreground">{b.check_in} - {b.check_out}</p>
-                          </div>
-                          <div className="text-right shrink-0 ml-3">
-                            <p className="text-sm font-data font-medium">{fmt(b.total_amount)}</p>
-                            <Badge variant={b.status === "confirmed" ? "default" : b.status === "checked_in" ? "secondary" : "outline"} className="text-xs mt-0.5">
-                              {b.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Staff Payments Due */}
-            {user?.role === "company_admin" && kpis.staff_payments_due > 0 && (
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/staff")} data-testid="staff-payments-card">
-                <CardContent className="p-5 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Staff Payments Due</p>
-                      <p className="text-2xl font-bold font-data">{fmt(kpis.staff_payments_due)}</p>
-                    </div>
-                  </div>
-                  <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
-                </CardContent>
-              </Card>
+            {/* Role-specific dashboard views */}
+            {userRole === "company_admin" && (
+              <AdminDashboard 
+                kpis={kpis} 
+                trends={trends} 
+                bookings={bookings} 
+                loadingData={loadingData} 
+                revenueTrend={revenueTrend} 
+                navigate={navigate} 
+              />
+            )}
+            {userRole === "owner" && (
+              <OwnerDashboard 
+                kpis={kpis} 
+                trends={trends} 
+                bookings={bookings} 
+                revenueTrend={revenueTrend} 
+              />
+            )}
+            {userRole === "staff" && (
+              <StaffDashboard 
+                kpis={kpis} 
+                bookings={bookings} 
+              />
             )}
           </>
         )}
