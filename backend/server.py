@@ -2147,6 +2147,12 @@ async def startup():
     await db.services.create_index([("company_id", 1), ("category", 1)])
     await db.booking_services.create_index([("company_id", 1)])
     await db.booking_services.create_index([("booking_id", 1)])
+    await db.tasks.create_index([("company_id", 1)])
+    await db.tasks.create_index([("company_id", 1), ("assigned_staff_id", 1)])
+    await db.tasks.create_index([("company_id", 1), ("status", 1)])
+    await db.audit_logs.create_index([("company_id", 1)])
+    await db.audit_logs.create_index([("user_id", 1)])
+    await db.payouts.create_index([("company_id", 1), ("staff_id", 1)])
     logger.info("Database indexes created")
 
 @app.on_event("shutdown")
