@@ -102,23 +102,23 @@ export default function Layout({ children }) {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-60 border-r bg-card flex-col shrink-0">
-        <div className="h-14 flex items-center px-5 border-b">
-          <span className="font-heading font-bold text-lg tracking-tight" data-testid="app-logo">
+      <aside className="hidden md:flex w-60 border-r bg-card/50 backdrop-blur-sm flex-col shrink-0">
+        <div className="h-14 flex items-center px-5 border-b bg-card">
+          <span className="font-heading font-bold text-lg tracking-tight text-gradient" data-testid="app-logo">
             PropStack
           </span>
         </div>
         <NavItems items={navItems} currentPath={location.pathname} onNavigate={handleNavigate} />
         <Separator />
         <div className="p-3">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted/50">
-            <Avatar className="h-8 w-8">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+            <Avatar className="h-8 w-8 ring-2 ring-background">
               <AvatarImage src={user?.picture} alt={user?.name} />
-              <AvatarFallback className="text-xs">{user?.name?.[0]}</AvatarFallback>
+              <AvatarFallback className="text-xs bg-primary/10 text-primary">{user?.name?.[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user?.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.role?.replace("_", " ")}</p>
+              <p className="text-xs text-muted-foreground truncate capitalize">{user?.role?.replace("_", " ")}</p>
             </div>
           </div>
         </div>
@@ -127,9 +127,9 @@ export default function Layout({ children }) {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-14 border-b bg-card flex items-center justify-between px-4 md:px-6 shrink-0">
+        <header className="h-14 border-b bg-card/80 backdrop-blur-sm flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)} data-testid="mobile-menu-btn">
+            <Button variant="ghost" size="icon" className="md:hidden hover:bg-accent" onClick={() => setMobileOpen(true)} data-testid="mobile-menu-btn">
               <Menu className="h-5 w-5" />
             </Button>
             <h2 className="font-heading text-base md:text-lg font-semibold" data-testid="header-greeting">
@@ -140,30 +140,30 @@ export default function Layout({ children }) {
             {user?.role && (
               <Badge 
                 variant="secondary" 
-                className="hidden sm:flex text-xs" 
+                className="hidden sm:flex text-xs bg-primary/10 text-primary border-0" 
                 data-testid="role-badge"
               >
                 {user.role === "company_admin" ? "Admin" : user.role === "owner" ? "Owner" : "Staff"}
               </Badge>
             )}
-            <Button variant="ghost" size="icon" onClick={toggleTheme} data-testid="theme-toggle-btn">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="hover:bg-accent" data-testid="theme-toggle-btn">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full" data-testid="user-menu-btn">
+                <Button variant="ghost" size="icon" className="rounded-full hover:ring-2 hover:ring-primary/20" data-testid="user-menu-btn">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user?.picture} alt={user?.name} />
-                    <AvatarFallback className="text-xs">{user?.name?.[0]}</AvatarFallback>
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary">{user?.name?.[0]}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate("/settings")} data-testid="menu-settings">
+              <DropdownMenuContent align="end" className="w-48 animate-scale-in">
+                <DropdownMenuItem onClick={() => navigate("/settings")} data-testid="menu-settings" className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" /> Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} data-testid="menu-logout">
+                <DropdownMenuItem onClick={logout} data-testid="menu-logout" className="cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" /> Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -172,7 +172,7 @@ export default function Layout({ children }) {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">{children}</main>
       </div>
 
       {/* Mobile Sidebar */}
