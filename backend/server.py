@@ -1883,168 +1883,455 @@ async def list_ota_sync_logs(
     logs = await db.ota_sync_logs.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
     return logs
 
-# ===== MOCK OTA SIMULATION =====
-OTA_SOURCES = ["airbnb", "booking.com", "vrbo", "expedia"]
-GUEST_NAMES = ["Emma Thompson", "James Wilson", "Sophie Chen", "Michael Brown", "Olivia Garcia", "Liam Martinez", "Isabella Lee", "Noah Johnson", "Ava Williams", "Ethan Davis"]
+# ===== OTA ICAL FEEDS MANAGEMENT =====
+OTA_SOURCES = ["airbnb", "booking.com", "vrbo", "expedia", "other"]
 
-@api_router.post("/ota/simulate-sync")
-async def simulate_ota_sync(background_tasks: BackgroundTasks, user=Depends(require_admin), property_id: Optional[str] = None):
-    """Simulate receiving bookings from OTAs (for testing/demo purposes)"""
-    company_id = user["company_id"]
+# Mock iCal data generator for testing
+def generate_mock_ical(property_name: str, source: str) -> str:
+    """Generate mock iCal data for testing"""
+    now = datetime.now(timezone.utc)
+    events = []
     
-    # Get properties to sync
-    query = {"company_id": company_id, "active": True}
-    if property_id:
-        query["id"] = property_id
-    properties = await db.properties.find(query, {"_id": 0}).to_list(100)
+    guest_names = ["Emma Thompson", "James Wilson", "Sophie Chen", "Michael Brown", "Olivia Garcia"]
     
-    if not properties:
-        return {"message": "No active properties to sync", "synced": 0}
-    
-    synced_count = 0
-    sync_results = []
-    
-    for prop in properties:
-        # Simulate 0-2 new bookings per property
-        num_bookings = random.randint(0, 2)
-        
-        for _ in range(num_bookings):
-            source = random.choice(OTA_SOURCES)
-            guest_name = random.choice(GUEST_NAMES)
-            
-            # Generate realistic dates
-            check_in_offset = random.randint(1, 30)
-            nights = random.randint(2, 10)
-            check_in = (datetime.now(timezone.utc) + timedelta(days=check_in_offset)).strftime("%Y-%m-%d")
-            check_out = (datetime.now(timezone.utc) + timedelta(days=check_in_offset + nights)).strftime("%Y-%m-%d")
-            
-            # Generate realistic pricing
-            base_rate = random.randint(100, 350)
-            total_amount = base_rate * nights
-            
-            external_id = f"{source}_{uuid.uuid4().hex[:8]}"
-            
-            # Create the OTA event
-            event = OTASyncEvent(
-                source=source,
-                property_id=prop["id"],
-                event_type="booking_created",
-                external_id=external_id,
-                data={
-                    "guest_name": guest_name,
-                    "check_in": check_in,
-                    "check_out": check_out,
-                    "total_amount": total_amount,
-                    "guests_count": random.randint(1, 4),
-                }
-            )
-            
-            # Create sync log
-            log_id = f"ota_{uuid.uuid4().hex[:12]}"
-            sync_log = {
-                "id": log_id,
-                "company_id": company_id,
-                "source": source,
-                "property_id": prop["id"],
-                "event_type": "booking_created",
-                "external_id": external_id,
-                "data": event.data,
-                "status": "pending",
-                "message": None,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "processed_at": None,
-            }
-            await db.ota_sync_logs.insert_one(sync_log)
-            
-            # Process in background
-            background_tasks.add_task(process_ota_sync, log_id, event, company_id)
-            
-            synced_count += 1
-            sync_results.append({
-                "property": prop["name"],
-                "source": source,
-                "guest": guest_name,
-                "check_in": check_in,
-                "check_out": check_out,
-            })
-    
-    return {
-        "message": f"Simulated {synced_count} OTA bookings from {len(OTA_SOURCES)} sources",
-        "synced": synced_count,
-        "results": sync_results
-    }
-
-@api_router.post("/ota/simulate-property-sync/{property_id}")
-async def simulate_property_ota_sync(property_id: str, background_tasks: BackgroundTasks, user=Depends(require_admin)):
-    """Simulate OTA sync for a specific property"""
-    company_id = user["company_id"]
-    
-    prop = await db.properties.find_one({"id": property_id, "company_id": company_id}, {"_id": 0})
-    if not prop:
-        raise HTTPException(status_code=404, detail="Property not found")
-    
-    # Generate 1-3 mock bookings for this property
-    num_bookings = random.randint(1, 3)
-    synced_results = []
-    
-    for _ in range(num_bookings):
-        source = random.choice(OTA_SOURCES)
-        guest_name = random.choice(GUEST_NAMES)
-        
-        check_in_offset = random.randint(1, 30)
+    # Generate 2-4 random bookings
+    for i in range(random.randint(2, 4)):
+        check_in_offset = random.randint(1, 45)
         nights = random.randint(2, 7)
-        check_in = (datetime.now(timezone.utc) + timedelta(days=check_in_offset)).strftime("%Y-%m-%d")
-        check_out = (datetime.now(timezone.utc) + timedelta(days=check_in_offset + nights)).strftime("%Y-%m-%d")
+        check_in = now + timedelta(days=check_in_offset)
+        check_out = check_in + timedelta(days=nights)
+        guest = random.choice(guest_names)
+        uid = f"{source.replace('.', '-')}_{uuid.uuid4().hex[:8]}@propstack.com"
         
-        base_rate = random.randint(100, 350)
-        total_amount = base_rate * nights
-        external_id = f"{source}_{uuid.uuid4().hex[:8]}"
+        events.append(f"""BEGIN:VEVENT
+DTSTART;VALUE=DATE:{check_in.strftime('%Y%m%d')}
+DTEND;VALUE=DATE:{check_out.strftime('%Y%m%d')}
+SUMMARY:{guest} - {property_name}
+UID:{uid}
+DESCRIPTION:Guest booking from {source}
+STATUS:CONFIRMED
+END:VEVENT""")
+    
+    ical_content = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//PropStack//OTA Sync//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:{property_name} - {source}
+{''.join(events)}
+END:VCALENDAR"""
+    
+    return ical_content
+
+async def fetch_ical_data(url: str) -> str:
+    """Fetch iCal data from URL or generate mock data"""
+    # Check if this is a mock URL
+    if url.startswith("mock://"):
+        # Parse mock URL: mock://airbnb/PropertyName
+        parts = url.replace("mock://", "").split("/", 1)
+        source = parts[0] if parts else "airbnb"
+        prop_name = parts[1] if len(parts) > 1 else "Property"
+        return generate_mock_ical(prop_name, source)
+    
+    # Real URL fetch
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            return response.text
+    except Exception as e:
+        logger.error(f"Failed to fetch iCal from {url}: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to fetch iCal data: {str(e)}")
+
+def parse_ical_bookings(ical_content: str, source: str, property_id: str) -> List[Dict]:
+    """Parse iCal content and extract booking events"""
+    bookings = []
+    try:
+        cal = Calendar.from_ical(ical_content)
         
-        event = OTASyncEvent(
-            source=source,
-            property_id=property_id,
-            event_type="booking_created",
-            external_id=external_id,
-            data={
-                "guest_name": guest_name,
-                "check_in": check_in,
-                "check_out": check_out,
-                "total_amount": total_amount,
-                "guests_count": random.randint(1, 4),
+        for component in cal.walk():
+            if component.name == "VEVENT":
+                # Extract booking data
+                dtstart = component.get('DTSTART')
+                dtend = component.get('DTEND')
+                summary = str(component.get('SUMMARY', 'Guest'))
+                uid = str(component.get('UID', f"{source}_{uuid.uuid4().hex[:8]}"))
+                status = str(component.get('STATUS', 'CONFIRMED')).upper()
+                description = str(component.get('DESCRIPTION', ''))
+                
+                if not dtstart or not dtend:
+                    continue
+                
+                # Convert dates
+                check_in = dtstart.dt if hasattr(dtstart, 'dt') else dtstart
+                check_out = dtend.dt if hasattr(dtend, 'dt') else dtend
+                
+                # Handle datetime vs date
+                if hasattr(check_in, 'date'):
+                    check_in = check_in.date()
+                if hasattr(check_out, 'date'):
+                    check_out = check_out.date()
+                
+                # Extract guest name from summary
+                guest_name = summary.split(' - ')[0].strip() if ' - ' in summary else summary
+                if guest_name.lower() in ['blocked', 'unavailable', 'not available']:
+                    continue  # Skip blocked dates
+                
+                # Calculate nights
+                nights = (check_out - check_in).days
+                
+                # Determine booking status from iCal status
+                booking_status = "confirmed"
+                if status == "CANCELLED":
+                    booking_status = "cancelled"
+                elif status == "TENTATIVE":
+                    booking_status = "pending"
+                
+                bookings.append({
+                    "uid": uid,
+                    "guest_name": guest_name[:100],  # Limit length
+                    "check_in": check_in.isoformat() if hasattr(check_in, 'isoformat') else str(check_in),
+                    "check_out": check_out.isoformat() if hasattr(check_out, 'isoformat') else str(check_out),
+                    "nights": nights,
+                    "status": booking_status,
+                    "source": source,
+                    "property_id": property_id,
+                    "description": description[:500],
+                })
+                
+    except Exception as e:
+        logger.error(f"Failed to parse iCal content: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to parse iCal data: {str(e)}")
+    
+    return bookings
+
+async def process_ical_booking(booking_data: Dict, company_id: str, feed_id: str) -> Dict:
+    """Process a single booking from iCal - create, update, or skip"""
+    uid = booking_data["uid"]
+    property_id = booking_data["property_id"]
+    
+    # Check if booking already exists by UID or date range + property
+    existing = await db.bookings.find_one({
+        "company_id": company_id,
+        "$or": [
+            {"ota_external_id": uid},
+            {
+                "property_id": property_id,
+                "check_in": booking_data["check_in"],
+                "check_out": booking_data["check_out"],
+                "ota_source": {"$exists": True}
             }
+        ]
+    }, {"_id": 0})
+    
+    now_str = datetime.now(timezone.utc).isoformat()
+    
+    if existing:
+        # Check if cancelled
+        if booking_data["status"] == "cancelled":
+            await db.bookings.update_one(
+                {"id": existing["id"]},
+                {"$set": {"status": "cancelled", "updated_at": now_str}}
+            )
+            return {"action": "cancelled", "booking_id": existing["id"]}
+        
+        # Update if dates changed
+        if existing["check_in"] != booking_data["check_in"] or existing["check_out"] != booking_data["check_out"]:
+            await db.bookings.update_one(
+                {"id": existing["id"]},
+                {"$set": {
+                    "check_in": booking_data["check_in"],
+                    "check_out": booking_data["check_out"],
+                    "guest_name": booking_data["guest_name"],
+                    "updated_at": now_str
+                }}
+            )
+            return {"action": "updated", "booking_id": existing["id"]}
+        
+        return {"action": "skipped", "booking_id": existing["id"], "reason": "no_changes"}
+    
+    # Create new booking
+    if booking_data["status"] == "cancelled":
+        return {"action": "skipped", "reason": "cancelled_not_found"}
+    
+    booking_id = f"book_{uuid.uuid4().hex[:12]}"
+    new_booking = {
+        "id": booking_id,
+        "company_id": company_id,
+        "property_id": property_id,
+        "guest_name": booking_data["guest_name"],
+        "check_in": booking_data["check_in"],
+        "check_out": booking_data["check_out"],
+        "total_amount": 0,  # iCal doesn't include pricing
+        "guests_count": 1,
+        "status": "confirmed",
+        "ota_source": booking_data["source"],
+        "ota_external_id": uid,
+        "ota_feed_id": feed_id,
+        "imported_at": now_str,
+        "created_at": now_str,
+        "updated_at": now_str,
+    }
+    await db.bookings.insert_one(new_booking)
+    return {"action": "created", "booking_id": booking_id}
+
+async def sync_ota_feeds_background(company_id: str, sync_log_id: str):
+    """Background task to sync all OTA feeds for a company"""
+    try:
+        logger.info(f"Starting OTA iCal sync for company {company_id}")
+        
+        # Get all active feeds
+        feeds = await db.ota_feeds.find({"company_id": company_id, "active": True}, {"_id": 0}).to_list(100)
+        
+        if not feeds:
+            await db.ota_sync_logs.update_one(
+                {"id": sync_log_id},
+                {"$set": {"status": "completed", "message": "No active OTA feeds configured", "processed_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            return
+        
+        total_created = 0
+        total_updated = 0
+        total_cancelled = 0
+        total_skipped = 0
+        errors = []
+        properties_synced = set()
+        
+        for feed in feeds:
+            try:
+                # Fetch iCal data
+                ical_content = await fetch_ical_data(feed["ical_url"])
+                
+                # Parse bookings
+                bookings = parse_ical_bookings(ical_content, feed["source"], feed["property_id"])
+                
+                # Process each booking
+                for booking_data in bookings:
+                    result = await process_ical_booking(booking_data, company_id, feed["id"])
+                    
+                    if result["action"] == "created":
+                        total_created += 1
+                    elif result["action"] == "updated":
+                        total_updated += 1
+                    elif result["action"] == "cancelled":
+                        total_cancelled += 1
+                    else:
+                        total_skipped += 1
+                
+                # Update feed's last sync timestamp
+                await db.ota_feeds.update_one(
+                    {"id": feed["id"]},
+                    {"$set": {"last_sync_at": datetime.now(timezone.utc).isoformat(), "last_sync_status": "success"}}
+                )
+                properties_synced.add(feed["property_id"])
+                
+            except Exception as e:
+                logger.error(f"Error syncing feed {feed['id']}: {e}")
+                errors.append(f"{feed['source']}: {str(e)}")
+                await db.ota_feeds.update_one(
+                    {"id": feed["id"]},
+                    {"$set": {"last_sync_at": datetime.now(timezone.utc).isoformat(), "last_sync_status": "error", "last_sync_error": str(e)}}
+                )
+        
+        # Update properties' last sync timestamp
+        if properties_synced:
+            await db.properties.update_many(
+                {"id": {"$in": list(properties_synced)}, "company_id": company_id},
+                {"$set": {"last_ota_sync_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        
+        # Update sync log
+        status = "completed" if not errors else "completed_with_errors"
+        message = f"Created: {total_created}, Updated: {total_updated}, Cancelled: {total_cancelled}, Skipped: {total_skipped}"
+        if errors:
+            message += f" | Errors: {'; '.join(errors[:3])}"
+        
+        await db.ota_sync_logs.update_one(
+            {"id": sync_log_id},
+            {"$set": {
+                "status": status,
+                "message": message,
+                "stats": {
+                    "created": total_created,
+                    "updated": total_updated,
+                    "cancelled": total_cancelled,
+                    "skipped": total_skipped,
+                    "feeds_processed": len(feeds),
+                    "properties_synced": len(properties_synced),
+                    "errors": len(errors)
+                },
+                "processed_at": datetime.now(timezone.utc).isoformat()
+            }}
         )
         
-        log_id = f"ota_{uuid.uuid4().hex[:12]}"
+        logger.info(f"OTA sync completed for company {company_id}: {message}")
+        
+    except Exception as e:
+        logger.error(f"OTA sync background task failed: {e}")
+        await db.ota_sync_logs.update_one(
+            {"id": sync_log_id},
+            {"$set": {"status": "failed", "message": str(e), "processed_at": datetime.now(timezone.utc).isoformat()}}
+        )
+
+# Global sync lock to prevent parallel syncs
+_sync_locks = {}
+
+@api_router.post("/ota/sync")
+async def trigger_ota_sync(background_tasks: BackgroundTasks, user=Depends(require_admin)):
+    """Trigger OTA iCal sync for all configured feeds - Single button sync"""
+    company_id = user["company_id"]
+    
+    # Check for existing running sync
+    if company_id in _sync_locks and _sync_locks[company_id]:
+        raise HTTPException(status_code=429, detail="Sync already in progress. Please wait.")
+    
+    # Set lock
+    _sync_locks[company_id] = True
+    
+    try:
+        # Check if feeds exist
+        feed_count = await db.ota_feeds.count_documents({"company_id": company_id, "active": True})
+        if feed_count == 0:
+            _sync_locks[company_id] = False
+            return {"status": "no_feeds", "message": "No OTA feeds configured. Add feeds in OTA Settings first."}
+        
+        # Create sync log
+        sync_log_id = f"ota_sync_{uuid.uuid4().hex[:12]}"
         sync_log = {
-            "id": log_id,
+            "id": sync_log_id,
             "company_id": company_id,
-            "source": source,
-            "property_id": property_id,
-            "event_type": "booking_created",
-            "external_id": external_id,
-            "data": event.data,
-            "status": "pending",
-            "message": None,
+            "source": "ical_sync",
+            "event_type": "bulk_sync",
+            "status": "processing",
+            "message": "Sync in progress...",
             "created_at": datetime.now(timezone.utc).isoformat(),
             "processed_at": None,
         }
         await db.ota_sync_logs.insert_one(sync_log)
-        background_tasks.add_task(process_ota_sync, log_id, event, company_id)
         
-        synced_results.append({
-            "source": source,
-            "guest": guest_name,
-            "check_in": check_in,
-            "check_out": check_out,
-            "amount": total_amount,
-        })
+        # Start background sync
+        async def run_sync_and_release():
+            try:
+                await sync_ota_feeds_background(company_id, sync_log_id)
+            finally:
+                _sync_locks[company_id] = False
+        
+        background_tasks.add_task(run_sync_and_release)
+        
+        return {
+            "status": "started",
+            "sync_id": sync_log_id,
+            "message": f"Syncing {feed_count} OTA feed(s) in background...",
+            "feeds_count": feed_count
+        }
+        
+    except Exception as e:
+        _sync_locks[company_id] = False
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/ota/sync-status")
+async def get_ota_sync_status(user=Depends(require_admin)):
+    """Get the latest sync status"""
+    company_id = user["company_id"]
+    
+    # Get most recent sync log
+    latest_log = await db.ota_sync_logs.find_one(
+        {"company_id": company_id, "event_type": "bulk_sync"},
+        {"_id": 0},
+        sort=[("created_at", -1)]
+    )
+    
+    # Get feed count
+    feed_count = await db.ota_feeds.count_documents({"company_id": company_id, "active": True})
+    
+    # Check if sync is running
+    is_syncing = _sync_locks.get(company_id, False)
     
     return {
-        "message": f"Simulated {num_bookings} OTA bookings for {prop['name']}",
-        "property": prop["name"],
-        "synced": num_bookings,
-        "bookings": synced_results
+        "is_syncing": is_syncing,
+        "feeds_count": feed_count,
+        "latest_sync": latest_log
     }
+
+# ===== OTA FEEDS CRUD =====
+@api_router.get("/ota/feeds")
+async def list_ota_feeds(user=Depends(require_admin)):
+    """List all OTA iCal feeds for the company"""
+    feeds = await db.ota_feeds.find({"company_id": user["company_id"]}, {"_id": 0}).to_list(100)
+    
+    # Enrich with property names
+    property_ids = list(set(f["property_id"] for f in feeds))
+    properties = await db.properties.find({"id": {"$in": property_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    prop_map = {p["id"]: p["name"] for p in properties}
+    
+    for feed in feeds:
+        feed["property_name"] = prop_map.get(feed["property_id"], "Unknown Property")
+    
+    return feeds
+
+@api_router.post("/ota/feeds")
+async def create_ota_feed(data: OTAFeedCreate, user=Depends(require_admin)):
+    """Add a new OTA iCal feed"""
+    company_id = user["company_id"]
+    
+    # Validate property
+    prop = await db.properties.find_one({"id": data.property_id, "company_id": company_id}, {"_id": 0})
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Check for duplicate
+    existing = await db.ota_feeds.find_one({
+        "company_id": company_id,
+        "property_id": data.property_id,
+        "source": data.source
+    }, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail=f"A {data.source} feed already exists for this property")
+    
+    feed_id = f"feed_{uuid.uuid4().hex[:12]}"
+    feed = {
+        "id": feed_id,
+        "company_id": company_id,
+        "property_id": data.property_id,
+        "source": data.source,
+        "ical_url": data.ical_url,
+        "name": data.name or f"{prop['name']} - {data.source}",
+        "active": True,
+        "last_sync_at": None,
+        "last_sync_status": None,
+        "last_sync_error": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.ota_feeds.insert_one(feed)
+    
+    feed["property_name"] = prop["name"]
+    return feed
+
+@api_router.put("/ota/feeds/{feed_id}")
+async def update_ota_feed(feed_id: str, data: OTAFeedUpdate, user=Depends(require_admin)):
+    """Update an OTA feed"""
+    company_id = user["company_id"]
+    
+    feed = await db.ota_feeds.find_one({"id": feed_id, "company_id": company_id}, {"_id": 0})
+    if not feed:
+        raise HTTPException(status_code=404, detail="Feed not found")
+    
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.ota_feeds.update_one({"id": feed_id}, {"$set": update_data})
+    
+    updated = await db.ota_feeds.find_one({"id": feed_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/ota/feeds/{feed_id}")
+async def delete_ota_feed(feed_id: str, user=Depends(require_admin)):
+    """Delete an OTA feed"""
+    result = await db.ota_feeds.delete_one({"id": feed_id, "company_id": user["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Feed not found")
+    return {"message": "Feed deleted"}
 
 # ===== SEED DATA =====
 @api_router.post("/seed-demo-data")
