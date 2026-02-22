@@ -130,11 +130,12 @@ function BookingCalendar({ bookings, properties, currentMonth, onMonthChange, on
       </div>
       
       {/* Legend */}
-      <div className="flex gap-4 text-xs">
+      <div className="flex flex-wrap gap-4 text-xs">
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-primary/80" /> Confirmed</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-blue-500" /> Checked In</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-slate-400" /> Checked Out</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-red-400" /> Cancelled</div>
+        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-slate-300 border border-slate-400" /> Blocked</div>
       </div>
     </div>
   );
