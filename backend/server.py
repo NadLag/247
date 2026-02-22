@@ -924,6 +924,18 @@ async def list_bookings(user=Depends(get_current_user), include_blocked: bool = 
     if not company_id:
         return []
     
+    # Auto-update expired bookings to checked_out
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    await db.bookings.update_many(
+        {
+            "company_id": company_id,
+            "check_out": {"$lt": today},
+            "status": {"$in": ["confirmed", "checked_in"]},
+            "booking_type": {"$ne": "blocked"}
+        },
+        {"$set": {"status": "checked_out", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
     query = {"company_id": company_id}
     if not include_blocked:
         # Exclude blocked dates from main bookings list
@@ -933,6 +945,31 @@ async def list_bookings(user=Depends(get_current_user), include_blocked: bool = 
         ]
     
     return await db.bookings.find(query, {"_id": 0}).sort("check_in", -1).to_list(1000)
+
+@api_router.get("/bookings/sources")
+async def list_booking_sources(user=Depends(get_current_user)):
+    """Get unique booking sources for filter dropdown"""
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    
+    # Get distinct sources
+    sources = await db.bookings.distinct("ota_source", {"company_id": company_id, "booking_type": {"$ne": "blocked"}})
+    # Also check for manual bookings without ota_source
+    has_manual = await db.bookings.count_documents({
+        "company_id": company_id, 
+        "booking_type": {"$ne": "blocked"},
+        "$or": [{"ota_source": None}, {"ota_source": {"$exists": False}}, {"ota_source": "manual"}]
+    })
+    
+    result = []
+    if has_manual > 0:
+        result.append({"value": "direct", "label": "Direct Booking"})
+    for source in sources:
+        if source and source not in [None, "manual"]:
+            result.append({"value": source, "label": source.title()})
+    
+    return result
 
 @api_router.get("/bookings/blocked-dates")
 async def list_blocked_dates(user=Depends(get_current_user), property_id: Optional[str] = None):
@@ -956,6 +993,21 @@ async def list_blocked_dates(user=Depends(get_current_user), property_id: Option
 @api_router.post("/bookings", status_code=201)
 async def create_booking(data: BookingCreate, user=Depends(require_admin)):
     company_id = user["company_id"]
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Validate check-in date is not in the past for manual bookings
+    if data.check_in and data.check_in < today:
+        raise HTTPException(
+            status_code=400,
+            detail="Check-in date cannot be in the past. Please select today or a future date."
+        )
+    
+    # Validate check-out is after check-in
+    if data.check_in and data.check_out and data.check_out <= data.check_in:
+        raise HTTPException(
+            status_code=400,
+            detail="Check-out date must be after check-in date."
+        )
     
     # Check for overlapping blocked dates
     if data.property_id and data.check_in and data.check_out and not data.force_override:
