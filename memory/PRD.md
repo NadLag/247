@@ -10,7 +10,12 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - **Auth**: Dual auth - Google OAuth + Password-based registration
 - **Payments**: Stripe via emergentintegrations library
 - **Email**: Resend for invitation emails
-- **Theme**: Dark/Light toggle with CSS variables
+- **Theme**: Teal-based minimalist design with dark/light toggle
+
+## Color Scheme (Warm Modern Teal)
+- Primary: `#0D9488` (HSL 168 76% 32%)
+- Background: `#F9FAFB` (Off-white)
+- Text: `#111827` (Near-black)
 
 ## User Personas
 1. **Company Admin** - Full CRUD on all modules, billing, invitations, staff/task management
@@ -26,11 +31,11 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] Company setup flow for new users
 - [x] Admin Dashboard with 8 KPIs + revenue trends chart
 - [x] **Role-Specific Dashboards** (Admin/Owner/Staff views)
-- [x] Properties CRUD (cards with owner details, units, OTA sync)
+- [x] Properties CRUD (6-column grid, Quick View, OTA import)
 - [x] Staff CRUD (table with salary, assignments, status)
 - [x] **Tasks CRUD** (full task management with assignments)
 - [x] Expenses CRUD (fixed/variable tabs, property filter, recurring)
-- [x] Bookings CRUD (status tabs: Checked-in, Upcoming, Confirmed, etc.)
+- [x] **Bookings - Calendar + List views** with filters
 - [x] Services CRUD (add-on services with staff/external provider assignment)
 - [x] Analytics page (KPIs, trends, filters by property/month/year)
 - [x] Invitations system with Resend email integration
