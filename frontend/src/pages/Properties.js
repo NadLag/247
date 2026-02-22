@@ -399,17 +399,6 @@ export default function Properties() {
             </span>
           </div>
         )}
-                <div>
-                  <p className="font-medium text-sm">No OTA feeds configured</p>
-                  <p className="text-xs text-muted-foreground">Add iCal URLs from Airbnb, Booking.com, etc. to enable sync</p>
-                </div>
-              </div>
-              <Button size="sm" onClick={() => navigate("/ota-settings")}>
-                Configure OTA Feeds
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -426,7 +415,7 @@ export default function Properties() {
               <h3 className="font-heading font-semibold text-lg mb-1">No properties yet</h3>
               <p className="text-sm text-muted-foreground mb-4">Add your first property to get started</p>
               {isAdmin && (
-                <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }}>
+                <Button onClick={openAddChoice}>
                   <Plus className="mr-2 h-4 w-4" /> Add Property
                 </Button>
               )}
