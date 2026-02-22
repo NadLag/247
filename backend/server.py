@@ -1355,7 +1355,9 @@ async def get_analytics(
             booking_query["property_id"] = property_id
         else:
             booking_query["property_id"] = {"$in": property_ids}
-            
+        
+        # Exclude blocked dates from analytics
+        booking_query["status"] = {"$ne": "blocked"}
         bookings = await db.bookings.find(booking_query, {"_id": 0}).to_list(1000)
         
         expense_query = {"company_id": company_id, "date": {"$gte": start.isoformat()[:10], "$lt": end.isoformat()[:10]}}
@@ -1363,11 +1365,14 @@ async def get_analytics(
             expense_query["property_id"] = property_id
         expenses = await db.expenses.find(expense_query, {"_id": 0}).to_list(1000)
         
-        revenue = sum(b.get("total_amount", 0) for b in bookings)
+        # Only count non-blocked, non-cancelled bookings for revenue
+        revenue = sum(b.get("total_amount", 0) for b in bookings if b.get("status") not in ["blocked", "cancelled"])
         expense_total = sum(e.get("amount", 0) for e in expenses)
         
         nights_booked = 0
         for b in bookings:
+            if b.get("status") in ["blocked", "cancelled"]:
+                continue
             try:
                 ci = datetime.fromisoformat(b["check_in"])
                 co = datetime.fromisoformat(b["check_out"])
@@ -1390,7 +1395,7 @@ async def get_analytics(
             "adr": round(adr, 2),
             "revpan": round(revpan, 2),
             "active_bookings": len([b for b in bookings if b.get("status") in ["confirmed", "checked_in"]]),
-            "total_bookings": len(bookings),
+            "total_bookings": len([b for b in bookings if b.get("status") != "blocked"]),
             "active_properties": active_properties,
             "total_properties": len(properties),
         }
