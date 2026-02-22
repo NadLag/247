@@ -68,10 +68,11 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 
 ### Booking Logic & UI Enhancements (Feb 22, 2026)
 - [x] **Auto-checkout status** - Expired bookings auto-update to `checked_out` on startup, hourly, and on every bookings list fetch
-- [x] **Past-date validation** - Backend rejects manual bookings with check-in in the past (400 error). Frontend date input has `min` attribute set to today
+- [x] **Past-date validation** - Backend rejects manual bookings with check-in OR check-out in the past (400 error). Frontend date inputs have `min` attribute set to today for new bookings
 - [x] **iCal source tracking** - `ota_source` field consistently used: `manual` for direct bookings, platform name (e.g., `airbnb`) for iCal imports
 - [x] **Source filter dropdown** - Bookings list view has Source filter with options from `/api/bookings/sources`
 - [x] **Source display in table** - New "Source" column with colored badges (green for Direct, blue for OTA). Booking detail popup always shows source
+- [x] **Source breakdown analytics** - New `GET /api/analytics/source-breakdown` endpoint. Two pie charts on Analytics page: "Bookings by Source" and "Revenue by Source" with percentages and values
 
 ### Bookings Page Fixes (Feb 22, 2026)
 - [x] **Property filter fix** - Properly handles "all" and specific property selections
