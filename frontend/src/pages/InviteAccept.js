@@ -40,8 +40,14 @@ export default function InviteAccept() {
         if (res.ok) {
           const data = await res.json();
           setInvitation(data);
-          // Pre-fill email from invitation
-          setForm(prev => ({ ...prev, email: data.email || "" }));
+          // Pre-fill all user info from invitation (read-only fields)
+          setForm(prev => ({
+            ...prev,
+            email: data.email || "",
+            first_name: data.first_name || "",
+            last_name: data.last_name || "",
+            phone: data.phone || "",
+          }));
         } else {
           const err = await res.json();
           setError(err.detail || "Invalid invitation");
