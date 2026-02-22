@@ -52,6 +52,7 @@ export default function Analytics() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
+  const [sourceBreakdown, setSourceBreakdown] = useState(null);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState("all");
@@ -67,10 +68,18 @@ export default function Analytics() {
       if (propRes.ok) setProperties(await propRes.json());
 
       let url = `${API}/api/analytics?year=${selectedYear}&month=${selectedMonth}`;
-      if (selectedProperty !== "all") url += `&property_id=${selectedProperty}`;
+      let srcUrl = `${API}/api/analytics/source-breakdown?year=${selectedYear}&month=${selectedMonth}`;
+      if (selectedProperty !== "all") {
+        url += `&property_id=${selectedProperty}`;
+        srcUrl += `&property_id=${selectedProperty}`;
+      }
       
-      const analyticsRes = await fetch(url, { credentials: "include" });
+      const [analyticsRes, srcRes] = await Promise.all([
+        fetch(url, { credentials: "include" }),
+        fetch(srcUrl, { credentials: "include" }),
+      ]);
       if (analyticsRes.ok) setAnalytics(await analyticsRes.json());
+      if (srcRes.ok) setSourceBreakdown(await srcRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
