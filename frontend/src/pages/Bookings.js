@@ -365,6 +365,7 @@ export default function Bookings() {
                 <SelectItem value="checked_in">Checked In</SelectItem>
                 <SelectItem value="checked_out">Checked Out</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="blocked">Blocked</SelectItem>
               </SelectContent>
             </Select>
           )}
