@@ -212,6 +212,41 @@ class BookingServiceUpdate(BaseModel):
     scheduled_date: Optional[str] = None
     status: Optional[str] = None
 
+# ===== REGISTRATION & AUTH MODELS =====
+class InviteRegistration(BaseModel):
+    token: str
+    first_name: str
+    last_name: str
+    email: str
+    phone: str
+    password: str
+
+class PasswordLogin(BaseModel):
+    email: str
+    password: str
+
+# ===== TASK MODELS =====
+class TaskCreate(BaseModel):
+    title: str
+    description: str = ""
+    task_type: str = "general"  # cleaning, maintenance, check_in, check_out, admin, general
+    property_id: Optional[str] = None
+    booking_id: Optional[str] = None
+    assigned_staff_id: str
+    due_date: Optional[str] = None
+    priority: str = "medium"  # low, medium, high, urgent
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    task_type: Optional[str] = None
+    property_id: Optional[str] = None
+    booking_id: Optional[str] = None
+    assigned_staff_id: Optional[str] = None
+    due_date: Optional[str] = None
+    priority: Optional[str] = None
+    status: Optional[str] = None  # pending, in_progress, completed, cancelled
+
 SUBSCRIPTION_EXEMPT_PATHS = ["/api/auth/", "/api/subscription/", "/api/companies/", "/api/webhook/", "/api/invitations/validate/", "/api/seed-demo-data"]
 
 SUBSCRIPTION_PLANS = {
