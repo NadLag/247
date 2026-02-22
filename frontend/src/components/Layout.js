@@ -12,19 +12,18 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { LayoutDashboard, Building2, Users, Receipt, CalendarDays, Mail, CreditCard, Settings, Sun, Moon, Menu, LogOut, ChevronRight, Package, BarChart3, ClipboardList, Link2 } from "lucide-react";
+import { LayoutDashboard, Building2, Users, Receipt, CalendarDays, Mail, CreditCard, Settings, Sun, Moon, Menu, LogOut, ChevronRight, Package, BarChart3, ClipboardList } from "lucide-react";
 
 const navConfig = {
   company_admin: [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Properties", path: "/properties", icon: Building2 },
-    { name: "Staff", path: "/staff", icon: Users },
     { name: "Bookings", path: "/bookings", icon: CalendarDays },
+    { name: "Staff", path: "/staff", icon: Users },
     { name: "Tasks", path: "/tasks", icon: ClipboardList },
-    { name: "Services", path: "/services", icon: Package },
     { name: "Expenses", path: "/expenses", icon: Receipt },
+    { name: "Services", path: "/services", icon: Package },
     { name: "Analytics", path: "/analytics", icon: BarChart3 },
-    { name: "OTA Settings", path: "/ota-settings", icon: Link2 },
     { name: "Invitations", path: "/invitations", icon: Mail },
     { name: "Billing", path: "/billing", icon: CreditCard },
     { name: "Settings", path: "/settings", icon: Settings },
