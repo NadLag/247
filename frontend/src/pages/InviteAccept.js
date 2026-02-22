@@ -100,10 +100,10 @@ export default function InviteAccept() {
         credentials: "include",
         body: JSON.stringify({
           token,
-          first_name: form.first_name,
-          last_name: form.last_name,
-          email: form.email,
-          phone: form.phone,
+          first_name: invitation.first_name || invitation.email.split('@')[0],
+          last_name: invitation.last_name || "",
+          email: invitation.email,
+          phone: invitation.phone || "",
           password: form.password,
         }),
       });
