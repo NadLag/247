@@ -1,0 +1,77 @@
+{
+  "summary": "Tested 2 new features: (1) Past-date validation for BOTH check-in AND check-out dates when creating bookings, (2) New /api/analytics/source-breakdown endpoint with pie charts for bookings count and revenue by source. All 12 backend tests PASSED. All frontend features verified working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_new_booking_features.py",
+    "/app/test_reports/pytest/pytest_new_booking_features.xml"
+  ],
+  "passed_tests": [
+    "Backend: test_01_checkin_past_date_rejected - POST /api/bookings returns 400 for past check-in dates",
+    "Backend: test_02_checkout_past_date_rejected - POST /api/bookings returns 400 for past check-out dates",
+    "Backend: test_03_only_checkout_past_rejected - Check-out before check-in rejected with 400",
+    "Backend: test_04_today_checkin_checkout_accepted - Today check-in and future check-out accepted",
+    "Backend: test_05_future_dates_accepted - Future check-in and check-out dates accepted",
+    "Backend: test_06_source_breakdown_returns_data - GET /api/analytics/source-breakdown returns correct structure",
+    "Backend: test_07_source_breakdown_structure - Source breakdown has label, key, bookings, revenue, booking_pct, revenue_pct",
+    "Backend: test_08_source_breakdown_with_year_filter - Accepts year query param",
+    "Backend: test_09_source_breakdown_with_month_filter - Accepts month query param",
+    "Backend: test_10_source_breakdown_with_property_filter - Accepts property_id query param",
+    "Backend: test_11_source_breakdown_with_all_filters - All filters work together",
+    "Frontend: Analytics page loads with source breakdown pie charts",
+    "Frontend: 'Bookings by Source' pie chart displays with source-bookings-chart testid",
+    "Frontend: 'Revenue by Source' pie chart displays with source-revenue-chart testid",
+    "Frontend: Source items show with percentages and values (Airbnb 50%, Direct 50%)",
+    "Frontend: Check-in date input has min='2026-02-22' (today) for new bookings",
+    "Frontend: Check-out date input has min='2026-02-22' for new bookings"
+  ],
+  "features_verified": {
+    "checkout_past_date_validation": {
+      "status": "WORKING",
+      "details": "POST /api/bookings now validates BOTH check-in AND check-out dates. Returns 400 with message 'Check-out date cannot be in the past' for past checkout dates."
+    },
+    "checkin_past_date_validation": {
+      "status": "WORKING", 
+      "details": "POST /api/bookings returns 400 with message 'Check-in date cannot be in the past' for past check-in dates."
+    },
+    "source_breakdown_endpoint": {
+      "status": "WORKING",
+      "details": "GET /api/analytics/source-breakdown returns sources array with label, key, bookings, revenue, nights, booking_pct, revenue_pct. Accepts year, month, property_id query params."
+    },
+    "bookings_by_source_pie_chart": {
+      "status": "WORKING",
+      "details": "Analytics page shows 'Bookings by Source' pie chart with data-testid='source-bookings-chart'. Shows source name, percentage, and count."
+    },
+    "revenue_by_source_pie_chart": {
+      "status": "WORKING",
+      "details": "Analytics page shows 'Revenue by Source' pie chart with data-testid='source-revenue-chart'. Shows source name, percentage, and revenue amount."
+    },
+    "date_input_min_attribute": {
+      "status": "WORKING",
+      "details": "Both check-in and check-out inputs in booking form have min attribute set to today for new bookings. Prevents UI selection of past dates."
+    }
+  },
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_new_booking_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (All UI verifications passed)"
+  },
+  "test_credentials": {
+    "note": "Tests create their own test users/sessions with timestamps for isolation"
+  },
+  "seed_data_creation": "Test creates temporary test users, properties, and bookings - cleaned up after tests",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Two new features verified working: (1) Check-out past-date validation added alongside existing check-in validation - backend returns 400 for past dates, frontend has min attribute on both date inputs, (2) New source breakdown analytics endpoint at GET /api/analytics/source-breakdown returns aggregated booking/revenue data by source with pie charts on Analytics page showing Bookings by Source and Revenue by Source. All source percentages and amounts display correctly."
+}
