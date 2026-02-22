@@ -2031,22 +2031,24 @@ def parse_ical_bookings(ical_content: str, source: str, property_id: str) -> Lis
                     skipped_count += 1
                     continue
                 
-                # Check for blocked/unavailable dates - import as blocked status
+                # Check for blocked/unavailable dates - import as blocked type (NOT a booking)
                 summary_lower = summary.lower()
                 is_blocked = any(blocked in summary_lower for blocked in ['blocked', 'unavailable', 'not available'])
                 
                 if is_blocked:
-                    # Import as blocked date
+                    # Import as blocked date - NOT a real booking
                     bookings.append({
                         "uid": uid,
-                        "guest_name": "Blocked",
+                        "guest_name": None,  # No guest for blocked dates
                         "check_in": check_in.isoformat() if hasattr(check_in, 'isoformat') else str(check_in),
                         "check_out": check_out.isoformat() if hasattr(check_out, 'isoformat') else str(check_out),
                         "nights": nights,
-                        "status": "blocked",
+                        "status": "blocked",  # Keep for backwards compat, but booking_type is primary
+                        "booking_type": "blocked",  # NEW: Primary type indicator
                         "source": source,
                         "property_id": property_id,
                         "description": f"Blocked: {summary}",
+                        "total_amount": 0,  # Blocked dates have no revenue
                     })
                     blocked_count += 1
                     continue
