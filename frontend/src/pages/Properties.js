@@ -192,42 +192,48 @@ export default function Properties() {
     } catch (err) { toast.error("Error deleting property"); }
   };
 
-  const handleOTASyncAll = async () => {
-    setSyncingAll(true);
+  const handleOTASync = async () => {
+    setSyncing(true);
     try {
-      toast.info("Syncing all properties with OTAs...");
-      const res = await fetch(`${API}/api/ota/simulate-sync`, { method: "POST", credentials: "include" });
+      toast.info("Starting OTA sync...");
+      const res = await fetch(`${API}/api/ota/sync`, { method: "POST", credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        if (data.synced > 0) {
-          toast.success(`Synced ${data.synced} bookings from OTAs`);
+        if (data.status === "no_feeds") {
+          toast.warning("No OTA feeds configured. Go to OTA Settings to add feeds.");
         } else {
-          toast.info("No new bookings from OTAs");
+          toast.success(data.message);
+          // Poll for completion
+          const pollStatus = async () => {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            const statusRes = await fetch(`${API}/api/ota/sync-status`, { credentials: "include" });
+            if (statusRes.ok) {
+              const status = await statusRes.json();
+              setLastSyncInfo(status);
+              if (status.is_syncing) {
+                pollStatus();
+              } else {
+                setSyncing(false);
+                fetchData();
+                if (status.latest_sync?.stats) {
+                  const s = status.latest_sync.stats;
+                  toast.success(`Sync complete: ${s.created} new, ${s.updated} updated bookings`);
+                }
+              }
+            }
+          };
+          pollStatus();
         }
       } else {
-        toast.error("Sync failed");
+        const err = await res.json();
+        toast.error(err.detail || "Sync failed");
+        setSyncing(false);
       }
     } catch (err) {
       toast.error("Sync failed");
-    } finally {
-      setSyncingAll(false);
+      setSyncing(false);
     }
-  };
-
-  const handleOTASyncProperty = async (propertyId) => {
-    setSyncingPropId(propertyId);
-    try {
-      const res = await fetch(`${API}/api/ota/simulate-property-sync/${propertyId}`, { method: "POST", credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        toast.success(`Synced ${data.synced} bookings for ${data.property}`);
-      } else {
-        toast.error("Sync failed");
-      }
-    } catch (err) {
-      toast.error("Sync failed");
-    } finally {
-      setSyncingPropId(null);
+  };;
     }
   };
 
