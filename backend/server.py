@@ -1554,9 +1554,11 @@ async def delete_invitation(inv_id: str, user=Depends(require_admin)):
 
 @api_router.get("/invitations/validate/{token}")
 async def validate_invitation(token: str):
+    """Validate invitation token and return pre-filled user data"""
     invitation = await db.invitations.find_one({"token": token, "used": False}, {"_id": 0})
     if not invitation:
         raise HTTPException(status_code=404, detail="Invalid or expired invitation")
+    
     expires_at = invitation.get("expires_at", "")
     if isinstance(expires_at, str):
         expires_at = datetime.fromisoformat(expires_at)
@@ -1564,12 +1566,39 @@ async def validate_invitation(token: str):
         expires_at = expires_at.replace(tzinfo=timezone.utc)
     if expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Invitation has expired")
+    
     company = await db.companies.find_one({"company_id": invitation["company_id"]}, {"_id": 0})
+    
+    # Get pre-filled user info from staff or property owner records
+    first_name = ""
+    last_name = ""
+    phone = ""
+    
+    if invitation["role"] == "staff":
+        # Look for staff record with this email
+        staff = await db.staff.find_one({"company_id": invitation["company_id"], "email": invitation["email"]}, {"_id": 0})
+        if staff:
+            first_name = staff.get("first_name", "")
+            last_name = staff.get("last_name", "")
+            phone = staff.get("phone", "")
+    elif invitation["role"] == "owner":
+        # Look for property with this owner email
+        prop = await db.properties.find_one({"company_id": invitation["company_id"], "owner_email": invitation["email"]}, {"_id": 0})
+        if prop:
+            first_name = prop.get("owner_first_name", "")
+            last_name = prop.get("owner_last_name", "")
+            phone = prop.get("owner_phone", "")
+    
     return {
         "email": invitation["email"],
         "role": invitation["role"],
-        "company_name": company["name"] if company else "Unknown",
+        "company_name": company.get("name", "Unknown") if company else "Unknown",
+        "company_id": invitation["company_id"],
+        "first_name": first_name,
+        "last_name": last_name,
+        "phone": phone,
         "token": token,
+        "used": invitation.get("used", False),
     }
 
 # ===== SUBSCRIPTION ROUTES =====
