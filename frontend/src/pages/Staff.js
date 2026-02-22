@@ -118,12 +118,12 @@ export default function StaffPage() {
   return (
     <Layout>
       <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="staff-page">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fade-in">
           <div>
-            <h1 className="font-heading text-2xl font-bold">Staff</h1>
+            <h1 className="font-heading text-2xl font-bold text-foreground">Staff</h1>
             <p className="text-sm text-muted-foreground mt-1">{staff.length} staff members</p>
           </div>
-          {isAdmin && <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-staff-btn"><Plus className="mr-2 h-4 w-4" />Add Staff</Button>}
+          {isAdmin && <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-staff-btn" className="shadow-sm"><Plus className="mr-2 h-4 w-4" />Add Staff</Button>}
         </div>
 
         {loading ? (
