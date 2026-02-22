@@ -697,13 +697,12 @@ export default function Bookings() {
               ) : (
                 <BookingList 
                   bookings={bookings}
+                  blockedDates={blockedDates}
                   properties={properties}
                   isAdmin={isAdmin}
                   onEdit={openEdit}
                   propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
                   statusFilter={statusFilter === "all" ? "" : statusFilter}
-                  sortBy={sortBy}
-                  onSort={setSortBy}
                 />
               )}
             </CardContent>
