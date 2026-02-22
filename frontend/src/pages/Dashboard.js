@@ -184,14 +184,14 @@ export default function Dashboard() {
     <Layout>
       <div className="space-y-8" data-testid="dashboard-page">
         {/* Header */}
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between animate-fade-in">
           <div>
-            <h1 className="text-2xl font-bold font-heading text-gray-900">
+            <h1 className="text-2xl font-bold font-heading text-gray-900 dark:text-gray-100">
               Hey, {user.name?.split(' ')[0] || 'there'}
             </h1>
-            <p className="text-gray-500 mt-1">Here's your performance overview</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Here's your performance overview</p>
           </div>
-          <Badge variant="outline" className="text-xs font-medium capitalize bg-teal-50 text-teal-700 border-teal-200">
+          <Badge variant="outline" className="text-xs font-medium capitalize bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-700">
             {user.role?.replace('_', ' ')}
           </Badge>
         </div>
@@ -207,6 +207,7 @@ export default function Dashboard() {
                 icon={DollarSign} 
                 trend={revenueTrend}
                 large
+                delay={0.1}
               />
               <KPICard 
                 label="Net Income" 
@@ -214,6 +215,7 @@ export default function Dashboard() {
                 subtitle={`Expenses: ${fmt(kpis.total_expenses || 0)}`}
                 icon={TrendingUp}
                 large
+                delay={0.15}
               />
               <KPICard 
                 label="Occupancy Rate" 
@@ -221,6 +223,7 @@ export default function Dashboard() {
                 subtitle={`${kpis.nights_booked || 0} nights booked`}
                 icon={Percent}
                 large
+                delay={0.2}
               />
             </div>
 
@@ -231,35 +234,38 @@ export default function Dashboard() {
                 value={fmt(kpis.adr || 0)} 
                 subtitle="Average Daily Rate"
                 icon={BarChart3}
+                delay={0.25}
               />
               <KPICard 
                 label="RevPAN" 
                 value={fmt(kpis.revpan || 0)} 
                 subtitle="Revenue Per Available Night"
                 icon={Moon}
+                delay={0.3}
               />
               <KPICard 
                 label="Active Bookings" 
                 value={kpis.active_bookings || 0}
                 subtitle={`${kpis.total_properties || 0} properties`}
                 icon={CalendarDays}
+                delay={0.35}
               />
             </div>
 
             {/* Secondary KPIs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <SecondaryKPI label="Properties" value={`${kpis.active_properties || 0} / ${kpis.total_properties || 0}`} icon={Building2} />
-              <SecondaryKPI label="Nights Booked" value={kpis.nights_booked || 0} icon={CalendarDays} />
-              <SecondaryKPI label="Expense Ratio" value={kpis.revenue_mtd > 0 ? `${((kpis.total_expenses || 0) / kpis.revenue_mtd * 100).toFixed(0)}%` : '0%'} icon={TrendingUp} />
-              <SecondaryKPI label="Active Properties" value={kpis.active_properties || 0} icon={Home} />
+              <SecondaryKPI label="Properties" value={`${kpis.active_properties || 0} / ${kpis.total_properties || 0}`} icon={Building2} delay={0.4} />
+              <SecondaryKPI label="Nights Booked" value={kpis.nights_booked || 0} icon={CalendarDays} delay={0.45} />
+              <SecondaryKPI label="Expense Ratio" value={kpis.revenue_mtd > 0 ? `${((kpis.total_expenses || 0) / kpis.revenue_mtd * 100).toFixed(0)}%` : '0%'} icon={TrendingUp} delay={0.5} />
+              <SecondaryKPI label="Active Properties" value={kpis.active_properties || 0} icon={Home} delay={0.55} />
             </div>
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Revenue Trend Chart */}
-              <Card className="lg:col-span-2 shadow-sm border-gray-100" data-testid="revenue-chart">
+              <Card className="lg:col-span-2 shadow-sm border-gray-100 dark:border-gray-700/50 animate-fade-in opacity-0" style={{ animationDelay: '0.4s' }} data-testid="revenue-chart">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-semibold font-heading text-gray-900">Revenue Trend</CardTitle>
+                  <CardTitle className="text-base font-semibold font-heading text-gray-900 dark:text-gray-100">Revenue Trend</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="h-[320px]">
@@ -300,17 +306,17 @@ export default function Dashboard() {
               </Card>
 
               {/* Recent Bookings */}
-              <Card className="shadow-sm border-gray-100" data-testid="recent-bookings">
+              <Card className="shadow-sm border-gray-100 dark:border-gray-700/50 animate-fade-in opacity-0" style={{ animationDelay: '0.45s' }} data-testid="recent-bookings">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-semibold font-heading text-gray-900">Recent Bookings</CardTitle>
+                  <CardTitle className="text-base font-semibold font-heading text-gray-900 dark:text-gray-100">Recent Bookings</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="max-h-[320px] overflow-y-auto pr-2">
                     {bookings.length === 0 ? (
-                      <p className="text-sm text-gray-400 text-center py-8">No recent bookings</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">No recent bookings</p>
                     ) : (
-                      bookings.map((b) => (
-                        <BookingItem key={b.id} booking={b} propertyName={getPropName(b.property_id)} />
+                      bookings.map((b, i) => (
+                        <BookingItem key={b.id} booking={b} propertyName={getPropName(b.property_id)} index={i} />
                       ))
                     )}
                   </div>
