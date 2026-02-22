@@ -214,35 +214,46 @@ function BookingList({ bookings, properties, isAdmin, onEdit, propertyFilter, st
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedBookings.map(b => (
-            <TableRow key={b.id} data-testid={`booking-row-${b.id}`}>
-              <TableCell className="font-medium">{b.guest_name}</TableCell>
-              <TableCell>{getPropName(b.property_id)}</TableCell>
-              <TableCell>{b.check_in}</TableCell>
-              <TableCell>{b.check_out}</TableCell>
-              <TableCell>{calcNights(b.check_in, b.check_out)}</TableCell>
-              <TableCell>
-                {b.ota_source ? (
-                  <Badge variant="outline" className="text-xs capitalize">{b.ota_source}</Badge>
-                ) : (
-                  <span className="text-muted-foreground text-xs">Manual</span>
-                )}
-              </TableCell>
-              <TableCell>
-                <Badge className={`text-xs capitalize ${statusColors[b.status] || ''}`}>
-                  {b.status?.replace('_', ' ')}
-                </Badge>
-              </TableCell>
-              <TableCell>{fmt(b.total_amount || 0)}</TableCell>
-              {isAdmin && (
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+          {sortedBookings.map(b => {
+            const isIcalImport = b.ota_source && b.ota_source !== 'manual';
+            const guestDisplay = b.guest_name || (isIcalImport ? `${b.ota_source} Guest` : 'Guest');
+            const amountDisplay = b.total_amount > 0 ? fmt(b.total_amount) : (isIcalImport ? <span className="text-muted-foreground text-xs italic">Not in iCal</span> : '$0.00');
+            
+            return (
+              <TableRow key={b.id} data-testid={`booking-row-${b.id}`}>
+                <TableCell className="font-medium">
+                  {guestDisplay}
+                  {isIcalImport && b.guest_name?.includes('Guest') && (
+                    <span className="block text-[10px] text-muted-foreground">via iCal sync</span>
+                  )}
                 </TableCell>
-              )}
-            </TableRow>
-          ))}
+                <TableCell>{getPropName(b.property_id)}</TableCell>
+                <TableCell>{b.check_in}</TableCell>
+                <TableCell>{b.check_out}</TableCell>
+                <TableCell>{calcNights(b.check_in, b.check_out)}</TableCell>
+                <TableCell>
+                  {b.ota_source ? (
+                    <Badge variant="outline" className="text-xs capitalize">{b.ota_source}</Badge>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">Manual</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge className={`text-xs capitalize ${statusColors[b.status] || ''}`}>
+                    {b.status?.replace('_', ' ')}
+                  </Badge>
+                </TableCell>
+                <TableCell>{amountDisplay}</TableCell>
+                {isAdmin && (
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                )}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
