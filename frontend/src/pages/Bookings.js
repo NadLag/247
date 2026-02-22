@@ -170,11 +170,14 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
 
 // List View Component
 function BookingList({ bookings, properties, isAdmin, onEdit, propertyFilter, statusFilter, sortBy, onSort }) {
-  const getPropName = (id) => properties.find(p => p.id === id)?.name || "Unknown";
+  const getPropName = (id) => {
+    const prop = properties.find(p => p.id === id);
+    return prop?.name || "Unknown Property";
+  };
   
   const filteredBookings = bookings.filter(b => {
-    if (propertyFilter && b.property_id !== propertyFilter) return false;
-    if (statusFilter && b.status !== statusFilter) return false;
+    if (propertyFilter && propertyFilter !== "all" && b.property_id !== propertyFilter) return false;
+    if (statusFilter && statusFilter !== "all" && b.status !== statusFilter) return false;
     return true;
   });
   
