@@ -66,6 +66,13 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Separate API endpoint** - `GET /api/bookings/blocked-dates` for calendar
 - [x] **Database migration** - Auto-converts `guest_name: "Blocked"` to proper blocked type
 
+### Bookings Page Fixes (Feb 22, 2026)
+- [x] **Property filter fix** - Properly handles "all" and specific property selections
+- [x] **Missing property recovery** - Auto-created missing OTA-synced property
+- [x] **iCal import indicators** - Shows "via iCal sync" for imported bookings
+- [x] **Amount display improvement** - Shows "Not in iCal" for missing pricing data
+- [x] **Null-safe sorting** - Handles null guest names in sort
+
 ### Authentication System
 - [x] Google OAuth (Emergent Auth)
 - [x] Password-based registration via invitation links
