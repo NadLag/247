@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Pencil, CalendarDays, List, ChevronLeft, ChevronRight, Filter, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, CalendarDays, List, ChevronLeft, ChevronRight, Filter, AlertTriangle, X, Clock, CalendarCheck, History, Ban } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const fmt = (v) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
@@ -34,8 +36,11 @@ const statusColors = {
   blocked: "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600",
 };
 
-// Calendar Component
+// Calendar Component with Day Detail Modal
 function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onMonthChange, onBookingClick, propertyFilter }) {
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [dayModalOpen, setDayModalOpen] = useState(false);
+  
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   
@@ -68,10 +73,22 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
 
   const getPropName = (id) => {
     const p = properties.find(pr => pr.id === id);
-    return p ? p.name.slice(0, 15) : "Unknown";
+    return p ? p.name : "Unknown Property";
   };
   
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  
+  const handleDayClick = (day) => {
+    if (!day) return;
+    const dayBookings = getBookingsForDay(day);
+    const dayBlocked = getBlockedForDay(day);
+    if (dayBookings.length > 0 || dayBlocked.length > 0) {
+      setSelectedDay({ day, bookings: dayBookings, blocked: dayBlocked });
+      setDayModalOpen(true);
+    }
+  };
+  
+  const selectedDateStr = selectedDay ? `${monthNames[month]} ${selectedDay.day}, ${year}` : '';
   
   return (
     <div className="space-y-4">
@@ -104,11 +121,14 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
             const dayBlocked = getBlockedForDay(day);
             const isToday = day && new Date().toDateString() === new Date(year, month, day).toDateString();
             const hasBlocked = dayBlocked.length > 0;
+            const totalItems = dayBookings.length + dayBlocked.length;
+            const hasMore = totalItems > 3;
             
             return (
               <div 
                 key={idx} 
-                className={`min-h-[100px] border-b border-r p-1 ${!day ? 'bg-muted/20' : ''} ${isToday ? 'bg-primary/5' : ''} ${hasBlocked ? 'bg-slate-100 dark:bg-slate-800/50' : ''}`}
+                onClick={() => handleDayClick(day)}
+                className={`min-h-[100px] border-b border-r p-1 transition-colors ${!day ? 'bg-muted/20' : 'cursor-pointer hover:bg-muted/30'} ${isToday ? 'bg-primary/5' : ''} ${hasBlocked ? 'bg-slate-100 dark:bg-slate-800/50' : ''}`}
               >
                 {day && (
                   <>
@@ -120,31 +140,25 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
                       {dayBlocked.slice(0, 1).map((b, i) => (
                         <div 
                           key={`blocked-${i}`}
-                          className="text-[10px] px-1 py-0.5 rounded bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-300 border border-slate-400 dark:border-slate-500 line-through italic cursor-default"
+                          className="text-[10px] px-1 py-0.5 rounded bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-300 border border-slate-400 dark:border-slate-500 line-through italic"
                           title={`Unavailable - ${getPropName(b.property_id)}`}
                         >
                           Unavailable
                         </div>
                       ))}
-                      {dayBlocked.length > 1 && (
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 text-center italic">
-                          +{dayBlocked.length - 1} blocked
-                        </div>
-                      )}
                       {/* Show real bookings */}
                       {dayBookings.slice(0, hasBlocked ? 2 : 3).map((b, i) => (
                         <div 
                           key={i}
-                          onClick={() => onBookingClick(b)}
-                          className={`text-[10px] px-1 py-0.5 rounded cursor-pointer truncate ${statusColors[b.status] || 'bg-primary/80 text-white'}`}
+                          className={`text-[10px] px-1 py-0.5 rounded truncate ${statusColors[b.status] || 'bg-primary/80 text-white'}`}
                           title={`${b.guest_name} - ${getPropName(b.property_id)}`}
                         >
                           {b.guest_name?.split(' ')[0] || 'Guest'}
                         </div>
                       ))}
-                      {dayBookings.length > (hasBlocked ? 2 : 3) && (
-                        <div className="text-[10px] text-muted-foreground text-center">
-                          +{dayBookings.length - (hasBlocked ? 2 : 3)} more
+                      {hasMore && (
+                        <div className="text-[10px] text-primary font-medium text-center hover:underline">
+                          +{totalItems - (hasBlocked ? 3 : 3)} more
                         </div>
                       )}
                     </div>
@@ -164,6 +178,70 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-red-400" /> Cancelled</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-slate-300 border border-slate-400 line-through" /> <span className="italic">Blocked/Unavailable</span></div>
       </div>
+      
+      {/* Day Detail Modal */}
+      <Dialog open={dayModalOpen} onOpenChange={setDayModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              {selectedDateStr}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedDay?.bookings.length || 0} bookings, {selectedDay?.blocked.length || 0} blocked
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px] pr-4">
+            <div className="space-y-3">
+              {/* Blocked Dates */}
+              {selectedDay?.blocked.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                    <Ban className="h-4 w-4" /> Unavailable
+                  </h4>
+                  {selectedDay.blocked.map((b, i) => (
+                    <div key={`b-${i}`} className="flex items-center justify-between p-2 bg-slate-100 dark:bg-slate-800 rounded-lg mb-2">
+                      <div>
+                        <p className="text-sm font-medium line-through text-muted-foreground">{getPropName(b.property_id)}</p>
+                        <p className="text-xs text-muted-foreground">{b.check_in} → {b.check_out}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">Blocked</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Bookings */}
+              {selectedDay?.bookings.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                    <CalendarCheck className="h-4 w-4" /> Bookings
+                  </h4>
+                  {selectedDay.bookings.map((b, i) => (
+                    <div 
+                      key={`r-${i}`} 
+                      className="flex items-center justify-between p-2 border rounded-lg mb-2 hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => { setDayModalOpen(false); onBookingClick(b); }}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{b.guest_name || 'Guest'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{getPropName(b.property_id)}</p>
+                        <p className="text-xs text-muted-foreground">{b.check_in} → {b.check_out}</p>
+                      </div>
+                      <div className="text-right ml-3">
+                        <Badge className={`text-xs ${statusColors[b.status] || ''}`}>
+                          {b.status?.replace('_', ' ')}
+                        </Badge>
+                        <p className="text-sm font-medium mt-1">{b.total_amount > 0 ? fmt(b.total_amount) : '-'}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
