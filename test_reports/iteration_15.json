@@ -1,0 +1,76 @@
+{
+  "summary": "Tested 5 booking enhancements: (1) Auto-checkout expired bookings, (2) Past-date validation, (3) iCal source tracking, (4) Source filter dropdown, (5) Source display. All 11 backend tests PASSED. All frontend features verified working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_booking_enhancements.py",
+    "/app/test_reports/pytest/pytest_booking_enhancements.xml",
+    "/.screenshots/booking_enhancements_01_initial.png",
+    "/.screenshots/booking_enhancements_02_list_with_filters.png",
+    "/.screenshots/booking_enhancements_03_filtered_direct.png",
+    "/.screenshots/booking_enhancements_04_booking_form.png",
+    "/.screenshots/booking_detail_with_source.png"
+  ],
+  "passed_tests": [
+    "Backend: test_01_auth_verification - Auth working",
+    "Backend: test_02_past_date_booking_rejected - POST /api/bookings returns 400 for past check-in dates",
+    "Backend: test_03_today_booking_accepted - POST /api/bookings accepts today's check-in date",
+    "Backend: test_04_future_booking_accepted - POST /api/bookings accepts future check-in dates",
+    "Backend: test_05_manual_booking_has_ota_source - Manual bookings have ota_source='manual'",
+    "Backend: test_06_get_bookings_sources_endpoint - GET /api/bookings/sources returns source list",
+    "Backend: test_07_filter_bookings_by_source_direct - GET /api/bookings?source=direct filters correctly",
+    "Backend: test_08_auto_checkout_in_list_bookings - GET /api/bookings auto-updates expired to checked_out",
+    "Backend: test_09_booking_list_contains_ota_source - Bookings include ota_source field",
+    "Backend: test_10_checkout_before_checkin_rejected - Invalid date ranges rejected with 400",
+    "Frontend: Source filter dropdown present in list view",
+    "Frontend: Source column header exists in booking table",
+    "Frontend: 70 source badges displayed (Airbnb, Direct, Expedia, etc.)",
+    "Frontend: Source filter 'Direct Booking' works correctly",
+    "Frontend: Check-in date input has min='2026-02-22' attribute (today's date)",
+    "Frontend: Booking detail popup shows Source field with badge"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100% (All 6 UI verifications passed)"
+  },
+  "features_verified": {
+    "auto_checkout_status": {
+      "status": "WORKING",
+      "details": "GET /api/bookings auto-updates expired bookings (check_out < today) from confirmed/checked_in to checked_out. Also runs on app startup and periodic task every hour."
+    },
+    "past_date_validation": {
+      "status": "WORKING",
+      "details": "POST /api/bookings returns 400 with message 'Check-in date cannot be in the past' for past dates. Frontend check-in input has min attribute set to today."
+    },
+    "ical_source_tracking": {
+      "status": "WORKING",
+      "details": "Bookings have ota_source field. Manual bookings get ota_source='manual'. iCal imports get airbnb/booking.com/etc."
+    },
+    "source_filter_dropdown": {
+      "status": "WORKING",
+      "details": "Source filter dropdown in list view with options: All Sources, Direct Booking, Airbnb, Booking.Com, Expedia, Vrbo"
+    },
+    "source_display": {
+      "status": "WORKING",
+      "details": "Source column in booking table shows badges. Booking detail popup shows Source with badge. Direct/manual bookings show 'Direct', iCal imports show platform name."
+    }
+  },
+  "test_data": {
+    "session_token": "test_booking_session_1771802902136",
+    "property_id": "prop_test_1771802902168",
+    "validation_session": "X8UmdD_TsCY4GFJar7YJpVk89MAMT-W6NWNEft-Ed2E"
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 5 booking enhancements are working correctly. Auto-checkout runs on startup and periodically. Source tracking differentiates between manual/direct bookings and OTA imports. Frontend has source filter and displays sources in table and detail popup."
+}
