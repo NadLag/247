@@ -388,6 +388,133 @@ async def logout(request: Request, response: Response):
     response.delete_cookie("session_token", path="/", samesite="none", secure=True)
     return {"message": "Logged out"}
 
+# ===== PASSWORD-BASED REGISTRATION =====
+@api_router.post("/auth/register-with-invite")
+async def register_with_invite(data: InviteRegistration, response: Response):
+    """Register a new user using an invitation token with password"""
+    # Validate invitation
+    invitation = await db.invitations.find_one({"token": data.token, "used": False}, {"_id": 0})
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invalid or expired invitation")
+    
+    expires_at = invitation.get("expires_at", "")
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Invitation has expired")
+    
+    # Check if email matches
+    if data.email.lower() != invitation["email"].lower():
+        raise HTTPException(status_code=400, detail="Email does not match invitation")
+    
+    # Check if user already exists
+    existing_user = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+    
+    # Hash password
+    password_hash = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    # Create user
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    new_user = {
+        "user_id": user_id,
+        "email": data.email.lower(),
+        "name": f"{data.first_name} {data.last_name}",
+        "first_name": data.first_name,
+        "last_name": data.last_name,
+        "phone": data.phone,
+        "password_hash": password_hash,
+        "auth_method": "password",
+        "picture": "",
+        "company_id": invitation["company_id"],
+        "role": invitation["role"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.insert_one(new_user)
+    
+    # Mark invitation as used
+    await db.invitations.update_one(
+        {"token": data.token},
+        {"$set": {"used": True, "used_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Create audit log
+    await db.audit_logs.insert_one({
+        "id": f"audit_{uuid.uuid4().hex[:12]}",
+        "company_id": invitation["company_id"],
+        "user_id": user_id,
+        "action": "account_activated",
+        "details": {"role": invitation["role"], "method": "password"},
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    
+    # Create session
+    session_token = secrets.token_urlsafe(32)
+    session_doc = {
+        "user_id": user_id,
+        "session_token": session_token,
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.user_sessions.insert_one(session_doc)
+    
+    response.set_cookie(
+        key="session_token", value=session_token,
+        httponly=True, secure=True, samesite="none", path="/", max_age=7 * 24 * 60 * 60,
+    )
+    
+    # Return user without password_hash
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+    return user
+
+@api_router.post("/auth/login")
+async def password_login(data: PasswordLogin, response: Response):
+    """Login with email and password"""
+    user = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Check password
+    password_hash = user.get("password_hash")
+    if not password_hash:
+        raise HTTPException(status_code=401, detail="Please sign in with Google")
+    
+    if not bcrypt.checkpw(data.password.encode('utf-8'), password_hash.encode('utf-8')):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Create audit log
+    await db.audit_logs.insert_one({
+        "id": f"audit_{uuid.uuid4().hex[:12]}",
+        "company_id": user.get("company_id"),
+        "user_id": user["user_id"],
+        "action": "login",
+        "details": {"method": "password"},
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    
+    # Create session
+    session_token = secrets.token_urlsafe(32)
+    session_doc = {
+        "user_id": user["user_id"],
+        "session_token": session_token,
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.user_sessions.insert_one(session_doc)
+    
+    response.set_cookie(
+        key="session_token", value=session_token,
+        httponly=True, secure=True, samesite="none", path="/", max_age=7 * 24 * 60 * 60,
+    )
+    
+    # Return user without password_hash
+    user.pop("password_hash", None)
+    return user
+
 # ===== COMPANY ROUTES =====
 @api_router.post("/companies/setup")
 async def setup_company(data: CompanySetup, user=Depends(get_current_user)):
