@@ -74,8 +74,9 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] OTA source badges on synced bookings
 
 ## Test Results (Feb 22, 2026 - Latest)
-- Backend: 100% (20/20 tests passed)
+- Backend: 100% (13/13 invitation flow tests passed)
 - Frontend: 100% (All UI features verified)
+- Invitation Registration: FIXED - Read-only fields + password setup working
 
 ## API Endpoints
 
