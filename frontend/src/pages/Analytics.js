@@ -104,17 +104,17 @@ export default function Analytics() {
   return (
     <Layout>
       <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="analytics-page">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
           <div>
-            <h1 className="font-heading text-2xl font-bold">Analytics</h1>
+            <h1 className="font-heading text-2xl font-bold text-foreground">Analytics</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {analytics?.period?.current_month || "Loading..."}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-              <SelectTrigger className="w-[180px]" data-testid="property-filter">
-                <Filter className="h-4 w-4 mr-2" />
+              <SelectTrigger className="w-[180px] hover:border-primary/30" data-testid="property-filter">
+                <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="All Properties" />
               </SelectTrigger>
               <SelectContent>
@@ -125,7 +125,7 @@ export default function Analytics() {
               </SelectContent>
             </Select>
             <Select value={String(selectedMonth)} onValueChange={v => setSelectedMonth(parseInt(v))}>
-              <SelectTrigger className="w-[140px]" data-testid="month-filter">
+              <SelectTrigger className="w-[140px] hover:border-primary/30" data-testid="month-filter">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -135,7 +135,7 @@ export default function Analytics() {
               </SelectContent>
             </Select>
             <Select value={String(selectedYear)} onValueChange={v => setSelectedYear(parseInt(v))}>
-              <SelectTrigger className="w-[100px]" data-testid="year-filter">
+              <SelectTrigger className="w-[100px] hover:border-primary/30" data-testid="year-filter">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
