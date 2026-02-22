@@ -309,15 +309,33 @@ export default function Bookings() {
         fetchData();
       } else if (res.status === 409) {
         // Conflict with blocked dates - show override dialog
-        const err = await res.json();
-        setConflictDetails(err.detail);
-        setDialogOpen(false);
-        setOverrideDialogOpen(true);
+        try {
+          const err = await res.json();
+          setConflictDetails(err.detail);
+          setDialogOpen(false);
+          setOverrideDialogOpen(true);
+        } catch (parseError) {
+          // If JSON parsing fails, still show conflict dialog with default message
+          setConflictDetails({ message: "Date conflict with blocked dates", requires_override: true });
+          setDialogOpen(false);
+          setOverrideDialogOpen(true);
+        }
       } else { 
         const err = await res.json(); 
         toast.error(typeof err.detail === 'string' ? err.detail : "Failed to save booking"); 
       }
-    } catch (err) { toast.error("Error saving booking"); } finally { setSaving(false); }
+    } catch (err) { 
+      // Check if the error message contains 409 - some proxies throw on non-2xx
+      const errMsg = err?.message || err?.toString() || '';
+      if (errMsg.includes('409') || errMsg.includes('conflict')) {
+        setConflictDetails({ message: "Date conflict with blocked dates", requires_override: true });
+        setDialogOpen(false);
+        setOverrideDialogOpen(true);
+      } else {
+        console.error('Booking save error:', err);
+        toast.error("Error saving booking"); 
+      }
+    } finally { setSaving(false); }
   };
   
   const handleForceOverride = () => {
