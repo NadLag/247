@@ -294,6 +294,10 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
     const isIcalImport = b.ota_source && b.ota_source !== 'manual';
     const guestDisplay = b.guest_name || (isIcalImport ? `${b.ota_source} Guest` : 'Guest');
     const amountDisplay = b.total_amount > 0 ? fmt(b.total_amount) : (isIcalImport ? <span className="text-muted-foreground text-xs italic">Not in iCal</span> : '$0.00');
+    const sourceLabel = getSourceLabel(b);
+    const sourceStyle = isIcalImport
+      ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-700"
+      : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700";
     
     return (
       <TableRow key={b.id} data-testid={`booking-row-${b.id}`} className="hover:bg-muted/30">
@@ -310,6 +314,11 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
         <TableCell>
           <Badge className={`text-xs capitalize ${statusColors[b.status] || ''}`}>
             {b.status?.replace('_', ' ')}
+          </Badge>
+        </TableCell>
+        <TableCell>
+          <Badge variant="outline" className={`text-[10px] capitalize ${sourceStyle}`} data-testid={`booking-source-${b.id}`}>
+            {sourceLabel}
           </Badge>
         </TableCell>
         <TableCell className="text-sm">{amountDisplay}</TableCell>
