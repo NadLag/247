@@ -46,16 +46,19 @@ function KPICard({ label, value, subtitle, icon: Icon, trend, large = false, del
 }
 
 // Secondary KPI (smaller)
-function SecondaryKPI({ label, value, icon: Icon }) {
+function SecondaryKPI({ label, value, icon: Icon, delay = 0 }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
+    <div 
+      className="bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 rounded-xl p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 animate-fade-in opacity-0"
+      style={{ animationDelay: `${delay}s` }}
+    >
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-lg bg-gray-50 flex items-center justify-center">
-          <Icon className="h-5 w-5 text-gray-500" />
+        <div className="h-10 w-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 flex items-center justify-center">
+          <Icon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{label}</p>
-          <p className="text-lg font-bold font-heading text-gray-900 tabular-nums">{value}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{label}</p>
+          <p className="text-lg font-bold font-heading text-gray-900 dark:text-gray-100 tabular-nums">{value}</p>
         </div>
       </div>
     </div>
