@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Building2, MapPin, User, BedDouble, Bath, FileText, UserCheck, RefreshCw, Clock, Link2, Globe, FileEdit, Loader2, CheckCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, MapPin, User, RefreshCw, Clock, Globe, FileEdit, Loader2, CheckCircle, Eye } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
