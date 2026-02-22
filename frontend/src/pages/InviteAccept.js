@@ -181,15 +181,47 @@ export default function InviteAccept() {
         </CardHeader>
         
         <CardContent className="p-6 pt-2">
-          {/* Invitation Details */}
-          <div className="bg-muted/50 rounded-lg p-4 mb-6 border">
-            <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-muted-foreground shrink-0" />
-              <div>
-                <p className="text-sm font-medium">Invitation for</p>
-                <p className="text-sm text-muted-foreground">{invitation.email}</p>
+          {/* Read-Only Invitation Details */}
+          <div className="bg-muted/50 rounded-lg p-4 mb-6 border space-y-3" data-testid="invitation-details">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Name</p>
+                  <p className="text-sm font-medium" data-testid="invite-name">
+                    {invitation.first_name && invitation.last_name 
+                      ? `${invitation.first_name} ${invitation.last_name}` 
+                      : invitation.email.split('@')[0]}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Role</p>
+                  <p className="text-sm font-medium" data-testid="invite-role">{roleDisplay}</p>
+                </div>
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  <p className="text-sm font-medium truncate" data-testid="invite-email">{invitation.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Company</p>
+                  <p className="text-sm font-medium truncate" data-testid="invite-company">{invitation.company_name}</p>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-center text-muted-foreground pt-1 border-t">
+              These details are set by your organization and cannot be changed
+            </p>
           </div>
 
           {/* Google Auth Option */}
