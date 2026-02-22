@@ -15,7 +15,6 @@ import Bookings from "@/pages/Bookings";
 import Services from "@/pages/Services";
 import Analytics from "@/pages/Analytics";
 import Tasks from "@/pages/Tasks";
-import OTASettings from "@/pages/OTASettings";
 import InviteAccept from "@/pages/InviteAccept";
 import { Toaster } from "@/components/ui/sonner";
 
