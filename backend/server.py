@@ -901,42 +901,125 @@ async def delete_expense(expense_id: str, user=Depends(require_admin)):
 
 # ===== BOOKING ROUTES =====
 @api_router.get("/bookings")
-async def list_bookings(user=Depends(get_current_user)):
+async def list_bookings(user=Depends(get_current_user), include_blocked: bool = False):
+    """List bookings. By default, blocked dates are excluded from the list."""
     company_id = user.get("company_id")
     if not company_id:
         return []
-    return await db.bookings.find({"company_id": company_id}, {"_id": 0}).sort("check_in", -1).to_list(1000)
+    
+    query = {"company_id": company_id}
+    if not include_blocked:
+        # Exclude blocked dates from main bookings list
+        query["$or"] = [
+            {"booking_type": {"$ne": "blocked"}},
+            {"booking_type": {"$exists": False}, "status": {"$ne": "blocked"}}  # Backwards compat
+        ]
+    
+    return await db.bookings.find(query, {"_id": 0}).sort("check_in", -1).to_list(1000)
+
+@api_router.get("/bookings/blocked-dates")
+async def list_blocked_dates(user=Depends(get_current_user), property_id: Optional[str] = None):
+    """Get blocked dates only - for calendar display"""
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    
+    query = {
+        "company_id": company_id,
+        "$or": [
+            {"booking_type": "blocked"},
+            {"status": "blocked", "booking_type": {"$exists": False}}  # Backwards compat
+        ]
+    }
+    if property_id:
+        query["property_id"] = property_id
+    
+    return await db.bookings.find(query, {"_id": 0}).sort("check_in", 1).to_list(1000)
 
 @api_router.post("/bookings", status_code=201)
 async def create_booking(data: BookingCreate, user=Depends(require_admin)):
     company_id = user["company_id"]
     
     # Check for overlapping blocked dates
-    if data.property_id and data.check_in and data.check_out:
+    if data.property_id and data.check_in and data.check_out and not data.force_override:
         overlapping_blocked = await db.bookings.find_one({
             "company_id": company_id,
             "property_id": data.property_id,
-            "status": "blocked",
             "$or": [
-                # New booking starts during blocked period
-                {"check_in": {"$lte": data.check_in}, "check_out": {"$gt": data.check_in}},
-                # New booking ends during blocked period
-                {"check_in": {"$lt": data.check_out}, "check_out": {"$gte": data.check_out}},
-                # New booking contains blocked period
-                {"check_in": {"$gte": data.check_in}, "check_out": {"$lte": data.check_out}},
+                {"booking_type": "blocked"},
+                {"status": "blocked", "booking_type": {"$exists": False}}
+            ],
+            "$and": [
+                {"check_in": {"$lt": data.check_out}},
+                {"check_out": {"$gt": data.check_in}}
             ]
         }, {"_id": 0})
         
         if overlapping_blocked:
             raise HTTPException(
-                status_code=400, 
-                detail=f"This date range is blocked and unavailable ({overlapping_blocked.get('check_in')} to {overlapping_blocked.get('check_out')})"
+                status_code=409,  # Conflict status
+                detail={
+                    "message": "This date range overlaps with blocked/unavailable dates.",
+                    "blocked_period": {
+                        "check_in": overlapping_blocked.get("check_in"),
+                        "check_out": overlapping_blocked.get("check_out")
+                    },
+                    "requires_override": True
+                }
             )
+    
+    # If force_override, handle blocked date override
+    if data.force_override and data.property_id and data.check_in and data.check_out:
+        # Find and update overlapping blocked dates to "overridden"
+        overlapping_result = await db.bookings.update_many(
+            {
+                "company_id": company_id,
+                "property_id": data.property_id,
+                "$or": [
+                    {"booking_type": "blocked"},
+                    {"status": "blocked", "booking_type": {"$exists": False}}
+                ],
+                "$and": [
+                    {"check_in": {"$lt": data.check_out}},
+                    {"check_out": {"$gt": data.check_in}}
+                ]
+            },
+            {"$set": {
+                "status": "overridden",
+                "booking_type": "blocked",  # Keep type as blocked
+                "overridden_at": datetime.now(timezone.utc).isoformat(),
+                "overridden_by": user.get("user_id")
+            }}
+        )
+        
+        # Log the override action
+        if overlapping_result.modified_count > 0:
+            await db.audit_logs.insert_one({
+                "id": f"audit_{uuid.uuid4().hex[:12]}",
+                "company_id": company_id,
+                "user_id": user.get("user_id"),
+                "user_email": user.get("email"),
+                "action": "booking_override",
+                "details": {
+                    "property_id": data.property_id,
+                    "check_in": data.check_in,
+                    "check_out": data.check_out,
+                    "guest_name": data.guest_name,
+                    "blocked_periods_overridden": overlapping_result.modified_count
+                },
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+    
+    # Create the booking
+    booking_data = data.model_dump()
+    booking_data.pop("force_override", None)  # Remove force_override from stored data
     
     booking = {
         "id": f"book_{uuid.uuid4().hex[:12]}",
         "company_id": company_id,
-        **data.model_dump(),
+        **booking_data,
+        "booking_type": "reservation",  # Manual bookings are always reservations
+        "source": "manual",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
