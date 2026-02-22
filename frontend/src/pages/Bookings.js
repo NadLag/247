@@ -521,6 +521,8 @@ export default function Bookings() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [propertyFilter, setPropertyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [sources, setSources] = useState([]);
   const [sortBy, setSortBy] = useState("check_in");
   const [selectedBooking, setSelectedBooking] = useState(null);
 
@@ -528,14 +530,16 @@ export default function Bookings() {
 
   const fetchData = async () => {
     try {
-      const [bookRes, blockedRes, propRes] = await Promise.all([
+      const [bookRes, blockedRes, propRes, srcRes] = await Promise.all([
         fetch(`${API}/api/bookings`, { credentials: "include" }),
         fetch(`${API}/api/bookings/blocked-dates`, { credentials: "include" }),
         fetch(`${API}/api/properties`, { credentials: "include" }),
+        fetch(`${API}/api/bookings/sources`, { credentials: "include" }),
       ]);
       if (bookRes.ok) setBookings(await bookRes.json());
       if (blockedRes.ok) setBlockedDates(await blockedRes.json());
       if (propRes.ok) setProperties(await propRes.json());
+      if (srcRes.ok) setSources(await srcRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
