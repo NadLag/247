@@ -1,0 +1,69 @@
+{
+  "summary": "Tested blocked dates critical fix features. All backend tests PASSED. Fixed frontend bug where override dialog wasn't showing on 409 conflict. All features working: bookings endpoint excludes blocked, blocked-dates endpoint returns only blocked, KPIs exclude blocked from revenue, conflict returns 409, force_override creates booking with audit log.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Dialog components",
+        "issues": ["Console warning: Missing Description or aria-describedby for DialogContent - accessibility improvement needed"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_blocked_dates_v2.py",
+    "/app/test_reports/pytest/pytest_blocked_v2.xml",
+    "/.screenshots/02_bookings_calendar.png",
+    "/.screenshots/03_bookings_list.png",
+    "/.screenshots/13_conflict_dialog_fixed.png",
+    "/.screenshots/14_override_success.png"
+  ],
+  "passed_tests": [
+    "test_01_auth_verification - Auth working with provided session token",
+    "test_02_get_bookings_excludes_blocked - GET /api/bookings returns 63 reservations, 0 blocked",
+    "test_03_get_blocked_dates_endpoint - GET /api/bookings/blocked-dates returns 6 blocked entries",
+    "test_04_kpis_exclude_blocked_revenue - Dashboard KPIs exclude blocked from calculations",
+    "test_05_create_booking_conflict_with_blocked - POST returns 409 when overlapping blocked dates",
+    "test_06_force_override_creates_booking - POST with force_override=true creates booking",
+    "test_07_verify_booking_types - booking_type field correctly set (reservation vs blocked)",
+    "test_08_cleanup_test_bookings - Test cleanup successful",
+    "UI - Calendar view shows 'Unavailable' with grey strikethrough styling",
+    "UI - List view excludes blocked dates (64 reservations shown)",
+    "UI - Conflict dialog shows on 409 with 'Force Manual Booking' option",
+    "UI - Override flow works - booking created successfully"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/frontend/src/pages/Bookings.js - Fixed error handling for 409 conflict to show override dialog instead of generic error toast"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "100% (All UI flows verified)"
+  },
+  "bug_fix_applied": {
+    "issue": "Override dialog not showing when 409 conflict returned",
+    "root_cause": "Error handling in handleSave() was falling into catch block before checking res.status. The Emergent proxy was intercepting 409 responses.",
+    "fix": "Added defensive error handling to check for 409 in catch block error message and show override dialog. Also wrapped res.json() in try-catch to handle parsing failures gracefully.",
+    "file": "/app/frontend/src/pages/Bookings.js",
+    "lines_changed": "292-340"
+  },
+  "test_data": {
+    "session_token": "X8UmdD_TsCY4GFJar7YJpVk89MAMT-W6NWNEft-Ed2E",
+    "blocked_dates_property": "prop_c040ed27a6dd (Four Oh Five)",
+    "blocked_date_range": "2026-02-23 to 2026-03-03",
+    "total_reservations": 63,
+    "total_blocked": 6
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All blocked dates features tested and working. The booking_type field is properly set to 'reservation' for regular bookings and 'blocked' for blocked dates. The frontend override dialog now works correctly when creating bookings that overlap with blocked dates. Total bookings increased to 66+ after test override bookings were created.",
+  "mocked_apis": {
+    "has_mocked": false,
+    "details": "All APIs are real implementations - no mocks"
+  }
+}
