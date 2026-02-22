@@ -22,7 +22,7 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 ### Core Features
 - [x] Landing page with hero, features, CTAs
 - [x] **Dual Authentication** - Google OAuth + Password-based login
-- [x] **Invitation-Based Registration** - Secure registration with password option
+- [x] **Invitation-Based Registration** - Read-only info (Name, Email, Role, Company) + password setup
 - [x] Company setup flow for new users
 - [x] Admin Dashboard with 8 KPIs + revenue trends chart
 - [x] **Role-Specific Dashboards** (Admin/Owner/Staff views)
@@ -46,6 +46,13 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] Password login with bcrypt hashing
 - [x] Session management with 7-day cookie expiry
 - [x] Both auth methods supported for invited users
+
+### Invitation Registration Flow (Fixed Feb 22, 2026)
+1. Admin creates invitation for Staff/Owner → email sent via Resend
+2. Invitee clicks link → `/invite/{token}` page loads
+3. Page shows **read-only** fields: Name, Email, Role, Company (pre-filled from staff/property records)
+4. User only needs to: Create Password OR Continue with Google
+5. Upon success → redirected to role-specific dashboard
 
 ### Role-Based Features
 - **Admin**: Full access to all modules, Tasks, Invitations, Staff management
