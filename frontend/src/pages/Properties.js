@@ -336,61 +336,52 @@ export default function Properties() {
 
   return (
     <Layout>
-      <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="properties-page">
+      <div className="space-y-6" data-testid="properties-page">
+        {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="font-heading text-2xl font-bold">Properties</h1>
-            <p className="text-sm text-muted-foreground mt-1">{properties.length} properties</p>
+            <h1 className="text-xl font-semibold">Properties</h1>
+            <p className="text-sm text-muted-foreground">{properties.length} total</p>
           </div>
           {isAdmin && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
               {lastSyncInfo?.feeds_count > 0 && (
-                <Button variant="outline" onClick={handleOTASync} disabled={syncing} data-testid="sync-ota-btn">
+                <Button variant="outline" size="sm" onClick={handleOTASync} disabled={syncing} data-testid="refresh-btn">
                   <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-                  {syncing ? "Syncing..." : "Sync from OTA"}
+                  {syncing ? "Refreshing..." : "Refresh"}
                 </Button>
               )}
-              <Button onClick={openAddChoice} data-testid="add-property-btn">
+              <Button size="sm" onClick={openAddChoice} data-testid="add-property-btn">
                 <Plus className="mr-2 h-4 w-4" /> Add Property
               </Button>
             </div>
           )}
         </div>
-        
-        {/* Last Sync Info */}
-        {lastSyncInfo?.latest_sync && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>
-              Last synced: {new Date(lastSyncInfo.latest_sync.created_at).toLocaleString()}
-              {lastSyncInfo.feeds_count > 0 && ` • ${lastSyncInfo.feeds_count} feed(s) configured`}
-            </span>
-          </div>
-        )}
 
+        {/* Grid - 6 columns desktop, 3 tablet, 1 mobile */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[1,2,3].map(i => (
-              <Card key={i} className="h-[280px]">
-                <CardContent className="p-6 h-full animate-pulse bg-muted rounded-lg" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {[1,2,3,4,5,6].map(i => (
+              <Card key={i} className="h-[180px]">
+                <CardContent className="p-4 h-full animate-pulse bg-muted/50 rounded-lg" />
               </Card>
             ))}
           </div>
         ) : properties.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="p-12 text-center">
-              <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="font-heading font-semibold text-lg mb-1">No properties yet</h3>
+          <Card className="border-dashed border-2">
+            <CardContent className="py-16 text-center">
+              <Building2 className="h-10 w-10 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="font-medium text-base mb-1">No properties yet</h3>
               <p className="text-sm text-muted-foreground mb-4">Add your first property to get started</p>
               {isAdmin && (
-                <Button onClick={openAddChoice}>
+                <Button size="sm" onClick={openAddChoice}>
                   <Plus className="mr-2 h-4 w-4" /> Add Property
                 </Button>
               )}
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {properties.map((prop) => (
               <PropertyCard 
                 key={prop.id}
@@ -398,6 +389,7 @@ export default function Properties() {
                 isAdmin={isAdmin}
                 onEdit={openEdit}
                 onDelete={handleDelete}
+                onQuickView={setQuickViewProp}
                 getCohostName={getCohostName}
               />
             ))}
