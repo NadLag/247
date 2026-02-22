@@ -106,7 +106,7 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 ## Navigation by Role
 
 ### Admin Sidebar
-Dashboard, Properties, Staff, Bookings, Tasks, Services, Expenses, Analytics, Invitations, Billing, Settings
+Dashboard, Properties, Staff, Bookings, Tasks, Services, Expenses, Analytics, OTA Settings, Invitations, Billing, Settings
 
 ### Owner Sidebar
 Dashboard, Properties, Bookings, Analytics, Settings
@@ -117,10 +117,10 @@ Dashboard, Tasks, Bookings, Settings
 ## Database Collections
 - users (with password_hash, auth_method, first_name, last_name)
 - companies, user_sessions
-- properties, staff, bookings, expenses, invitations
+- properties (with last_ota_sync_at), staff, bookings (with ota_source, ota_external_id, ota_feed_id), expenses, invitations
 - tasks (with assigned_staff_id, status, priority, task_type)
 - services, booking_services
-- payment_transactions, ota_sync_logs
+- payment_transactions, ota_sync_logs, ota_feeds
 - audit_logs (account_activated, login events)
 - payouts
 
