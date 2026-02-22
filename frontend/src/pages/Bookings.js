@@ -845,7 +845,7 @@ export default function Bookings() {
                 </div>
                 <div className="space-y-2">
                   <Label>Check-out *</Label>
-                  <Input type="date" value={form.check_out} onChange={e => set("check_out", e.target.value)} min={form.check_in || undefined} data-testid="booking-checkout-input" />
+                  <Input type="date" value={form.check_out} onChange={e => set("check_out", e.target.value)} min={!editing ? (form.check_in || new Date().toISOString().slice(0, 10)) : (form.check_in || undefined)} data-testid="booking-checkout-input" />
                 </div>
               </div>
               {nights > 0 && (
