@@ -233,8 +233,6 @@ export default function Properties() {
       toast.error("Sync failed");
       setSyncing(false);
     }
-  };;
-    }
   };
 
   const openEdit = (prop) => {
