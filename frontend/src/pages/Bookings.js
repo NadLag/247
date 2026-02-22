@@ -246,27 +246,117 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
   );
 }
 
-// List View Component
-function BookingList({ bookings, properties, isAdmin, onEdit, propertyFilter, statusFilter, sortBy, onSort }) {
+// List View Component - Sectioned by Status
+function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, propertyFilter, statusFilter }) {
   const getPropName = (id) => {
     const prop = properties.find(p => p.id === id);
     return prop?.name || "Unknown Property";
   };
   
+  const today = new Date().toISOString().slice(0, 10);
+  
+  // Filter bookings
   const filteredBookings = bookings.filter(b => {
     if (propertyFilter && propertyFilter !== "all" && b.property_id !== propertyFilter) return false;
     if (statusFilter && statusFilter !== "all" && b.status !== statusFilter) return false;
     return true;
   });
   
-  const sortedBookings = [...filteredBookings].sort((a, b) => {
-    if (sortBy === "check_in") return new Date(a.check_in) - new Date(b.check_in);
-    if (sortBy === "check_out") return new Date(a.check_out) - new Date(b.check_out);
-    if (sortBy === "guest") return (a.guest_name || '').localeCompare(b.guest_name || '');
-    return 0;
+  // Filter blocked dates
+  const filteredBlocked = blockedDates.filter(b => {
+    if (propertyFilter && propertyFilter !== "all" && b.property_id !== propertyFilter) return false;
+    return true;
   });
   
-  if (sortedBookings.length === 0) {
+  // Categorize bookings
+  const checkingToday = filteredBookings.filter(b => b.check_in === today || b.check_out === today);
+  const upcoming = filteredBookings.filter(b => b.check_in > today && b.status !== 'cancelled');
+  const past = filteredBookings.filter(b => b.check_out < today || b.status === 'checked_out');
+  const activeNow = filteredBookings.filter(b => b.check_in <= today && b.check_out > today && b.check_in !== today);
+  
+  // Sort each section
+  const sortByCheckIn = (a, b) => new Date(a.check_in) - new Date(b.check_in);
+  const sortByCheckInDesc = (a, b) => new Date(b.check_in) - new Date(a.check_in);
+  
+  const BookingRow = ({ b }) => {
+    const isIcalImport = b.ota_source && b.ota_source !== 'manual';
+    const guestDisplay = b.guest_name || (isIcalImport ? `${b.ota_source} Guest` : 'Guest');
+    const amountDisplay = b.total_amount > 0 ? fmt(b.total_amount) : (isIcalImport ? <span className="text-muted-foreground text-xs italic">Not in iCal</span> : '$0.00');
+    
+    return (
+      <TableRow key={b.id} data-testid={`booking-row-${b.id}`} className="hover:bg-muted/30">
+        <TableCell className="font-medium">
+          {guestDisplay}
+          {isIcalImport && b.guest_name?.includes('Guest') && (
+            <span className="block text-[10px] text-muted-foreground">via iCal</span>
+          )}
+        </TableCell>
+        <TableCell className="text-sm">{getPropName(b.property_id)}</TableCell>
+        <TableCell className="text-sm">{b.check_in}</TableCell>
+        <TableCell className="text-sm">{b.check_out}</TableCell>
+        <TableCell className="text-sm">{calcNights(b.check_in, b.check_out)}</TableCell>
+        <TableCell>
+          <Badge className={`text-xs capitalize ${statusColors[b.status] || ''}`}>
+            {b.status?.replace('_', ' ')}
+          </Badge>
+        </TableCell>
+        <TableCell className="text-sm">{amountDisplay}</TableCell>
+        {isAdmin && (
+          <TableCell className="text-right">
+            <Button variant="ghost" size="sm" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </TableCell>
+        )}
+      </TableRow>
+    );
+  };
+  
+  const BlockedRow = ({ b }) => (
+    <TableRow key={b.id} className="bg-slate-50 dark:bg-slate-800/30">
+      <TableCell className="font-medium text-muted-foreground line-through italic">Unavailable</TableCell>
+      <TableCell className="text-sm text-muted-foreground">{getPropName(b.property_id)}</TableCell>
+      <TableCell className="text-sm text-muted-foreground">{b.check_in}</TableCell>
+      <TableCell className="text-sm text-muted-foreground">{b.check_out}</TableCell>
+      <TableCell className="text-sm text-muted-foreground">{calcNights(b.check_in, b.check_out)}</TableCell>
+      <TableCell>
+        <Badge variant="secondary" className="text-xs">Blocked</Badge>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">-</TableCell>
+      {isAdmin && <TableCell />}
+    </TableRow>
+  );
+  
+  const SectionHeader = ({ icon: Icon, title, count, color = "text-foreground" }) => (
+    <TableRow className="bg-muted/50 hover:bg-muted/50">
+      <TableCell colSpan={isAdmin ? 8 : 7} className="py-2">
+        <div className={`flex items-center gap-2 font-semibold text-sm ${color}`}>
+          <Icon className="h-4 w-4" />
+          {title}
+          <Badge variant="outline" className="ml-2 text-xs">{count}</Badge>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+  
+  const TableHeaders = () => (
+    <TableHeader>
+      <TableRow>
+        <TableHead>Guest</TableHead>
+        <TableHead>Property</TableHead>
+        <TableHead>Check-in</TableHead>
+        <TableHead>Check-out</TableHead>
+        <TableHead>Nights</TableHead>
+        <TableHead>Status</TableHead>
+        <TableHead>Amount</TableHead>
+        {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+      </TableRow>
+    </TableHeader>
+  );
+  
+  const totalCount = filteredBookings.length + filteredBlocked.length;
+  
+  if (totalCount === 0) {
     return (
       <div className="py-16 text-center text-muted-foreground">
         <CalendarDays className="h-10 w-10 mx-auto mb-3 opacity-40" />
@@ -276,64 +366,111 @@ function BookingList({ bookings, properties, isAdmin, onEdit, propertyFilter, st
   }
   
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="cursor-pointer hover:text-primary" onClick={() => onSort("guest")}>Guest</TableHead>
-            <TableHead>Property</TableHead>
-            <TableHead className="cursor-pointer hover:text-primary" onClick={() => onSort("check_in")}>Check-in</TableHead>
-            <TableHead className="cursor-pointer hover:text-primary" onClick={() => onSort("check_out")}>Check-out</TableHead>
-            <TableHead>Nights</TableHead>
-            <TableHead>Source</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Amount</TableHead>
-            {isAdmin && <TableHead className="text-right">Actions</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedBookings.map(b => {
-            const isIcalImport = b.ota_source && b.ota_source !== 'manual';
-            const guestDisplay = b.guest_name || (isIcalImport ? `${b.ota_source} Guest` : 'Guest');
-            const amountDisplay = b.total_amount > 0 ? fmt(b.total_amount) : (isIcalImport ? <span className="text-muted-foreground text-xs italic">Not in iCal</span> : '$0.00');
-            
-            return (
-              <TableRow key={b.id} data-testid={`booking-row-${b.id}`}>
-                <TableCell className="font-medium">
-                  {guestDisplay}
-                  {isIcalImport && b.guest_name?.includes('Guest') && (
-                    <span className="block text-[10px] text-muted-foreground">via iCal sync</span>
-                  )}
-                </TableCell>
-                <TableCell>{getPropName(b.property_id)}</TableCell>
-                <TableCell>{b.check_in}</TableCell>
-                <TableCell>{b.check_out}</TableCell>
-                <TableCell>{calcNights(b.check_in, b.check_out)}</TableCell>
-                <TableCell>
-                  {b.ota_source ? (
-                    <Badge variant="outline" className="text-xs capitalize">{b.ota_source}</Badge>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">Manual</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Badge className={`text-xs capitalize ${statusColors[b.status] || ''}`}>
-                    {b.status?.replace('_', ' ')}
-                  </Badge>
-                </TableCell>
-                <TableCell>{amountDisplay}</TableCell>
-                {isAdmin && (
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                )}
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+    <div className="space-y-6">
+      {/* Checking Today Section */}
+      {checkingToday.length > 0 && (
+        <Card>
+          <CardHeader className="py-3 px-4 bg-amber-50 dark:bg-amber-900/20 border-b">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <Clock className="h-4 w-4" />
+              Checking In/Out Today
+              <Badge className="ml-2 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">{checkingToday.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeaders />
+              <TableBody>
+                {checkingToday.sort(sortByCheckIn).map(b => <BookingRow key={b.id} b={b} />)}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Active Now Section */}
+      {activeNow.length > 0 && (
+        <Card>
+          <CardHeader className="py-3 px-4 bg-blue-50 dark:bg-blue-900/20 border-b">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-blue-700 dark:text-blue-400">
+              <CalendarCheck className="h-4 w-4" />
+              Currently Staying
+              <Badge className="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">{activeNow.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeaders />
+              <TableBody>
+                {activeNow.sort(sortByCheckIn).map(b => <BookingRow key={b.id} b={b} />)}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Upcoming Section */}
+      {upcoming.length > 0 && (
+        <Card>
+          <CardHeader className="py-3 px-4 bg-primary/5 border-b">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-primary">
+              <CalendarDays className="h-4 w-4" />
+              Upcoming
+              <Badge className="ml-2 bg-primary/10 text-primary">{upcoming.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeaders />
+              <TableBody>
+                {upcoming.sort(sortByCheckIn).map(b => <BookingRow key={b.id} b={b} />)}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Unavailable/Blocked Section */}
+      {filteredBlocked.length > 0 && (
+        <Card>
+          <CardHeader className="py-3 px-4 bg-slate-100 dark:bg-slate-800/50 border-b">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <Ban className="h-4 w-4" />
+              Unavailable / Blocked
+              <Badge variant="secondary" className="ml-2">{filteredBlocked.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeaders />
+              <TableBody>
+                {filteredBlocked.sort(sortByCheckIn).map(b => <BlockedRow key={b.id} b={b} />)}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Past Bookings Section */}
+      {past.length > 0 && (
+        <Card>
+          <CardHeader className="py-3 px-4 bg-muted/30 border-b">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+              <History className="h-4 w-4" />
+              Past Bookings
+              <Badge variant="outline" className="ml-2">{past.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeaders />
+              <TableBody>
+                {past.sort(sortByCheckInDesc).map(b => <BookingRow key={b.id} b={b} />)}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
