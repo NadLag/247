@@ -1903,23 +1903,28 @@ def generate_mock_ical(property_name: str, source: str) -> str:
         guest = random.choice(guest_names)
         uid = f"{source.replace('.', '-')}_{uuid.uuid4().hex[:8]}@propstack.com"
         
-        events.append(f"""BEGIN:VEVENT
-DTSTART;VALUE=DATE:{check_in.strftime('%Y%m%d')}
-DTEND;VALUE=DATE:{check_out.strftime('%Y%m%d')}
-SUMMARY:{guest} - {property_name}
-UID:{uid}
-DESCRIPTION:Guest booking from {source}
-STATUS:CONFIRMED
-END:VEVENT""")
+        event_lines = [
+            "BEGIN:VEVENT",
+            f"DTSTART;VALUE=DATE:{check_in.strftime('%Y%m%d')}",
+            f"DTEND;VALUE=DATE:{check_out.strftime('%Y%m%d')}",
+            f"SUMMARY:{guest} - {property_name}",
+            f"UID:{uid}",
+            f"DESCRIPTION:Guest booking from {source}",
+            "STATUS:CONFIRMED",
+            "END:VEVENT"
+        ]
+        events.append("\r\n".join(event_lines))
     
-    ical_content = f"""BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//PropStack//OTA Sync//EN
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-X-WR-CALNAME:{property_name} - {source}
-{''.join(events)}
-END:VCALENDAR"""
+    cal_lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//PropStack//OTA Sync//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        f"X-WR-CALNAME:{property_name} - {source}",
+    ]
+    
+    ical_content = "\r\n".join(cal_lines) + "\r\n" + "\r\n".join(events) + "\r\nEND:VCALENDAR"
     
     return ical_content
 
