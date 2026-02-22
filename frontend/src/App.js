@@ -38,7 +38,6 @@ function AppRouter() {
       <Route path="/services" element={<Services />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/tasks" element={<Tasks />} />
-      <Route path="/ota-settings" element={<OTASettings />} />
       <Route path="/invitations" element={<Invitations />} />
       <Route path="/billing" element={<Billing />} />
       <Route path="/settings" element={<Settings />} />
