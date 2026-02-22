@@ -605,18 +605,27 @@ async def get_dashboard_kpis(user=Depends(get_current_user)):
         properties = await db.properties.find({"company_id": company_id}, {"_id": 0}).to_list(1000)
         property_ids = [p["id"] for p in properties]
 
-    # Build booking query based on role
+    # Build booking query based on role - EXCLUDE blocked dates from all KPIs
     booking_query = {"company_id": company_id}
     if role in ["owner", "staff"]:
         booking_query["property_id"] = {"$in": property_ids}
     
+    # Exclude blocked dates from revenue calculations using booking_type
+    reservation_filter = {
+        "$or": [
+            {"booking_type": "reservation"},
+            {"booking_type": {"$exists": False}, "status": {"$nin": ["blocked", "overridden"]}}
+        ]
+    }
+    
     current_bookings = await db.bookings.find(
-        {**booking_query, "check_in": {"$gte": current_month_start.isoformat()[:10]}, "status": {"$ne": "blocked"}}, {"_id": 0}
+        {**booking_query, **reservation_filter, "check_in": {"$gte": current_month_start.isoformat()[:10]}}, {"_id": 0}
     ).to_list(1000)
     last_bookings = await db.bookings.find(
-        {**booking_query, "check_in": {"$gte": last_month_start.isoformat()[:10], "$lt": current_month_start.isoformat()[:10]}, "status": {"$ne": "blocked"}}, {"_id": 0}
+        {**booking_query, **reservation_filter, "check_in": {"$gte": last_month_start.isoformat()[:10], "$lt": current_month_start.isoformat()[:10]}}, {"_id": 0}
     ).to_list(1000)
 
+    # Only count non-cancelled bookings for revenue
     current_revenue = sum(b.get("total_amount", 0) for b in current_bookings if b.get("status") != "cancelled")
     last_revenue = sum(b.get("total_amount", 0) for b in last_bookings if b.get("status") != "cancelled")
 
@@ -630,11 +639,19 @@ async def get_dashboard_kpis(user=Depends(get_current_user)):
     active_properties = len([p for p in properties if p.get("active", True)])
     total_units = sum(p.get("units", 0) for p in properties)
 
-    active_bookings_query = {**booking_query, "status": {"$in": ["confirmed", "checked_in"]}}
+    # Only count real bookings (not blocked) for active bookings
+    active_bookings_query = {
+        **booking_query, 
+        **reservation_filter,
+        "status": {"$in": ["confirmed", "checked_in"]}
+    }
     active_bookings = await db.bookings.count_documents(active_bookings_query)
 
+    # Only count nights from real reservations (not blocked)
     nights_booked = 0
     for b in current_bookings:
+        if b.get("status") == "cancelled":
+            continue
         try:
             ci = datetime.fromisoformat(b["check_in"])
             co = datetime.fromisoformat(b["check_out"])
