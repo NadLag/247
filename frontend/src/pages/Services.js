@@ -47,25 +47,29 @@ const empty = {
   active: true,
 };
 
-function ServiceCard({ service, staff, onEdit, onDelete, isAdmin }) {
+function ServiceCard({ service, staff, onEdit, onDelete, isAdmin, index = 0 }) {
   const category = categories.find(c => c.value === service.category) || categories[5];
   const IconComponent = category.icon;
   const assignedStaff = staff.find(s => s.id === service.assigned_staff_id);
 
   return (
-    <Card className="group hover:shadow-md transition-shadow" data-testid={`service-card-${service.id}`}>
+    <Card 
+      className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-200 animate-fade-in opacity-0" 
+      data-testid={`service-card-${service.id}`}
+      style={{ animationDelay: `${0.05 + index * 0.03}s` }}
+    >
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
-            <div className={`h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0`}>
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
               <IconComponent className="h-5 w-5 text-primary" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-medium text-sm truncate">{service.name}</h3>
+              <h3 className="font-medium text-sm truncate text-foreground">{service.name}</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{category.label}</p>
             </div>
           </div>
-          <Badge variant={service.active ? "default" : "secondary"} className="shrink-0">
+          <Badge variant={service.active ? "default" : "secondary"} className={`shrink-0 ${service.active ? 'bg-primary/10 text-primary border-0' : ''}`}>
             {service.active ? "Active" : "Inactive"}
           </Badge>
         </div>
@@ -76,19 +80,19 @@ function ServiceCard({ service, staff, onEdit, onDelete, isAdmin }) {
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t">
           <div>
-            <p className="text-lg font-bold font-data">{fmt(service.price)}</p>
+            <p className="text-lg font-bold font-heading tabular-nums text-foreground">{fmt(service.price)}</p>
             <p className="text-xs text-muted-foreground capitalize">{service.price_type?.replace("_", " ")}</p>
           </div>
           <div className="text-right">
             {service.provider_type === "internal" ? (
               <div className="flex items-center gap-1.5 text-sm">
                 <User className="h-3.5 w-3.5 text-primary" />
-                <span>{assignedStaff ? `${assignedStaff.first_name} ${assignedStaff.last_name}` : "Unassigned"}</span>
+                <span className="text-foreground">{assignedStaff ? `${assignedStaff.first_name} ${assignedStaff.last_name}` : "Unassigned"}</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 text-sm">
                 <Building2 className="h-3.5 w-3.5 text-amber-500" />
-                <span>{service.external_provider_name || "External"}</span>
+                <span className="text-foreground">{service.external_provider_name || "External"}</span>
               </div>
             )}
           </div>
@@ -96,10 +100,10 @@ function ServiceCard({ service, staff, onEdit, onDelete, isAdmin }) {
 
         {isAdmin && (
           <div className="flex justify-end gap-1 mt-3 pt-3 border-t opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="sm" onClick={() => onEdit(service)} data-testid={`edit-service-${service.id}`}>
+            <Button variant="ghost" size="sm" onClick={() => onEdit(service)} data-testid={`edit-service-${service.id}`} className="hover:bg-primary/10 hover:text-primary">
               <Pencil className="h-4 w-4 mr-1" /> Edit
             </Button>
-            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => onDelete(service.id)} data-testid={`delete-service-${service.id}`}>
+            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => onDelete(service.id)} data-testid={`delete-service-${service.id}`}>
               <Trash2 className="h-4 w-4 mr-1" /> Delete
             </Button>
           </div>
