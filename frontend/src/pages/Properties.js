@@ -33,16 +33,20 @@ const empty = {
   units: 1, active: true,
 };
 
-function PropertyCard({ prop, isAdmin, onEdit, onDelete, onQuickView }) {
+function PropertyCard({ prop, isAdmin, onEdit, onDelete, onQuickView, index = 0 }) {
   const ownerName = [prop.owner_first_name, prop.owner_last_name].filter(Boolean).join(" ") || "No owner";
   const location = prop.city && prop.country ? `${prop.city}, ${prop.country}` : prop.address || "No address";
   
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200 border-border/60" data-testid={`property-card-${prop.id}`}>
+    <Card 
+      className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-200 border-border/60 animate-fade-in opacity-0" 
+      data-testid={`property-card-${prop.id}`}
+      style={{ animationDelay: `${0.05 + index * 0.03}s` }}
+    >
       <CardContent className="p-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-3">
-          <h3 className="font-semibold text-sm leading-tight line-clamp-2">{prop.name}</h3>
+          <h3 className="font-semibold text-sm leading-tight line-clamp-2 text-foreground">{prop.name}</h3>
           <Badge 
             variant={prop.active ? "default" : "secondary"} 
             className={`shrink-0 text-[10px] px-1.5 py-0 ${prop.active ? 'bg-primary/10 text-primary border-primary/20' : ''}`}
@@ -54,16 +58,16 @@ function PropertyCard({ prop, isAdmin, onEdit, onDelete, onQuickView }) {
         {/* Details */}
         <div className="space-y-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <MapPin className="h-3 w-3 shrink-0" />
+            <MapPin className="h-3 w-3 shrink-0 text-primary/60" />
             <span className="truncate">{location}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <User className="h-3 w-3 shrink-0" />
+            <User className="h-3 w-3 shrink-0 text-primary/60" />
             <span className="truncate">{ownerName}</span>
           </div>
           {prop.last_ota_sync_at && (
             <div className="flex items-center gap-1.5">
-              <Clock className="h-3 w-3 shrink-0" />
+              <Clock className="h-3 w-3 shrink-0 text-primary/60" />
               <span>Synced {new Date(prop.last_ota_sync_at).toLocaleDateString()}</span>
             </div>
           )}
@@ -74,18 +78,19 @@ function PropertyCard({ prop, isAdmin, onEdit, onDelete, onQuickView }) {
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1 h-8 text-xs"
+            className="flex-1 h-8 text-xs hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors"
             onClick={() => onQuickView(prop)}
             data-testid={`view-property-${prop.id}`}
           >
+            <Eye className="h-3 w-3 mr-1.5" />
             Quick View
           </Button>
           {isAdmin && (
             <>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => onEdit(prop)} data-testid={`edit-property-${prop.id}`}>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary" onClick={() => onEdit(prop)} data-testid={`edit-property-${prop.id}`}>
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => onDelete(prop.id)} data-testid={`delete-property-${prop.id}`}>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(prop.id)} data-testid={`delete-property-${prop.id}`}>
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </>
