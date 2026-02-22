@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Plus, Pencil, CalendarDays, List, ChevronLeft, ChevronRight, Filter, AlertTriangle, Clock, CalendarCheck, History, Ban } from "lucide-react";
+import { Plus, Pencil, CalendarDays, List, ChevronLeft, ChevronRight, Filter, AlertTriangle, Clock, CalendarCheck, History, Ban, Globe } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const fmt = (v) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
@@ -246,7 +246,7 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
 }
 
 // List View Component - Sectioned by Status
-function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, propertyFilter, statusFilter }) {
+function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, propertyFilter, statusFilter, sourceFilter }) {
   const getPropName = (id) => {
     const prop = properties.find(p => p.id === id);
     return prop?.name || "Unknown Property";
@@ -254,10 +254,23 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
   
   const today = new Date().toISOString().slice(0, 10);
   
+  const getSourceLabel = (b) => {
+    const src = b.ota_source;
+    if (!src || src === "manual") return "Direct";
+    return src.charAt(0).toUpperCase() + src.slice(1);
+  };
+
   // Filter bookings
   const filteredBookings = bookings.filter(b => {
     if (propertyFilter && propertyFilter !== "all" && b.property_id !== propertyFilter) return false;
     if (statusFilter && statusFilter !== "all" && b.status !== statusFilter) return false;
+    if (sourceFilter && sourceFilter !== "all") {
+      if (sourceFilter === "direct") {
+        if (b.ota_source && b.ota_source !== "manual") return false;
+      } else {
+        if (b.ota_source !== sourceFilter) return false;
+      }
+    }
     return true;
   });
   
