@@ -103,6 +103,15 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 ### Staff Earnings
 - `GET /api/staff/my-earnings` - Staff earnings data
 
+### OTA iCal Sync
+- `GET /api/ota/feeds` - List all OTA feeds
+- `POST /api/ota/feeds` - Add new OTA feed (property_id, source, ical_url)
+- `PUT /api/ota/feeds/{id}` - Update feed (source, ical_url, active)
+- `DELETE /api/ota/feeds/{id}` - Delete feed
+- `POST /api/ota/sync` - Trigger background sync for all feeds
+- `GET /api/ota/sync-status` - Get current sync status (is_syncing, feeds_count, latest_sync)
+- `GET /api/ota-sync-logs` - List sync logs with stats
+
 ## Navigation by Role
 
 ### Admin Sidebar
