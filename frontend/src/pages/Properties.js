@@ -260,22 +260,55 @@ export default function Properties() {
   return (
     <Layout>
       <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="properties-page">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="font-heading text-2xl font-bold">Properties</h1>
             <p className="text-sm text-muted-foreground mt-1">{properties.length} properties</p>
           </div>
           {isAdmin && (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={handleOTASyncAll} disabled={syncingAll} data-testid="sync-all-ota-btn">
-                <RefreshCw className={`mr-2 h-4 w-4 ${syncingAll ? "animate-spin" : ""}`} />
-                {syncingAll ? "Syncing..." : "Sync All OTA"}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" onClick={handleOTASync} disabled={syncing} data-testid="sync-ota-btn">
+                <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+                {syncing ? "Syncing..." : "Sync from OTA"}
               </Button>
               <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-property-btn">
                 <Plus className="mr-2 h-4 w-4" /> Add Property
               </Button>
             </div>
           )}
+        </div>
+        
+        {/* Last Sync Info */}
+        {lastSyncInfo?.latest_sync && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            <span>
+              Last synced: {new Date(lastSyncInfo.latest_sync.created_at).toLocaleString()}
+              {lastSyncInfo.feeds_count > 0 && ` • ${lastSyncInfo.feeds_count} feed(s) configured`}
+            </span>
+            <Button variant="link" size="sm" className="h-auto p-0 text-primary" onClick={() => navigate("/ota-settings")}>
+              <Link2 className="h-3 w-3 mr-1" />
+              Configure Feeds
+            </Button>
+          </div>
+        )}
+        
+        {!lastSyncInfo?.latest_sync && lastSyncInfo?.feeds_count === 0 && isAdmin && (
+          <Card className="border-dashed border-primary/30 bg-primary/5">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Link2 className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium text-sm">No OTA feeds configured</p>
+                  <p className="text-xs text-muted-foreground">Add iCal URLs from Airbnb, Booking.com, etc. to enable sync</p>
+                </div>
+              </div>
+              <Button size="sm" onClick={() => navigate("/ota-settings")}>
+                Configure OTA Feeds
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         </div>
 
         {loading ? (
