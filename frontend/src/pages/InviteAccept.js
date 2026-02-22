@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Building2, Mail, Lock, User, Phone, Loader2, CheckCircle, XCircle, Shield, Eye, EyeOff } from "lucide-react";
+import { Building2, Mail, Lock, User, Loader2, CheckCircle, XCircle, Shield, Eye, EyeOff } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
