@@ -250,12 +250,17 @@ export default function Bookings() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
+  const [blockedDates, setBlockedDates] = useState([]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  
+  // Override conflict state
+  const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
+  const [conflictDetails, setConflictDetails] = useState(null);
   
   // View state
   const [viewMode, setViewMode] = useState("calendar");
@@ -269,11 +274,13 @@ export default function Bookings() {
 
   const fetchData = async () => {
     try {
-      const [bookRes, propRes] = await Promise.all([
+      const [bookRes, blockedRes, propRes] = await Promise.all([
         fetch(`${API}/api/bookings`, { credentials: "include" }),
+        fetch(`${API}/api/bookings/blocked-dates`, { credentials: "include" }),
         fetch(`${API}/api/properties`, { credentials: "include" }),
       ]);
       if (bookRes.ok) setBookings(await bookRes.json());
+      if (blockedRes.ok) setBlockedDates(await blockedRes.json());
       if (propRes.ok) setProperties(await propRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
