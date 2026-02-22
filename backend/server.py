@@ -1014,6 +1014,13 @@ async def create_booking(data: BookingCreate, user=Depends(require_admin)):
             detail="Check-in date cannot be in the past. Please select today or a future date."
         )
     
+    # Validate check-out date is not in the past
+    if data.check_out and data.check_out < today:
+        raise HTTPException(
+            status_code=400,
+            detail="Check-out date cannot be in the past. Please select today or a future date."
+        )
+    
     # Validate check-out is after check-in
     if data.check_in and data.check_out and data.check_out <= data.check_in:
         raise HTTPException(
