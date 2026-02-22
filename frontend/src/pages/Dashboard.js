@@ -149,7 +149,13 @@ export default function Dashboard() {
           fetch(`${API}/api/properties`, { credentials: "include" }),
         ]);
         
-        if (kpiRes.ok) setKpis(await kpiRes.json());
+        if (kpiRes.ok) {
+          const kpiData = await kpiRes.json();
+          console.log("KPI Data received:", kpiData);
+          setKpis(kpiData);
+        } else {
+          console.error("KPI fetch failed:", kpiRes.status);
+        }
         if (trendRes.ok) setTrends(await trendRes.json());
         if (bookRes.ok) {
           const data = await bookRes.json();
