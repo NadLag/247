@@ -45,6 +45,17 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **"Hey, {FirstName}" greeting** in header
 - [x] **Audit logging** for account activation and logins
 
+### UI/UX Enhancements (Feb 22, 2026)
+- [x] **Premium animations** - Fade-in, slide-in, scale-in transitions
+- [x] **Staggered list animations** - Cards animate in sequence
+- [x] **Hover lift effects** - Cards elevate on hover
+- [x] **Glass morphism** - Subtle backdrop blur on sidebar/header
+- [x] **Improved scrollbars** - Custom styled, theme-aware
+- [x] **Better focus states** - Accessible ring styling
+- [x] **Dark mode polish** - Consistent colors across all components
+- [x] **Icon color consistency** - Primary color accents on icons
+- [x] **Removed OTA Settings page** - Consolidated into Properties
+
 ### Authentication System
 - [x] Google OAuth (Emergent Auth)
 - [x] Password-based registration via invitation links
@@ -52,91 +63,12 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] Session management with 7-day cookie expiry
 - [x] Both auth methods supported for invited users
 
-### Invitation Registration Flow (Fixed Feb 22, 2026)
-1. Admin creates invitation for Staff/Owner → email sent via Resend
-2. Invitee clicks link → `/invite/{token}` page loads
-3. Page shows **read-only** fields: Name, Email, Role, Company (pre-filled from staff/property records)
-4. User only needs to: Create Password OR Continue with Google
-5. Upon success → redirected to role-specific dashboard
-
-### Role-Based Features
-- **Admin**: Full access to all modules, Tasks, Invitations, Staff management
-- **Owner (View-Only)**: Properties, Bookings, Analytics (filtered to their properties)
-- **Staff**: Tasks, Bookings, Earnings, Dashboard with work summary
-
-### Tasks Module
-- Task types: Cleaning, Maintenance, Check-in, Check-out, Admin, General
-- Priorities: Low, Medium, High, Urgent
-- Status workflow: Pending → In Progress → Completed → Cancelled
-- Staff can only update their own tasks' status
-- Admin can create, edit, delete, assign tasks
-- Task summary cards for staff (Pending, In Progress, Completed MTD)
-
-### OTA iCal Sync (Updated Feb 22, 2026)
-- [x] **Unified "Add Property" button** with choice modal:
-  - **Sync from OTA** - Creates NEW property from iCal URL, imports bookings, opens edit dialog
-  - **Add Manually** - Traditional property form
-- [x] **"Refresh" button** (renamed from "Sync from OTA") - refreshes all OTA feeds
-- [x] iCal parser with `icalendar` library
-- [x] Mock URL format for testing: `mock://source/PropertyName`
-- [x] Background job processing with sync status polling
-- [x] Duplicate detection by UID or (property + date range + OTA source)
-- [x] OTA source badges on Bookings page
-
-### Properties Page (Updated Feb 22, 2026)
-- [x] **6-column grid** (desktop) → 4 columns (lg) → 3 columns (md) → 2 columns (sm) → 1 column (mobile)
-- [x] Compact property cards: Name, Address, Owner, Status, Last Sync
-- [x] **Quick View** popup with property details
-- [x] Single "Add Property" button with Sync/Manual choice
-
-### Bookings Page (Updated Feb 22, 2026)
-- [x] **Calendar View** (default) - Airbnb-style monthly grid
-- [x] **List View** - Sortable/filterable table
-- [x] Color-coded bookings (Teal=Confirmed, Blue=CheckedIn, Grey=CheckedOut, Red=Cancelled)
-- [x] Property and Status filters
-- [x] Click booking → details popup with Edit option
-
-## Test Results (Feb 22, 2026 - Latest)
-- Frontend: 100% (10/10 UI features verified)
-- Properties grid: 6 columns working
-- Bookings Calendar/List: Both views functional
-- Color theme: Teal (HSL 168 76% 32%) applied
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register-with-invite` - Password registration via invitation
-- `POST /api/auth/login` - Email/password login
-- `GET /api/auth/google` - Google OAuth initiation
-- `GET /api/auth/me` - Current user info
-- `POST /api/auth/logout` - Logout
-
-### Tasks
-- `GET /api/tasks` - List tasks (role-filtered)
-- `POST /api/tasks` - Create task (admin only)
-- `PUT /api/tasks/{id}` - Update task
-- `DELETE /api/tasks/{id}` - Delete task (admin only)
-- `GET /api/tasks/my-summary` - Staff task summary
-
-### Staff Earnings
-- `GET /api/staff/my-earnings` - Staff earnings data
-
 ### OTA iCal Sync
-- `POST /api/ota/import-property` - **NEW**: Create property from iCal URL + import bookings
-- `GET /api/ota/feeds` - List all OTA feeds
-- `POST /api/ota/feeds` - Add new OTA feed (property_id, source, ical_url)
-- `PUT /api/ota/feeds/{id}` - Update feed (source, ical_url, active)
-- `DELETE /api/ota/feeds/{id}` - Delete feed
-- `POST /api/ota/sync` - Trigger background sync for all feeds
-- `GET /api/ota/sync-status` - Get current sync status (is_syncing, feeds_count, latest_sync)
-- `GET /api/ota-sync-logs` - List sync logs with stats
-
-### Properties
-- `GET /api/properties` - List all properties
-- `POST /api/properties` - Create property manually
-- `GET /api/properties/{id}` - **NEW**: Get single property by ID
-- `PUT /api/properties/{id}` - Update property
-- `DELETE /api/properties/{id}` - Delete property
+- [x] Unified "Add Property" button with choice modal
+- [x] "Refresh" button for syncing all OTA feeds
+- [x] iCal parser with `icalendar` library
+- [x] Blocked dates vs confirmed bookings handling
+- [x] Background job processing with sync status polling
 
 ## Navigation by Role
 
@@ -150,14 +82,11 @@ Dashboard, Properties, Bookings, Analytics, Settings
 Dashboard, Tasks, Bookings, Settings
 
 ## Database Collections
-- users (with password_hash, auth_method, first_name, last_name)
-- companies, user_sessions
-- properties (with last_ota_sync_at), staff, bookings (with ota_source, ota_external_id, ota_feed_id), expenses, invitations
-- tasks (with assigned_staff_id, status, priority, task_type)
-- services, booking_services
+- users, companies, user_sessions
+- properties, staff, bookings, expenses, invitations
+- tasks, services, booking_services
 - payment_transactions, ota_sync_logs, ota_feeds
-- audit_logs (account_activated, login events)
-- payouts
+- audit_logs, payouts
 
 ## Environment Variables
 ```
@@ -172,7 +101,7 @@ SENDER_EMAIL=onboarding@resend.dev
 ## Prioritized Backlog
 
 ### P1 (Next)
-- Real OTA iCal URLs (replace mock:// with real Airbnb/Booking.com URLs)
+- Real OTA API integrations (Airbnb, Booking.com)
 - Production Resend API key for real emails
 - Staff payout tracking and history
 - Owner financial reports (PDF/CSV export)
@@ -180,8 +109,8 @@ SENDER_EMAIL=onboarding@resend.dev
 ### P2
 - JWT authentication migration
 - Audit logs viewer in admin panel
-- Booking calendar view for owners
 - Task notifications for staff
+- Collapsible sidebar
 
 ### P3
 - AI revenue forecasting
