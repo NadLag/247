@@ -139,6 +139,8 @@ class BookingCreate(BaseModel):
     guests_count: int = 1
     assigned_cohost: Optional[str] = None
     status: str = "confirmed"
+    booking_type: str = "reservation"  # reservation | blocked
+    force_override: bool = False  # Allow override of blocked dates
 
 class BookingUpdate(BaseModel):
     guest_name: Optional[str] = None
@@ -148,6 +150,7 @@ class BookingUpdate(BaseModel):
     guests_count: Optional[int] = None
     assigned_cohost: Optional[str] = None
     status: Optional[str] = None
+    booking_type: Optional[str] = None
 
 class InvitationCreate(BaseModel):
     email: str
