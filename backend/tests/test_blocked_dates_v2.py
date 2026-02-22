@@ -196,39 +196,51 @@ class TestBlockedDatesV2:
     
     def test_07_verify_booking_types(self, session):
         """Verify booking_type field is properly set (reservation vs blocked)"""
-        # Get all bookings including blocked via include_blocked param
-        response = session.get(f"{BASE_URL}/api/bookings?include_blocked=true")
-        if response.status_code != 200:
-            # Try without param - API might not support it
-            response = session.get(f"{BASE_URL}/api/bookings")
-        
+        # Get bookings WITHOUT include_blocked - should only have reservations
+        response = session.get(f"{BASE_URL}/api/bookings")
         assert response.status_code == 200
-        bookings = response.json()
+        bookings_default = response.json()
         
-        # Get blocked dates
+        # Get bookings WITH include_blocked=true - should have both
+        response_all = session.get(f"{BASE_URL}/api/bookings?include_blocked=true")
+        assert response_all.status_code == 200
+        bookings_all = response_all.json()
+        
+        # Get blocked dates endpoint
         response = session.get(f"{BASE_URL}/api/bookings/blocked-dates")
         assert response.status_code == 200
         blocked_dates = response.json()
         
-        # Count types
-        types_in_bookings = {}
-        for b in bookings:
+        # Count types in default bookings (should be only reservations)
+        types_default = {}
+        for b in bookings_default:
             bt = b.get("booking_type", "unknown")
-            types_in_bookings[bt] = types_in_bookings.get(bt, 0) + 1
+            types_default[bt] = types_default.get(bt, 0) + 1
         
-        types_in_blocked = {}
-        for b in blocked_dates:
-            bt = b.get("booking_type", b.get("status", "unknown"))
-            types_in_blocked[bt] = types_in_blocked.get(bt, 0) + 1
+        # Count types in all bookings
+        types_all = {}
+        for b in bookings_all:
+            bt = b.get("booking_type", "unknown")
+            types_all[bt] = types_all.get(bt, 0) + 1
         
-        print(f"Booking types in /api/bookings: {types_in_bookings}")
-        print(f"Booking types in /api/bookings/blocked-dates: {types_in_blocked}")
+        print(f"Booking types in /api/bookings (default): {types_default}")
+        print(f"Booking types in /api/bookings?include_blocked=true: {types_all}")
+        print(f"Blocked dates endpoint count: {len(blocked_dates)}")
         
-        # The bookings list should have only reservations
-        assert "blocked" not in types_in_bookings or types_in_bookings.get("blocked", 0) == 0, \
-            "Main bookings list should not contain blocked type"
+        # The default bookings list should have only reservations
+        assert "blocked" not in types_default or types_default.get("blocked", 0) == 0, \
+            f"Default bookings list should not contain blocked type, found: {types_default}"
         
-        print(f"✅ Booking type separation verified: reservations vs blocked")
+        # The include_blocked=true should have both types
+        if len(blocked_dates) > 0:
+            assert "blocked" in types_all, "include_blocked=true should include blocked types"
+            assert types_all.get("blocked", 0) == len(blocked_dates), \
+                f"Blocked count mismatch: API returned {types_all.get('blocked', 0)}, endpoint has {len(blocked_dates)}"
+        
+        print(f"✅ Booking type separation verified:")
+        print(f"   - Default API excludes blocked ({len(bookings_default)} reservations)")
+        print(f"   - include_blocked=true includes all ({len(bookings_all)} total)")
+        print(f"   - Blocked dates endpoint returns {len(blocked_dates)} blocked entries")
     
     def test_08_cleanup_test_bookings(self, session):
         """Cleanup test bookings created during testing"""
