@@ -392,10 +392,13 @@ async def logout(request: Request, response: Response):
 @api_router.post("/auth/register-with-invite")
 async def register_with_invite(data: InviteRegistration, response: Response):
     """Register a new user using an invitation token with password"""
+    logger.info(f"Registration attempt for email: {data.email}")
+    
     # Validate invitation
     invitation = await db.invitations.find_one({"token": data.token, "used": False}, {"_id": 0})
     if not invitation:
-        raise HTTPException(status_code=404, detail="Invalid or expired invitation")
+        logger.warning(f"Invalid or expired invitation token for email: {data.email}")
+        raise HTTPException(status_code=404, detail="Invalid or expired invitation token")
     
     expires_at = invitation.get("expires_at", "")
     if isinstance(expires_at, str):
@@ -403,29 +406,36 @@ async def register_with_invite(data: InviteRegistration, response: Response):
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
     if expires_at < datetime.now(timezone.utc):
+        logger.warning(f"Invitation expired for email: {data.email}")
         raise HTTPException(status_code=400, detail="Invitation has expired")
     
     # Check if email matches
     if data.email.lower() != invitation["email"].lower():
+        logger.warning(f"Email mismatch: {data.email} vs {invitation['email']}")
         raise HTTPException(status_code=400, detail="Email does not match invitation")
     
     # Check if user already exists
     existing_user = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
     if existing_user:
-        raise HTTPException(status_code=400, detail="User with this email already exists")
+        logger.warning(f"User already exists: {data.email}")
+        raise HTTPException(status_code=400, detail="User with this email already exists. Please sign in instead.")
     
     # Hash password
     password_hash = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
-    # Create user
+    # Create user with proper name handling
     user_id = f"user_{uuid.uuid4().hex[:12]}"
+    first_name = data.first_name.strip() if data.first_name else data.email.split('@')[0]
+    last_name = data.last_name.strip() if data.last_name else ""
+    full_name = f"{first_name} {last_name}".strip()
+    
     new_user = {
         "user_id": user_id,
         "email": data.email.lower(),
-        "name": f"{data.first_name} {data.last_name}",
-        "first_name": data.first_name,
-        "last_name": data.last_name,
-        "phone": data.phone,
+        "name": full_name,
+        "first_name": first_name,
+        "last_name": last_name,
+        "phone": data.phone or "",
         "password_hash": password_hash,
         "auth_method": "password",
         "picture": "",
@@ -435,6 +445,7 @@ async def register_with_invite(data: InviteRegistration, response: Response):
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.users.insert_one(new_user)
+    logger.info(f"User created successfully: {user_id} with role {invitation['role']}")
     
     # Mark invitation as used
     await db.invitations.update_one(
