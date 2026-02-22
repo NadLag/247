@@ -436,9 +436,143 @@ export default function Properties() {
           </div>
         )}
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        {/* Choice Dialog - Add Property Options */}
+        <Dialog open={choiceDialogOpen} onOpenChange={setChoiceDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-heading">Add Property</DialogTitle>
+              <DialogDescription>Choose how you'd like to add a new property</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <Card 
+                className="cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                onClick={selectAddOTA}
+                data-testid="add-from-ota-choice"
+              >
+                <CardContent className="p-4 flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Globe className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Sync from OTA</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Import property & bookings from Airbnb, Booking.com, etc. using iCal
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className="cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                onClick={selectAddManual}
+                data-testid="add-manual-choice"
+              >
+                <CardContent className="p-4 flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <FileEdit className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Add Manually</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Enter property details manually without OTA connection
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* OTA Import Dialog */}
+        <Dialog open={otaDialogOpen} onOpenChange={setOtaDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="font-heading flex items-center gap-2">
+                <Globe className="h-5 w-5" /> Sync from OTA
+              </DialogTitle>
+              <DialogDescription>
+                Enter the iCal URL from your OTA platform to import property and bookings
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label>Property Name *</Label>
+                <Input 
+                  value={otaForm.name}
+                  onChange={e => setOtaForm(p => ({ ...p, name: e.target.value }))}
+                  placeholder="e.g., Beach House"
+                  data-testid="ota-property-name"
+                />
+                <p className="text-xs text-muted-foreground">Give your property a name for easy identification</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>OTA Source *</Label>
+                <Select value={otaForm.source} onValueChange={v => setOtaForm(p => ({ ...p, source: v }))}>
+                  <SelectTrigger data-testid="ota-source-select">
+                    <SelectValue placeholder="Select OTA platform..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OTA_SOURCES.map(s => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>iCal URL *</Label>
+                  <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={generateMockUrl}>
+                    Generate Mock URL
+                  </Button>
+                </div>
+                <Input 
+                  value={otaForm.ical_url}
+                  onChange={e => setOtaForm(p => ({ ...p, ical_url: e.target.value }))}
+                  placeholder="https://www.airbnb.com/calendar/ical/..."
+                  data-testid="ota-ical-url"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Find the iCal export URL in your OTA platform settings
+                </p>
+              </div>
+              
+              {importResult && (
+                <Card className="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800">
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-emerald-600" />
+                    <div className="text-sm">
+                      <p className="font-medium text-emerald-800 dark:text-emerald-400">Property imported!</p>
+                      <p className="text-emerald-700 dark:text-emerald-500">
+                        {importResult.bookings_imported} booking(s) created
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOtaDialogOpen(false)}>Cancel</Button>
+              <Button 
+                onClick={handleOTAImport} 
+                disabled={importing || !otaForm.name.trim() || !otaForm.source || !otaForm.ical_url.trim()}
+                data-testid="import-ota-btn"
+              >
+                {importing ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing...</>
+                ) : (
+                  <><RefreshCw className="mr-2 h-4 w-4" /> Import Property</>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Manual Add/Edit Dialog */}
+        <Dialog open={manualDialogOpen} onOpenChange={setManualDialogOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle className="font-heading">{editing ? "Edit Property" : "Add Property"}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-heading">{editing ? "Edit Property" : "Add Property Manually"}</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-2">
               {/* Basic Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -503,7 +637,7 @@ export default function Properties() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setManualDialogOpen(false)}>Cancel</Button>
               <Button onClick={handleSave} disabled={!form.name.trim() || saving} data-testid="save-property-btn">{saving ? "Saving..." : editing ? "Update" : "Create"}</Button>
             </DialogFooter>
           </DialogContent>
