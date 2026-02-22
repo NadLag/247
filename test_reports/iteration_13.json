@@ -1,0 +1,64 @@
+{
+  "summary": "Bug Fix: Blocked dates now correctly imported from iCal OTA sync with status='blocked'. Found and fixed a bug in process_ical_booking where status was hardcoded to 'confirmed' instead of using the parsed status from iCal. All blocked date features now working: import, display in calendar (gray), list view filter, manual booking validation, KPI exclusion.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/ota/feeds",
+        "issue": "Transient 520 errors from Cloudflare, but feed is actually created in DB. May need retry logic in frontend.",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Dashboard charts",
+        "issues": ["Console warnings about chart dimensions when initializing - non-blocking"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_blocked_dates.py",
+    "/.screenshots/01_dashboard.png",
+    "/.screenshots/02_bookings_calendar.png",
+    "/.screenshots/03_bookings_list.png"
+  ],
+  "passed_tests": [
+    "✅ iCal parser correctly identifies 6 blocked dates and 8 regular bookings from Airbnb iCal",
+    "✅ OTA sync now imports blocked dates with status='blocked' and guest_name='Blocked'",
+    "✅ Manual booking creation on blocked dates returns 400 error with descriptive message",
+    "✅ Dashboard KPIs exclude blocked dates from revenue calculations (status != 'blocked')",
+    "✅ Analytics KPIs exclude blocked dates from revenue and booking counts",
+    "✅ Bookings calendar view shows blocked dates in gray (different from confirmed green)",
+    "✅ Bookings list view has 'Blocked' status filter option",
+    "✅ Property name shows correctly (not 'Unknown') - all bookings have valid property_id",
+    "✅ Recent Bookings list on Dashboard shows both 'Blocked' and 'Airbnb Guest' entries",
+    "✅ Calendar legend includes 'Blocked' status indicator"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/server.py - Line 2146: Changed status='confirmed' to status=booking_data.get('status', 'confirmed') to preserve blocked status"
+  ],
+  "success_rate": {
+    "backend": "100% (All API tests passed)",
+    "frontend": "100% (All UI verifications passed)"
+  },
+  "bug_fix_details": {
+    "original_issue": "Blocked dates from iCal were imported but always set to status='confirmed' instead of status='blocked'",
+    "root_cause": "In process_ical_booking() function (line 2146), the status was hardcoded to 'confirmed' when creating new bookings instead of using booking_data.get('status')",
+    "fix_applied": "Changed line 2146 from 'status': 'confirmed' to 'status': booking_data.get('status', 'confirmed')",
+    "verification": "Tested with real Airbnb iCal URL - now correctly imports 6 blocked dates with status='blocked'"
+  },
+  "test_data_used": {
+    "ical_url": "https://www.airbnb.ca/calendar/ical/1331247817144386380.ics?t=5af8dab80e7f4ea1b11aa3526227ebe2",
+    "expected_blocked_dates": 6,
+    "expected_regular_bookings": 8
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Blocked dates bug fixed. The parse_ical_bookings function correctly parses 'Not available' entries as blocked, and process_ical_booking now preserves the status. All blocked date features verified working: calendar gray styling, list filter, manual booking validation, KPI exclusion."
+}
