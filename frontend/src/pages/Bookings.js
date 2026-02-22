@@ -304,9 +304,9 @@ export default function Bookings() {
     <Layout>
       <div className="space-y-6" data-testid="bookings-page">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center justify-between flex-wrap gap-4 animate-fade-in">
           <div>
-            <h1 className="text-xl font-semibold">Bookings</h1>
+            <h1 className="text-xl font-semibold font-heading text-foreground">Bookings</h1>
             <p className="text-sm text-muted-foreground">{bookings.length} total bookings</p>
           </div>
           <div className="flex items-center gap-2">
@@ -315,7 +315,7 @@ export default function Bookings() {
               <Button 
                 variant={viewMode === "calendar" ? "default" : "ghost"} 
                 size="sm" 
-                className="h-8"
+                className="h-8 transition-all"
                 onClick={() => setViewMode("calendar")}
                 data-testid="calendar-view-btn"
               >
@@ -324,7 +324,7 @@ export default function Bookings() {
               <Button 
                 variant={viewMode === "list" ? "default" : "ghost"} 
                 size="sm"
-                className="h-8"
+                className="h-8 transition-all"
                 onClick={() => setViewMode("list")}
                 data-testid="list-view-btn"
               >
@@ -332,7 +332,7 @@ export default function Bookings() {
               </Button>
             </div>
             {isAdmin && (
-              <Button size="sm" onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-booking-btn">
+              <Button size="sm" onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-booking-btn" className="shadow-sm">
                 <Plus className="mr-2 h-4 w-4" /> Add Booking
               </Button>
             )}
