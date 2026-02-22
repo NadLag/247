@@ -918,7 +918,11 @@ async def delete_expense(expense_id: str, user=Depends(require_admin)):
 
 # ===== BOOKING ROUTES =====
 @api_router.get("/bookings")
-async def list_bookings(user=Depends(get_current_user), include_blocked: bool = False):
+async def list_bookings(
+    user=Depends(get_current_user),
+    include_blocked: bool = False,
+    source: Optional[str] = None
+):
     """List bookings. By default, blocked dates are excluded from the list."""
     company_id = user.get("company_id")
     if not company_id:
@@ -938,11 +942,19 @@ async def list_bookings(user=Depends(get_current_user), include_blocked: bool = 
     
     query = {"company_id": company_id}
     if not include_blocked:
-        # Exclude blocked dates from main bookings list
         query["$or"] = [
             {"booking_type": {"$ne": "blocked"}},
-            {"booking_type": {"$exists": False}, "status": {"$ne": "blocked"}}  # Backwards compat
+            {"booking_type": {"$exists": False}, "status": {"$ne": "blocked"}}
         ]
+    
+    # Filter by source
+    if source:
+        if source == "direct":
+            query["$and"] = query.get("$and", []) + [
+                {"$or": [{"ota_source": "manual"}, {"ota_source": None}, {"ota_source": {"$exists": False}}]}
+            ]
+        else:
+            query["ota_source"] = source
     
     return await db.bookings.find(query, {"_id": 0}).sort("check_in", -1).to_list(1000)
 
@@ -1088,7 +1100,7 @@ async def create_booking(data: BookingCreate, user=Depends(require_admin)):
         "company_id": company_id,
         **booking_data,
         "booking_type": "reservation",  # Manual bookings are always reservations
-        "source": "manual",
+        "ota_source": "manual",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
