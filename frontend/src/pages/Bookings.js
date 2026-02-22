@@ -681,32 +681,30 @@ export default function Bookings() {
               <div className="h-64 animate-pulse bg-muted/50 rounded-lg" />
             </CardContent>
           </Card>
-        ) : (
+        ) : viewMode === "calendar" ? (
           <Card>
             <CardContent className="p-4">
-              {viewMode === "calendar" ? (
-                <BookingCalendar 
-                  bookings={bookings}
-                  blockedDates={blockedDates}
-                  properties={properties}
-                  currentMonth={currentMonth}
-                  onMonthChange={handleMonthChange}
-                  onBookingClick={handleBookingClick}
-                  propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
-                />
-              ) : (
-                <BookingList 
-                  bookings={bookings}
-                  blockedDates={blockedDates}
-                  properties={properties}
-                  isAdmin={isAdmin}
-                  onEdit={openEdit}
-                  propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
-                  statusFilter={statusFilter === "all" ? "" : statusFilter}
-                />
-              )}
+              <BookingCalendar 
+                bookings={bookings}
+                blockedDates={blockedDates}
+                properties={properties}
+                currentMonth={currentMonth}
+                onMonthChange={handleMonthChange}
+                onBookingClick={handleBookingClick}
+                propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
+              />
             </CardContent>
           </Card>
+        ) : (
+          <BookingList 
+            bookings={bookings}
+            blockedDates={blockedDates}
+            properties={properties}
+            isAdmin={isAdmin}
+            onEdit={openEdit}
+            propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
+            statusFilter={statusFilter === "all" ? "" : statusFilter}
+          />
         )}
 
         {/* Booking Detail Popup (Calendar click) */}
