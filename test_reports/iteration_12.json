@@ -1,0 +1,69 @@
+{
+  "summary": "Bug fix VERIFIED: iCal Property Sync now correctly imports bookings. The parse_ical_bookings function properly handles Airbnb iCal format: (1) 'Reserved' entries are converted to 'Airbnb Guest' name, (2) 'Airbnb (Not available)' entries are correctly skipped, (3) Backend logs show detailed parsing info.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Dashboard charts",
+        "issues": ["Console warnings about chart dimensions when initializing"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ical_import.py",
+    "/app/test_reports/pytest/pytest_ical_bugfix.xml"
+  ],
+  "passed_tests": [
+    "✅ Fetch iCal data from Airbnb URL - 3885 bytes fetched successfully",
+    "✅ iCal contains 8 'Reserved' entries (actual bookings)",
+    "✅ iCal contains 6 'Not available' entries (blocked dates - correctly identified)",
+    "✅ OTA import endpoint returns status: success with bookings_imported: 8",
+    "✅ All 8 Airbnb bookings created with guest_name: 'Airbnb Guest'",
+    "✅ No blocked dates were imported as bookings (0 'Not available' entries)",
+    "✅ Backend logs show: 'Parsed iCal: 8 bookings found, 6 skipped'",
+    "✅ Backend logs show: 'Imported 8 bookings for property prop_xxx'",
+    "✅ Dashboard shows 8 Active Bookings with Recent Bookings list",
+    "✅ Bookings Calendar view displays bookings with color-coded status bars",
+    "✅ Bookings List view shows all 8 bookings with correct details",
+    "✅ Properties page shows TEST_Airbnb_Property with 'Active' status and sync date"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_ical_import.py"
+  ],
+  "success_rate": {
+    "backend": "100% (6/6 tests passed)",
+    "frontend": "100% (All UI elements verified)"
+  },
+  "test_credentials": {
+    "session_token": "test_ical_session_1771791643279",
+    "company_id": "comp_ical_1771791643279",
+    "user_email": "ical.admin.1771791643279@example.com"
+  },
+  "seed_data_creation": "Created test admin user with company via MongoDB for authenticated testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug fix verified for iCal import. The parse_ical_bookings function in server.py (around line 1962) correctly: (1) Converts 'Reserved' to 'Airbnb Guest', (2) Skips entries containing 'not available' in summary, (3) Logs detailed parsing stats. Test with real Airbnb iCal URL confirmed 8 bookings imported, 6 blocked dates skipped.",
+  "bug_verification": {
+    "original_issue": "iCal Property Sync Not Pulling Bookings - 'Reserved' summary was being skipped",
+    "fix_applied": "parse_ical_bookings function updated to handle 'Reserved' as 'Airbnb Guest' and properly skip 'Not available' entries",
+    "fix_location": "/app/backend/server.py:1962-2042",
+    "verification_method": "Backend API test + Frontend UI verification",
+    "test_ical_url": "https://www.airbnb.ca/calendar/ical/1331247817144386380.ics?t=5af8dab80e7f4ea1b11aa3526227ebe2",
+    "expected_bookings": 8,
+    "actual_bookings": 8,
+    "expected_skipped": 6,
+    "actual_skipped": 6,
+    "status": "FIXED AND VERIFIED"
+  },
+  "mocked_apis": {
+    "has_mocked": false,
+    "details": "All tests use real Airbnb iCal URL and actual backend API endpoints"
+  }
+}
