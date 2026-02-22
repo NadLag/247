@@ -13,7 +13,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://booking-hub-169.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://lodging-dashboard-qa.preview.emergentagent.com')
 
 
 @pytest.fixture(scope="module")

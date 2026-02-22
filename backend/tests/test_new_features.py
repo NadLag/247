@@ -12,7 +12,7 @@ import os
 import json
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://booking-hub-169.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://lodging-dashboard-qa.preview.emergentagent.com').rstrip('/')
 
 
 class TestSetup:
