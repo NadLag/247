@@ -1093,15 +1093,7 @@ async def get_my_earnings(user=Depends(get_current_user)):
         checkin_rate = staff_doc.get("per_checkin_rate", 0) or 0
         checkout_rate = staff_doc.get("per_checkout_rate", 0) or 0
         
-        # Count tasks completed this month
-        tasks_this_month = await db.tasks.count_documents({
-            "company_id": company_id,
-            "assigned_staff_id": staff_doc["id"],
-            "status": "completed",
-            "completed_at": {"$gte": current_month_start.isoformat()[:10]}
-        })
-        
-        # Also count check-ins/check-outs from bookings
+        # Count check-ins/check-outs from bookings
         property_ids = staff_doc.get("assigned_properties", [])
         checkins = await db.bookings.count_documents({
             "company_id": company_id,
