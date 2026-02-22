@@ -1566,9 +1566,24 @@ async def delete_invitation(inv_id: str, user=Depends(require_admin)):
 @api_router.get("/invitations/validate/{token}")
 async def validate_invitation(token: str):
     """Validate invitation token and return pre-filled user data"""
-    invitation = await db.invitations.find_one({"token": token, "used": False}, {"_id": 0})
+    # First check if invitation exists (including used ones)
+    invitation = await db.invitations.find_one({"token": token}, {"_id": 0})
     if not invitation:
         raise HTTPException(status_code=404, detail="Invalid or expired invitation")
+    
+    # Check if already used
+    if invitation.get("used", False):
+        return {
+            "email": invitation["email"],
+            "role": invitation["role"],
+            "company_name": "",
+            "company_id": invitation["company_id"],
+            "first_name": "",
+            "last_name": "",
+            "phone": "",
+            "token": token,
+            "used": True,
+        }
     
     expires_at = invitation.get("expires_at", "")
     if isinstance(expires_at, str):
