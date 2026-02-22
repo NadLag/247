@@ -246,15 +246,15 @@ export default function Tasks() {
   return (
     <Layout>
       <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="tasks-page">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fade-in">
           <div>
-            <h1 className="font-heading text-2xl font-bold">Tasks</h1>
+            <h1 className="font-heading text-2xl font-bold text-foreground">Tasks</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {isAdmin ? `${tasks.length} total tasks` : `Your assigned tasks`}
             </p>
           </div>
           {isAdmin && (
-            <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-task-btn">
+            <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-task-btn" className="shadow-sm">
               <Plus className="mr-2 h-4 w-4" />Add Task
             </Button>
           )}
