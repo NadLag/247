@@ -66,26 +66,29 @@ function SecondaryKPI({ label, value, icon: Icon, delay = 0 }) {
 }
 
 // Recent Booking Item
-function BookingItem({ booking, propertyName }) {
+function BookingItem({ booking, propertyName, index = 0 }) {
   const statusColors = {
-    confirmed: "bg-teal-50 text-teal-700 border-teal-200",
-    checked_in: "bg-blue-50 text-blue-700 border-blue-200",
-    checked_out: "bg-gray-50 text-gray-600 border-gray-200",
-    cancelled: "bg-red-50 text-red-700 border-red-200",
-    blocked: "bg-gray-100 text-gray-500 border-gray-300",
+    confirmed: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-400 dark:border-teal-700",
+    checked_in: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700",
+    checked_out: "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600",
+    cancelled: "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700",
+    blocked: "bg-gray-100 text-gray-500 border-gray-300 dark:bg-gray-800 dark:text-gray-500 dark:border-gray-600",
   };
   
   return (
-    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+    <div 
+      className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700/50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 -mx-2 px-2 rounded-lg transition-colors animate-fade-in opacity-0"
+      style={{ animationDelay: `${0.3 + index * 0.05}s` }}
+    >
       <div className="min-w-0 flex-1">
-        <p className="font-medium text-sm text-gray-900 truncate">{booking.guest_name}</p>
-        <p className="text-xs text-gray-500 truncate">{propertyName}</p>
+        <p className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">{booking.guest_name}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{propertyName}</p>
       </div>
       <div className="flex items-center gap-3 ml-4">
         <Badge variant="outline" className={`text-xs ${statusColors[booking.status] || ''}`}>
           {booking.status?.replace('_', ' ')}
         </Badge>
-        <span className="text-sm font-semibold font-heading tabular-nums text-gray-900">
+        <span className="text-sm font-semibold font-heading tabular-nums text-gray-900 dark:text-gray-100">
           {fmt(booking.total_amount || 0)}
         </span>
       </div>
