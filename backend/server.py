@@ -2140,16 +2140,19 @@ async def process_ical_booking(booking_data: Dict, company_id: str, feed_id: str
         return {"action": "skipped", "reason": "cancelled_not_found"}
     
     booking_id = f"book_{uuid.uuid4().hex[:12]}"
+    booking_type = booking_data.get("booking_type", "reservation")
+    
     new_booking = {
         "id": booking_id,
         "company_id": company_id,
         "property_id": property_id,
-        "guest_name": booking_data["guest_name"],
+        "guest_name": booking_data["guest_name"] if booking_type == "reservation" else None,
         "check_in": booking_data["check_in"],
         "check_out": booking_data["check_out"],
-        "total_amount": 0,  # iCal doesn't include pricing
-        "guests_count": 1,
-        "status": booking_data.get("status", "confirmed"),  # Preserve blocked status from iCal
+        "total_amount": booking_data.get("total_amount", 0) if booking_type == "reservation" else 0,
+        "guests_count": 1 if booking_type == "reservation" else 0,
+        "status": booking_data.get("status", "confirmed"),
+        "booking_type": booking_type,  # NEW: reservation or blocked
         "ota_source": booking_data["source"],
         "ota_external_id": uid,
         "ota_feed_id": feed_id,
@@ -2158,7 +2161,7 @@ async def process_ical_booking(booking_data: Dict, company_id: str, feed_id: str
         "updated_at": now_str,
     }
     await db.bookings.insert_one(new_booking)
-    return {"action": "created", "booking_id": booking_id}
+    return {"action": "created", "booking_id": booking_id, "booking_type": booking_type}
 
 async def sync_ota_feeds_background(company_id: str, sync_log_id: str):
     """Background task to sync all OTA feeds for a company"""
