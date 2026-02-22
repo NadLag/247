@@ -212,22 +212,13 @@ export default function Properties() {
       
       if (res.ok) {
         const data = await res.json();
-        setImportResult(data);
-        toast.success(`Property created with ${data.bookings_imported} bookings!`);
+        toast.success(`Property "${data.property_name}" created with ${data.bookings_imported} booking(s)!`);
         fetchData();
-        
-        // After successful import, offer to edit the property
-        if (data.property_id) {
-          // Fetch the new property and open edit dialog
-          const propRes = await fetch(`${API}/api/properties/${data.property_id}`, { credentials: "include" });
-          if (propRes.ok) {
-            const newProp = await propRes.json();
-            setOtaDialogOpen(false);
-            setOtaForm({ name: "", source: "", ical_url: "" });
-            setImportResult(null);
-            openEdit(newProp);
-          }
-        }
+        fetchSyncStatus();
+        // Close dialog and reset form
+        setOtaDialogOpen(false);
+        setOtaForm({ name: "", source: "", ical_url: "" });
+        setImportResult(null);
       } else {
         const err = await res.json();
         toast.error(err.detail || "Failed to import property");
