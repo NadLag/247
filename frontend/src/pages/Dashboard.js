@@ -12,30 +12,33 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const fmt = (v) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
 
 // Premium KPI Card Component
-function KPICard({ label, value, subtitle, icon: Icon, trend, large = false }) {
+function KPICard({ label, value, subtitle, icon: Icon, trend, large = false, delay = 0 }) {
   const isPositive = trend > 0;
   const showTrend = trend !== undefined && trend !== null && trend !== 0;
   
   return (
-    <div className={`kpi-card ${large ? 'p-8' : 'p-6'}`}>
+    <div 
+      className={`kpi-card hover-lift ${large ? 'p-8' : 'p-6'} animate-fade-in opacity-0`}
+      style={{ animationDelay: `${delay}s` }}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1 min-w-0 flex-1">
           <p className="kpi-label">{label}</p>
-          <p className={`font-heading tabular-nums tracking-tight text-gray-900 ${large ? 'text-4xl font-bold' : 'text-2xl font-bold'}`}>
+          <p className={`font-heading tabular-nums tracking-tight text-gray-900 dark:text-gray-100 ${large ? 'text-4xl font-bold' : 'text-2xl font-bold'}`}>
             {value}
           </p>
           {subtitle && (
-            <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
           )}
           {showTrend && (
-            <div className={`flex items-center gap-1 mt-2 text-sm font-medium ${isPositive ? 'text-teal-600' : 'text-red-500'}`}>
+            <div className={`flex items-center gap-1 mt-2 text-sm font-medium ${isPositive ? 'text-teal-600 dark:text-teal-400' : 'text-red-500 dark:text-red-400'}`}>
               {isPositive ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
               <span>{Math.abs(trend).toFixed(1)}% vs last month</span>
             </div>
           )}
         </div>
-        <div className="h-12 w-12 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
-          <Icon className="h-6 w-6 text-teal-600" />
+        <div className="h-12 w-12 rounded-xl bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center shrink-0 transition-transform hover:scale-110">
+          <Icon className="h-6 w-6 text-teal-600 dark:text-teal-400" />
         </div>
       </div>
     </div>
