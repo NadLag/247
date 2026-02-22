@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Building2, MapPin, User, BedDouble, Bath, FileText, UserCheck, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, MapPin, User, BedDouble, Bath, FileText, UserCheck, RefreshCw, Clock, Link2 } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -26,9 +26,7 @@ const empty = {
   units: 1, active: true,
 };
 
-function PropertyCard({ prop, isAdmin, onEdit, onDelete, onOTASync, syncingPropId, getCohostName }) {
-  const isSyncing = syncingPropId === prop.id;
-  
+function PropertyCard({ prop, isAdmin, onEdit, onDelete, getCohostName }) {
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col" data-testid={`property-card-${prop.id}`}>
       <div className="h-2 bg-primary shrink-0" />
