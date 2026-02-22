@@ -141,7 +141,7 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 ## Navigation by Role
 
 ### Admin Sidebar
-Dashboard, Properties, Staff, Bookings, Tasks, Services, Expenses, Analytics, OTA Settings, Invitations, Billing, Settings
+Dashboard, Properties, Bookings, Staff, Tasks, Expenses, Services, Analytics, Invitations, Billing, Settings
 
 ### Owner Sidebar
 Dashboard, Properties, Bookings, Analytics, Settings
