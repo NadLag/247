@@ -2258,6 +2258,143 @@ async def get_ota_sync_status(user=Depends(require_admin)):
         "latest_sync": latest_log
     }
 
+# ===== OTA IMPORT - CREATE PROPERTY FROM ICAL =====
+class OTAImportRequest(BaseModel):
+    name: str
+    source: str
+    ical_url: str
+
+@api_router.post("/ota/import-property")
+async def import_property_from_ota(data: OTAImportRequest, user=Depends(require_admin)):
+    """Create a NEW property from OTA iCal URL and import all bookings"""
+    company_id = user["company_id"]
+    
+    logger.info(f"OTA import: Creating property '{data.name}' from {data.source}")
+    
+    try:
+        # Fetch iCal data
+        ical_content = await fetch_ical_data(data.ical_url)
+        
+        # Parse bookings to get count
+        bookings_data = parse_ical_bookings(ical_content, data.source, "temp")
+        
+        # Create new property
+        property_id = f"prop_{uuid.uuid4().hex[:12]}"
+        now_str = datetime.now(timezone.utc).isoformat()
+        
+        new_property = {
+            "id": property_id,
+            "company_id": company_id,
+            "name": data.name.strip(),
+            "address": "",
+            "property_type": "",
+            "rooms": 0,
+            "suites": 0,
+            "bathrooms": 0,
+            "city": "",
+            "country": "",
+            "notes": f"Imported from {data.source}",
+            "owner_first_name": "",
+            "owner_last_name": "",
+            "owner_phone": "",
+            "owner_email": "",
+            "assigned_cohost": None,
+            "units": 1,
+            "active": True,
+            "ota_source": data.source,
+            "ota_ical_url": data.ical_url,
+            "last_ota_sync_at": now_str,
+            "created_at": now_str,
+            "updated_at": now_str,
+        }
+        await db.properties.insert_one(new_property)
+        logger.info(f"Created property: {property_id}")
+        
+        # Create OTA feed for future syncs
+        feed_id = f"feed_{uuid.uuid4().hex[:12]}"
+        feed = {
+            "id": feed_id,
+            "company_id": company_id,
+            "property_id": property_id,
+            "source": data.source,
+            "ical_url": data.ical_url,
+            "name": f"{data.name} - {data.source}",
+            "active": True,
+            "last_sync_at": now_str,
+            "last_sync_status": "success",
+            "last_sync_error": None,
+            "created_at": now_str,
+            "updated_at": now_str,
+        }
+        await db.ota_feeds.insert_one(feed)
+        
+        # Import bookings
+        bookings_created = 0
+        for booking_data in bookings_data:
+            booking_data["property_id"] = property_id
+            
+            # Check for duplicates by UID
+            existing = await db.bookings.find_one({
+                "company_id": company_id,
+                "ota_external_id": booking_data["uid"]
+            }, {"_id": 0})
+            
+            if not existing and booking_data["status"] != "cancelled":
+                booking_id = f"book_{uuid.uuid4().hex[:12]}"
+                new_booking = {
+                    "id": booking_id,
+                    "company_id": company_id,
+                    "property_id": property_id,
+                    "guest_name": booking_data["guest_name"],
+                    "check_in": booking_data["check_in"],
+                    "check_out": booking_data["check_out"],
+                    "total_amount": 0,
+                    "guests_count": 1,
+                    "status": "confirmed",
+                    "ota_source": data.source,
+                    "ota_external_id": booking_data["uid"],
+                    "ota_feed_id": feed_id,
+                    "imported_at": now_str,
+                    "created_at": now_str,
+                    "updated_at": now_str,
+                }
+                await db.bookings.insert_one(new_booking)
+                bookings_created += 1
+        
+        logger.info(f"Imported {bookings_created} bookings for property {property_id}")
+        
+        # Create sync log
+        sync_log_id = f"ota_sync_{uuid.uuid4().hex[:12]}"
+        sync_log = {
+            "id": sync_log_id,
+            "company_id": company_id,
+            "source": data.source,
+            "event_type": "property_import",
+            "status": "completed",
+            "message": f"Property created with {bookings_created} bookings",
+            "stats": {
+                "property_id": property_id,
+                "bookings_created": bookings_created,
+            },
+            "created_at": now_str,
+            "processed_at": now_str,
+        }
+        await db.ota_sync_logs.insert_one(sync_log)
+        
+        return {
+            "status": "success",
+            "property_id": property_id,
+            "property_name": data.name,
+            "bookings_imported": bookings_created,
+            "feed_id": feed_id,
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"OTA import failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to import property: {str(e)}")
+
 # ===== OTA FEEDS CRUD =====
 @api_router.get("/ota/feeds")
 async def list_ota_feeds(user=Depends(require_admin)):
