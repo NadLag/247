@@ -247,75 +247,10 @@ export default function InviteAccept() {
             </span>
           </div>
 
-          {/* Registration Form */}
+          {/* Registration Form - Only Password Setup */}
           <form onSubmit={handlePasswordRegister} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="first_name">First Name *</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="first_name"
-                    value={form.first_name}
-                    onChange={e => set("first_name", e.target.value)}
-                    className="pl-10"
-                    placeholder="John"
-                    required
-                    data-testid="register-firstname"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="last_name">Last Name *</Label>
-                <Input 
-                  id="last_name"
-                  value={form.last_name}
-                  onChange={e => set("last_name", e.target.value)}
-                  placeholder="Doe"
-                  required
-                  data-testid="register-lastname"
-                />
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={e => set("email", e.target.value)}
-                  className="pl-10"
-                  placeholder="john@example.com"
-                  required
-                  disabled
-                  data-testid="register-email"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">Email is set from your invitation</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number *</Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={e => set("phone", e.target.value)}
-                  className="pl-10"
-                  placeholder="+1 (555) 000-0000"
-                  required
-                  data-testid="register-phone"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
+              <Label htmlFor="password">Create Password *</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
