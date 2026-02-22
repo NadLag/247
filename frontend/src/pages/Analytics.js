@@ -48,6 +48,82 @@ function KPICard({ title, value, previousValue, change, icon: Icon, testId, vari
   );
 }
 
+const SOURCE_COLORS = [
+  "#0D9488", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16"
+];
+
+function SourceBreakdownChart({ data, title, metric, pctKey, testId }) {
+  const chartData = data.sources.map((s, i) => ({
+    name: s.label,
+    value: s[metric],
+    pct: s[pctKey],
+    fill: SOURCE_COLORS[i % SOURCE_COLORS.length],
+  }));
+  
+  const total = metric === "revenue" 
+    ? `$${data.total_revenue.toLocaleString()}`
+    : data.total_bookings;
+
+  return (
+    <Card data-testid={testId}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <Globe className="h-4 w-4" />
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-6">
+          <div className="w-[180px] h-[180px] shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  dataKey="value"
+                  stroke="hsl(var(--background))"
+                  strokeWidth={2}
+                >
+                  {chartData.map((entry, i) => (
+                    <Cell key={i} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
+                  formatter={(value, name) => [
+                    metric === "revenue" ? `$${value.toLocaleString()}` : value,
+                    name
+                  ]}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex-1 space-y-2 min-w-0">
+            <p className="text-xs text-muted-foreground mb-3">
+              Total: <span className="font-semibold text-foreground">{total}</span>
+            </p>
+            {chartData.map((entry, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm" data-testid={`source-item-${entry.name.toLowerCase().replace(/\s/g, '-')}`}>
+                <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: entry.fill }} />
+                <span className="truncate flex-1 text-muted-foreground">{entry.name}</span>
+                <span className="font-data font-medium tabular-nums shrink-0">
+                  {entry.pct}%
+                </span>
+                <span className="font-data text-xs text-muted-foreground tabular-nums shrink-0">
+                  {metric === "revenue" ? `$${entry.value.toLocaleString()}` : entry.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Analytics() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
