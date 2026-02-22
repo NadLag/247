@@ -98,22 +98,22 @@ export default function Expenses() {
   return (
     <Layout>
       <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="expenses-page">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-3 animate-fade-in">
           <div>
-            <h1 className="font-heading text-2xl font-bold">Expenses</h1>
+            <h1 className="font-heading text-2xl font-bold text-foreground">Expenses</h1>
             <p className="text-sm text-muted-foreground mt-1">Fixed: {fmt(totalFixed)} | Variable: {fmt(totalVariable)}</p>
           </div>
           <div className="flex items-center gap-3">
             <Select value={filterProp} onValueChange={setFilterProp}>
-              <SelectTrigger className="w-[180px]" data-testid="filter-property-select">
-                <Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="All Properties" />
+              <SelectTrigger className="w-[180px] hover:border-primary/30" data-testid="filter-property-select">
+                <Filter className="h-4 w-4 mr-2 text-muted-foreground" /><SelectValue placeholder="All Properties" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Properties</SelectItem>
                 {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
-            {isAdmin && <Button onClick={() => openAdd("fixed")} data-testid="add-expense-btn"><Plus className="mr-2 h-4 w-4" />Add Expense</Button>}
+            {isAdmin && <Button onClick={() => openAdd("fixed")} data-testid="add-expense-btn" className="shadow-sm"><Plus className="mr-2 h-4 w-4" />Add Expense</Button>}
           </div>
         </div>
 
