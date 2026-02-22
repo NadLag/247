@@ -216,9 +216,9 @@ class BookingServiceUpdate(BaseModel):
 class InviteRegistration(BaseModel):
     token: str
     first_name: str
-    last_name: str
+    last_name: str = ""
     email: str
-    phone: str
+    phone: str = ""
     password: str
 
 class PasswordLogin(BaseModel):
