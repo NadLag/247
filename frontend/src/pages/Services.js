@@ -254,7 +254,7 @@ export default function Services() {
             </Tabs>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredServices.map(service => (
+              {filteredServices.map((service, index) => (
                 <ServiceCard 
                   key={service.id} 
                   service={service} 
@@ -262,6 +262,7 @@ export default function Services() {
                   onEdit={openEdit} 
                   onDelete={handleDelete}
                   isAdmin={isAdmin}
+                  index={index}
                 />
               ))}
             </div>
