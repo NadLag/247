@@ -33,97 +33,64 @@ const empty = {
   units: 1, active: true,
 };
 
-function PropertyCard({ prop, isAdmin, onEdit, onDelete, getCohostName }) {
+function PropertyCard({ prop, isAdmin, onEdit, onDelete, onQuickView }) {
+  const ownerName = [prop.owner_first_name, prop.owner_last_name].filter(Boolean).join(" ") || "No owner";
+  const location = prop.city && prop.country ? `${prop.city}, ${prop.country}` : prop.address || "No address";
+  
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col" data-testid={`property-card-${prop.id}`}>
-      <div className="h-2 bg-primary shrink-0" />
-      <CardContent className="p-5 flex flex-col flex-1">
-        {/* Header - Fixed height section */}
+    <Card className="group hover:shadow-lg transition-all duration-200 border-border/60" data-testid={`property-card-${prop.id}`}>
+      <CardContent className="p-4">
+        {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="min-w-0 flex-1">
-            <h3 className="font-heading font-semibold text-base truncate">{prop.name}</h3>
-            {prop.property_type && (
-              <Badge variant="outline" className="text-xs mt-1">{prop.property_type}</Badge>
-            )}
-          </div>
-          <Badge variant={prop.active ? "default" : "secondary"} className="shrink-0">
+          <h3 className="font-semibold text-sm leading-tight line-clamp-2">{prop.name}</h3>
+          <Badge 
+            variant={prop.active ? "default" : "secondary"} 
+            className={`shrink-0 text-[10px] px-1.5 py-0 ${prop.active ? 'bg-primary/10 text-primary border-primary/20' : ''}`}
+          >
             {prop.active ? "Active" : "Inactive"}
           </Badge>
         </div>
 
-        {/* Location */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-          <MapPin className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">
-            {prop.city && prop.country ? `${prop.city}, ${prop.country}` : prop.address || "No location set"}
-          </span>
-        </div>
-
-        {/* Room stats - Fixed grid */}
-        <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-3 pb-3 border-b">
-          <div className="flex items-center gap-1">
-            <BedDouble className="h-3.5 w-3.5 shrink-0" />
-            <span>{prop.rooms || 0} Rooms</span>
+        {/* Details */}
+        <div className="space-y-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">{location}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <BedDouble className="h-3.5 w-3.5 shrink-0" />
-            <span>{prop.suites || 0} Suites</span>
+          <div className="flex items-center gap-1.5">
+            <User className="h-3 w-3 shrink-0" />
+            <span className="truncate">{ownerName}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Bath className="h-3.5 w-3.5 shrink-0" />
-            <span>{prop.bathrooms || 0} Baths</span>
-          </div>
-        </div>
-
-        {/* Owner & Units - Fixed grid */}
-        <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-          <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
-            <User className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{prop.owner_first_name} {prop.owner_last_name}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Building2 className="h-3.5 w-3.5 shrink-0" />
-            <span>{prop.units} unit{prop.units !== 1 ? "s" : ""}</span>
-          </div>
-        </div>
-
-        {/* Flexible content area - grows to fill space */}
-        <div className="flex-1 space-y-2 min-h-[48px]">
-          {getCohostName(prop.assigned_cohost) && (
-            <div className="flex items-center gap-1.5 text-xs bg-primary/5 rounded-md px-2.5 py-2 border border-primary/10">
-              <UserCheck className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span className="truncate">
-                <span className="font-medium">Co-Host:</span> {getCohostName(prop.assigned_cohost)}
-              </span>
-            </div>
-          )}
-          {prop.notes && (
-            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-              <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span className="line-clamp-2">{prop.notes}</span>
+          {prop.last_ota_sync_at && (
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3 w-3 shrink-0" />
+              <span>Synced {new Date(prop.last_ota_sync_at).toLocaleDateString()}</span>
             </div>
           )}
         </div>
 
-        {/* Actions - Fixed at bottom */}
-        {isAdmin && (
-          <div className="flex gap-2 pt-3 mt-auto border-t">
-            <Button variant="outline" size="sm" onClick={() => onEdit(prop)} data-testid={`edit-property-${prop.id}`}>
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
-            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/5" onClick={() => onDelete(prop.id)} data-testid={`delete-property-${prop.id}`}>
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        )}
-        
-        {/* Last Sync indicator */}
-        {prop.last_ota_sync_at && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2 pt-2 border-t">
-            <Clock className="h-3 w-3" />
-            <span>Last synced: {new Date(prop.last_ota_sync_at).toLocaleDateString()}</span>
-          </div>
-        )}
+        {/* Actions */}
+        <div className="flex gap-2 mt-4 pt-3 border-t border-border/50">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1 h-8 text-xs"
+            onClick={() => onQuickView(prop)}
+            data-testid={`view-property-${prop.id}`}
+          >
+            Quick View
+          </Button>
+          {isAdmin && (
+            <>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => onEdit(prop)} data-testid={`edit-property-${prop.id}`}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => onDelete(prop.id)} data-testid={`delete-property-${prop.id}`}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
