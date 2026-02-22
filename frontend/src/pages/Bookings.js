@@ -585,8 +585,49 @@ export default function Bookings() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave} disabled={!form.property_id || !form.guest_name || !form.check_in || !form.check_out || saving} data-testid="save-booking-btn">
+              <Button onClick={() => handleSave(false)} disabled={!form.property_id || !form.guest_name || !form.check_in || !form.check_out || saving} data-testid="save-booking-btn">
                 {saving ? "Saving..." : editing ? "Update" : "Create"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Override Conflict Dialog */}
+        <Dialog open={overrideDialogOpen} onOpenChange={setOverrideDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
+                <AlertTriangle className="h-5 w-5" />
+                Date Conflict Detected
+              </DialogTitle>
+              <DialogDescription>
+                This date range overlaps with blocked/unavailable dates.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              {conflictDetails?.blocked_period && (
+                <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-muted-foreground mb-1">Blocked Period:</p>
+                  <p className="font-medium">
+                    {conflictDetails.blocked_period.check_in} → {conflictDetails.blocked_period.check_out}
+                  </p>
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Do you want to override these blocked dates and create the booking anyway? 
+                This action will be logged for audit purposes.
+              </p>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={cancelOverride}>Cancel</Button>
+              <Button 
+                variant="default" 
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={handleForceOverride} 
+                disabled={saving}
+                data-testid="force-override-btn"
+              >
+                {saving ? "Processing..." : "Force Manual Booking"}
               </Button>
             </DialogFooter>
           </DialogContent>
