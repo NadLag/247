@@ -161,7 +161,8 @@ export default function Dashboard() {
         if (trendRes.ok) setTrends(await trendRes.json());
         if (bookRes.ok) {
           const data = await bookRes.json();
-          setBookings(data.filter(b => b.status !== 'blocked').slice(0, 6));
+          // Filter out any remaining blocked bookings (API should already exclude them)
+          setBookings(data.filter(b => b.booking_type !== 'blocked' && b.status !== 'blocked').slice(0, 6));
         }
         if (propRes.ok) setProperties(await propRes.json());
       } catch (err) {
