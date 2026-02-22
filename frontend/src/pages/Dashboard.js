@@ -141,6 +141,7 @@ export default function Dashboard() {
     if (!user?.company_id) return;
     
     const fetchData = async () => {
+      console.log("Dashboard v2: Fetching KPIs from", `${API}/api/dashboard/kpis`);
       try {
         const [kpiRes, trendRes, bookRes, propRes] = await Promise.all([
           fetch(`${API}/api/dashboard/kpis`, { credentials: "include" }),
@@ -149,12 +150,13 @@ export default function Dashboard() {
           fetch(`${API}/api/properties`, { credentials: "include" }),
         ]);
         
+        console.log("Dashboard v2: KPI response status:", kpiRes.status);
         if (kpiRes.ok) {
           const kpiData = await kpiRes.json();
-          console.log("KPI Data received:", kpiData);
+          console.log("Dashboard v2: KPI Data received:", kpiData);
           setKpis(kpiData);
         } else {
-          console.error("KPI fetch failed:", kpiRes.status);
+          console.error("Dashboard v2: KPI fetch failed:", kpiRes.status);
         }
         if (trendRes.ok) setTrends(await trendRes.json());
         if (bookRes.ok) {
@@ -163,7 +165,7 @@ export default function Dashboard() {
         }
         if (propRes.ok) setProperties(await propRes.json());
       } catch (err) {
-        console.error("Dashboard fetch error:", err);
+        console.error("Dashboard v2: fetch error:", err);
       } finally {
         setLoading(false);
       }
