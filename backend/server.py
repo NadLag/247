@@ -2843,13 +2843,20 @@ async def migrate_blocked_bookings():
             {"$set": {"booking_type": "blocked", "guest_name": None, "total_amount": 0}}
         )
         
+        # Also fix bookings where guest_name was "Blocked" (from old iCal imports)
+        blocked_name_result = await db.bookings.update_many(
+            {"guest_name": "Blocked", "booking_type": {"$ne": "blocked"}},
+            {"$set": {"booking_type": "blocked", "guest_name": None, "total_amount": 0, "status": "blocked"}}
+        )
+        
         # Update all other bookings to have booking_type=reservation
         reservation_result = await db.bookings.update_many(
             {"status": {"$ne": "blocked"}, "booking_type": {"$exists": False}},
             {"$set": {"booking_type": "reservation"}}
         )
         
-        logger.info(f"Migration complete: {blocked_result.modified_count} blocked dates updated, {reservation_result.modified_count} reservations updated")
+        total_blocked = blocked_result.modified_count + blocked_name_result.modified_count
+        logger.info(f"Migration complete: {total_blocked} blocked dates updated, {reservation_result.modified_count} reservations updated")
     except Exception as e:
         logger.error(f"Migration error: {e}")
 
