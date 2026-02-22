@@ -396,6 +396,52 @@ export default function Properties() {
           </div>
         )}
 
+        {/* Quick View Dialog */}
+        <Dialog open={!!quickViewProp} onOpenChange={() => setQuickViewProp(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{quickViewProp?.name}</DialogTitle>
+            </DialogHeader>
+            {quickViewProp && (
+              <div className="space-y-4 py-2">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Address</p>
+                    <p>{quickViewProp.address || quickViewProp.city || "Not set"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Status</p>
+                    <Badge variant={quickViewProp.active ? "default" : "secondary"}>
+                      {quickViewProp.active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Owner</p>
+                    <p>{[quickViewProp.owner_first_name, quickViewProp.owner_last_name].filter(Boolean).join(" ") || "Not set"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Units</p>
+                    <p>{quickViewProp.units || 1}</p>
+                  </div>
+                  {quickViewProp.last_ota_sync_at && (
+                    <div className="col-span-2">
+                      <p className="text-muted-foreground text-xs mb-1">Last Synced</p>
+                      <p>{new Date(quickViewProp.last_ota_sync_at).toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+                {isAdmin && (
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button className="flex-1" onClick={() => { setQuickViewProp(null); openEdit(quickViewProp); }}>
+                      <Pencil className="mr-2 h-4 w-4" /> Edit Property
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Choice Dialog - Add Property Options */}
         <Dialog open={choiceDialogOpen} onOpenChange={setChoiceDialogOpen}>
           <DialogContent className="sm:max-w-md">
