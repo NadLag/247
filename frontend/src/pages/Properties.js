@@ -107,6 +107,7 @@ export default function Properties() {
   const [choiceDialogOpen, setChoiceDialogOpen] = useState(false);
   const [otaDialogOpen, setOtaDialogOpen] = useState(false);
   const [manualDialogOpen, setManualDialogOpen] = useState(false);
+  const [quickViewProp, setQuickViewProp] = useState(null);
   
   // Form states
   const [form, setForm] = useState(empty);
