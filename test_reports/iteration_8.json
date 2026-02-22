@@ -1,0 +1,112 @@
+{
+  "summary": "Iteration 8 - Comprehensive testing of invitation-based registration flow. All backend tests passed (13/13). Frontend UI tests passed. The flow correctly shows read-only Name, Email, Role, Company fields from invitation data and allows users to only set up password authentication.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/invitations/validate/{token}",
+        "issue": "Returns 404 for used tokens instead of a response with used=true. This causes frontend to show 'Invalid Invitation' instead of 'Invitation Already Used' message.",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_invitation_registration.py",
+    "/app/test_reports/pytest/pytest_invitation.xml"
+  ],
+  "passed_tests": [
+    "✅ POST /api/invitations - creates staff invitation with token, email, role, expires_at",
+    "✅ POST /api/invitations - creates owner invitation correctly",
+    "✅ GET /api/invitations/validate/{token} - returns all required fields: email, role, company_name, first_name, last_name, phone, token, used",
+    "✅ GET /api/invitations/validate/{token} - returns 404 for invalid token",
+    "✅ GET /api/invitations/validate/{token} - pre-fills staff info (first_name, last_name, phone) from staff record when email matches",
+    "✅ POST /api/auth/register-with-invite - creates user with password, assigns role and company_id from invitation",
+    "✅ POST /api/auth/register-with-invite - marks invitation as used after registration",
+    "✅ POST /api/auth/register-with-invite - returns 404 for already-used token",
+    "✅ POST /api/auth/register-with-invite - returns 400 for email mismatch",
+    "✅ POST /api/auth/login - allows login with email/password after registration",
+    "✅ User created has correct role (staff), company_id, auth_method (password)",
+    "✅ POST /api/invitations - returns 400 for invalid role (not owner/staff)",
+    "✅ POST /api/invitations - returns 400 for duplicate pending invitation",
+    "✅ Frontend: Invite page shows read-only Name field (pre-filled or email prefix)",
+    "✅ Frontend: Invite page shows read-only Email field",
+    "✅ Frontend: Invite page shows read-only Role field ('Staff Member' or 'Property Owner')",
+    "✅ Frontend: Invite page shows read-only Company field",
+    "✅ Frontend: Info text 'These details are set by your organization and cannot be changed'",
+    "✅ Frontend: Google OAuth button present ('Continue with Google')",
+    "✅ Frontend: Password field with placeholder 'Min. 8 characters'",
+    "✅ Frontend: Confirm password field",
+    "✅ Frontend: Terms checkbox required before submission",
+    "✅ Frontend: 'Create Account' button disabled until terms accepted",
+    "✅ Frontend: Registration redirects to dashboard on success",
+    "✅ Frontend: Dashboard shows 'Hey, {FirstName}' greeting",
+    "✅ Frontend: Dashboard shows role-specific view (Staff Dashboard)",
+    "✅ Frontend: Invalid token shows 'Invalid Invitation' error with 'Go to Home' button"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "The invitation validation endpoint only searches for unused tokens, so used tokens return 404 instead of a distinct 'used' response. Frontend has 'Invitation Already Used' UI but never sees it.",
+    "Password validation (min 8 chars) is only on frontend - backend accepts any password length. Consider adding backend validation.",
+    "Pre-filling works correctly - staff records are queried by email to populate first_name, last_name, phone."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_invitation_registration.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "100% (All UI tests passed)"
+  },
+  "seed_data_creation": "Created test admin user (admin.inv.{ts}@example.com) with company (comp_inv_{ts}). Created staff record (John Doe, uitest.prefilled@example.com) for pre-fill testing.",
+  "test_credentials": {
+    "admin_session_token": "test_inv_admin_session_1771721513512",
+    "company_id": "comp_inv_1771721513512",
+    "registered_user_email": "uitest.prefilled@example.com",
+    "registered_user_password": "TestUIPassword123!"
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 8 verified the full invitation-based registration flow: (1) Admin creates invitation via POST /api/invitations, (2) Invited user visits /invite/{token}, (3) Page shows read-only Name/Email/Role/Company from invitation data + staff record lookup, (4) User only needs to enter password and accept terms, (5) Registration creates user with correct role/company_id, (6) User redirected to role-specific dashboard. Minor UX issue: used tokens show 'Invalid Invitation' instead of 'Invitation Already Used'.",
+  "features_tested": {
+    "invitation_creation": {
+      "endpoint": "POST /api/invitations",
+      "roles_supported": ["staff", "owner"],
+      "fields_returned": ["id", "company_id", "email", "role", "token", "used", "email_sent", "expires_at", "created_at"],
+      "validation": "Rejects invalid roles, duplicate pending emails"
+    },
+    "invitation_validation": {
+      "endpoint": "GET /api/invitations/validate/{token}",
+      "fields_returned": ["email", "role", "company_name", "company_id", "first_name", "last_name", "phone", "token", "used"],
+      "pre_fill_logic": "Looks up staff record by email for staff role, property record for owner role"
+    },
+    "password_registration": {
+      "endpoint": "POST /api/auth/register-with-invite",
+      "required_fields": ["token", "first_name", "last_name", "email", "phone", "password"],
+      "creates_user_with": ["user_id", "email", "name", "first_name", "last_name", "phone", "password_hash", "auth_method", "company_id", "role"]
+    },
+    "frontend_ui": {
+      "read_only_fields": ["Name", "Email", "Role", "Company"],
+      "editable_fields": ["Password", "Confirm Password"],
+      "required_actions": ["Accept terms", "Click Create Account"],
+      "success_behavior": "Redirect to /dashboard with success toast"
+    }
+  },
+  "data_testids_verified": [
+    "invite-register-card",
+    "invitation-details",
+    "invite-name",
+    "invite-email",
+    "invite-role",
+    "invite-company",
+    "google-register-btn",
+    "register-password",
+    "register-confirm-password",
+    "accept-terms",
+    "register-submit-btn",
+    "go-signin-btn"
+  ]
+}
