@@ -66,6 +66,13 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Separate API endpoint** - `GET /api/bookings/blocked-dates` for calendar
 - [x] **Database migration** - Auto-converts `guest_name: "Blocked"` to proper blocked type
 
+### Booking Logic & UI Enhancements (Feb 22, 2026)
+- [x] **Auto-checkout status** - Expired bookings auto-update to `checked_out` on startup, hourly, and on every bookings list fetch
+- [x] **Past-date validation** - Backend rejects manual bookings with check-in in the past (400 error). Frontend date input has `min` attribute set to today
+- [x] **iCal source tracking** - `ota_source` field consistently used: `manual` for direct bookings, platform name (e.g., `airbnb`) for iCal imports
+- [x] **Source filter dropdown** - Bookings list view has Source filter with options from `/api/bookings/sources`
+- [x] **Source display in table** - New "Source" column with colored badges (green for Direct, blue for OTA). Booking detail popup always shows source
+
 ### Bookings Page Fixes (Feb 22, 2026)
 - [x] **Property filter fix** - Properly handles "all" and specific property selections
 - [x] **Missing property recovery** - Auto-created missing OTA-synced property
@@ -118,6 +125,8 @@ SENDER_EMAIL=onboarding@resend.dev
 ## Prioritized Backlog
 
 ### P1 (Next)
+- Properties page 6-column responsive grid layout
+- Collapsible sidebar for better usability
 - Real OTA API integrations (Airbnb, Booking.com)
 - Production Resend API key for real emails
 - Staff payout tracking and history
@@ -127,7 +136,6 @@ SENDER_EMAIL=onboarding@resend.dev
 - JWT authentication migration
 - Audit logs viewer in admin panel
 - Task notifications for staff
-- Collapsible sidebar
 
 ### P3
 - AI revenue forecasting
