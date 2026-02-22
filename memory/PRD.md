@@ -137,7 +137,7 @@ SENDER_EMAIL=onboarding@resend.dev
 ## Prioritized Backlog
 
 ### P1 (Next)
-- Real OTA iCal integration
+- Real OTA iCal URLs (replace mock:// with real Airbnb/Booking.com URLs)
 - Production Resend API key for real emails
 - Staff payout tracking and history
 - Owner financial reports (PDF/CSV export)
