@@ -321,11 +321,40 @@ export default function Properties() {
       rooms: prop.rooms || 0, suites: prop.suites || 0, bathrooms: prop.bathrooms || 0,
       city: prop.city || "", country: prop.country || "", notes: prop.notes || "",
       assigned_cohost: prop.assigned_cohost || "",
-      owner_first_name: prop.owner_first_name, owner_last_name: prop.owner_last_name,
-      owner_phone: prop.owner_phone, owner_email: prop.owner_email,
-      units: prop.units, active: prop.active,
+      owner_first_name: prop.owner_first_name || "", owner_last_name: prop.owner_last_name || "",
+      owner_phone: prop.owner_phone || "", owner_email: prop.owner_email || "",
+      units: prop.units || 1, active: prop.active ?? true,
     });
-    setEditing(prop.id); setDialogOpen(true);
+    setEditing(prop.id);
+    setManualDialogOpen(true);
+  };
+
+  const openAddChoice = () => {
+    setChoiceDialogOpen(true);
+  };
+
+  const selectAddManual = () => {
+    setChoiceDialogOpen(false);
+    setForm(empty);
+    setEditing(null);
+    setManualDialogOpen(true);
+  };
+
+  const selectAddOTA = () => {
+    setChoiceDialogOpen(false);
+    setOtaForm({ name: "", source: "", ical_url: "" });
+    setImportResult(null);
+    setOtaDialogOpen(true);
+  };
+
+  const generateMockUrl = () => {
+    if (!otaForm.source || !otaForm.name) {
+      toast.error("Enter property name and select source first");
+      return;
+    }
+    const propName = otaForm.name.trim().replace(/\s+/g, "_");
+    setOtaForm(prev => ({ ...prev, ical_url: `mock://${otaForm.source}/${propName}` }));
+    toast.info("Mock URL generated for testing");
   };
 
   const getCohostName = (id) => {
@@ -347,11 +376,13 @@ export default function Properties() {
           </div>
           {isAdmin && (
             <div className="flex items-center gap-2 flex-wrap">
-              <Button variant="outline" onClick={handleOTASync} disabled={syncing} data-testid="sync-ota-btn">
-                <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-                {syncing ? "Syncing..." : "Sync from OTA"}
-              </Button>
-              <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-property-btn">
+              {lastSyncInfo?.feeds_count > 0 && (
+                <Button variant="outline" onClick={handleOTASync} disabled={syncing} data-testid="sync-ota-btn">
+                  <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+                  {syncing ? "Syncing..." : "Sync from OTA"}
+                </Button>
+              )}
+              <Button onClick={openAddChoice} data-testid="add-property-btn">
                 <Plus className="mr-2 h-4 w-4" /> Add Property
               </Button>
             </div>
@@ -366,18 +397,8 @@ export default function Properties() {
               Last synced: {new Date(lastSyncInfo.latest_sync.created_at).toLocaleString()}
               {lastSyncInfo.feeds_count > 0 && ` • ${lastSyncInfo.feeds_count} feed(s) configured`}
             </span>
-            <Button variant="link" size="sm" className="h-auto p-0 text-primary" onClick={() => navigate("/ota-settings")}>
-              <Link2 className="h-3 w-3 mr-1" />
-              Configure Feeds
-            </Button>
           </div>
         )}
-        
-        {!lastSyncInfo?.latest_sync && lastSyncInfo?.feeds_count === 0 && isAdmin && (
-          <Card className="border-dashed border-primary/30 bg-primary/5">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Link2 className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium text-sm">No OTA feeds configured</p>
                   <p className="text-xs text-muted-foreground">Add iCal URLs from Airbnb, Booking.com, etc. to enable sync</p>
