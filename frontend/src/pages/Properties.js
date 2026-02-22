@@ -334,20 +334,20 @@ export default function Properties() {
     <Layout>
       <div className="space-y-6" data-testid="properties-page">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center justify-between flex-wrap gap-4 animate-fade-in">
           <div>
-            <h1 className="text-xl font-semibold">Properties</h1>
+            <h1 className="text-xl font-semibold font-heading text-foreground">Properties</h1>
             <p className="text-sm text-muted-foreground">{properties.length} total</p>
           </div>
           {isAdmin && (
             <div className="flex items-center gap-2">
               {lastSyncInfo?.feeds_count > 0 && (
-                <Button variant="outline" size="sm" onClick={handleOTASync} disabled={syncing} data-testid="refresh-btn">
+                <Button variant="outline" size="sm" onClick={handleOTASync} disabled={syncing} data-testid="refresh-btn" className="hover:bg-primary/5 hover:border-primary/30 hover:text-primary">
                   <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
                   {syncing ? "Refreshing..." : "Refresh"}
                 </Button>
               )}
-              <Button size="sm" onClick={openAddChoice} data-testid="add-property-btn">
+              <Button size="sm" onClick={openAddChoice} data-testid="add-property-btn" className="shadow-sm">
                 <Plus className="mr-2 h-4 w-4" /> Add Property
               </Button>
             </div>
