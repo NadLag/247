@@ -608,14 +608,14 @@ async def get_dashboard_kpis(user=Depends(get_current_user)):
         booking_query["property_id"] = {"$in": property_ids}
     
     current_bookings = await db.bookings.find(
-        {**booking_query, "check_in": {"$gte": current_month_start.isoformat()[:10]}}, {"_id": 0}
+        {**booking_query, "check_in": {"$gte": current_month_start.isoformat()[:10]}, "status": {"$ne": "blocked"}}, {"_id": 0}
     ).to_list(1000)
     last_bookings = await db.bookings.find(
-        {**booking_query, "check_in": {"$gte": last_month_start.isoformat()[:10], "$lt": current_month_start.isoformat()[:10]}}, {"_id": 0}
+        {**booking_query, "check_in": {"$gte": last_month_start.isoformat()[:10], "$lt": current_month_start.isoformat()[:10]}, "status": {"$ne": "blocked"}}, {"_id": 0}
     ).to_list(1000)
 
-    current_revenue = sum(b.get("total_amount", 0) for b in current_bookings)
-    last_revenue = sum(b.get("total_amount", 0) for b in last_bookings)
+    current_revenue = sum(b.get("total_amount", 0) for b in current_bookings if b.get("status") != "cancelled")
+    last_revenue = sum(b.get("total_amount", 0) for b in last_bookings if b.get("status") != "cancelled")
 
     # Expenses query based on role
     expense_query = {"company_id": company_id, "date": {"$gte": current_month_start.isoformat()[:10]}}
