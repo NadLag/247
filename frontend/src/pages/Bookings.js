@@ -2,22 +2,20 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Pencil, CalendarDays, Moon as MoonNight, Users as UsersIcon, UserCheck, RefreshCw, LogIn, Clock, CheckCircle, XCircle, LogOut } from "lucide-react";
+import { Plus, Pencil, CalendarDays, List, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const fmt = (v) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
-const empty = { property_id: "", guest_name: "", check_in: "", check_out: "", total_amount: "", guests_count: 1, assigned_cohost: "", status: "confirmed" };
+const empty = { property_id: "", guest_name: "", check_in: "", check_out: "", total_amount: "", guests_count: 1, status: "confirmed" };
 
 function calcNights(checkIn, checkOut) {
   if (!checkIn || !checkOut) return 0;
@@ -27,80 +25,186 @@ function calcNights(checkIn, checkOut) {
   return diff > 0 ? Math.round(diff) : 0;
 }
 
-const statusConfig = {
-  checked_in_today: { label: "Today's Check-ins", icon: LogIn, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
-  upcoming: { label: "Upcoming", icon: Clock, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
-  confirmed: { label: "Confirmed", icon: CheckCircle, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
-  checked_out: { label: "Checked Out", icon: LogOut, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-500/10" },
-  cancelled: { label: "Cancelled", icon: XCircle, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
+const statusColors = {
+  confirmed: "bg-primary/80 text-white",
+  checked_in: "bg-blue-500 text-white",
+  checked_out: "bg-slate-400 text-white",
+  cancelled: "bg-red-400 text-white",
+  pending: "bg-amber-400 text-white",
 };
 
-function BookingTable({ bookings, properties, cohosts, isAdmin, onEdit, getPropName, getCohostName }) {
-  if (bookings.length === 0) {
+// Calendar Component
+function BookingCalendar({ bookings, properties, currentMonth, onMonthChange, onBookingClick, propertyFilter }) {
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startPad = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
+  
+  const days = [];
+  for (let i = 0; i < startPad; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(i);
+  
+  const getBookingsForDay = (day) => {
+    if (!day) return [];
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return bookings.filter(b => {
+      if (propertyFilter && b.property_id !== propertyFilter) return false;
+      return b.check_in <= dateStr && b.check_out > dateStr;
+    });
+  };
+
+  const getPropName = (id) => {
+    const p = properties.find(pr => pr.id === id);
+    return p ? p.name.slice(0, 15) : "Unknown";
+  };
+  
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  
+  return (
+    <div className="space-y-4">
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={() => onMonthChange(-1)}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="font-semibold">{monthNames[month]} {year}</h2>
+        <Button variant="ghost" size="sm" onClick={() => onMonthChange(1)}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      {/* Calendar Grid */}
+      <div className="border rounded-lg overflow-hidden">
+        {/* Day Headers */}
+        <div className="grid grid-cols-7 bg-muted/50">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+            <div key={d} className="p-2 text-center text-xs font-medium text-muted-foreground border-b">
+              {d}
+            </div>
+          ))}
+        </div>
+        
+        {/* Days Grid */}
+        <div className="grid grid-cols-7">
+          {days.map((day, idx) => {
+            const dayBookings = getBookingsForDay(day);
+            const isToday = day && new Date().toDateString() === new Date(year, month, day).toDateString();
+            
+            return (
+              <div 
+                key={idx} 
+                className={`min-h-[100px] border-b border-r p-1 ${!day ? 'bg-muted/20' : ''} ${isToday ? 'bg-primary/5' : ''}`}
+              >
+                {day && (
+                  <>
+                    <div className={`text-xs font-medium mb-1 ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {day}
+                    </div>
+                    <div className="space-y-0.5">
+                      {dayBookings.slice(0, 3).map((b, i) => (
+                        <div 
+                          key={i}
+                          onClick={() => onBookingClick(b)}
+                          className={`text-[10px] px-1 py-0.5 rounded cursor-pointer truncate ${statusColors[b.status] || 'bg-primary/80 text-white'}`}
+                          title={`${b.guest_name} - ${getPropName(b.property_id)}`}
+                        >
+                          {b.guest_name.split(' ')[0]}
+                        </div>
+                      ))}
+                      {dayBookings.length > 3 && (
+                        <div className="text-[10px] text-muted-foreground text-center">
+                          +{dayBookings.length - 3} more
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Legend */}
+      <div className="flex gap-4 text-xs">
+        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-primary/80" /> Confirmed</div>
+        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-blue-500" /> Checked In</div>
+        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-slate-400" /> Checked Out</div>
+        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-red-400" /> Cancelled</div>
+      </div>
+    </div>
+  );
+}
+
+// List View Component
+function BookingList({ bookings, properties, isAdmin, onEdit, propertyFilter, statusFilter, sortBy, onSort }) {
+  const getPropName = (id) => properties.find(p => p.id === id)?.name || "Unknown";
+  
+  const filteredBookings = bookings.filter(b => {
+    if (propertyFilter && b.property_id !== propertyFilter) return false;
+    if (statusFilter && b.status !== statusFilter) return false;
+    return true;
+  });
+  
+  const sortedBookings = [...filteredBookings].sort((a, b) => {
+    if (sortBy === "check_in") return new Date(a.check_in) - new Date(b.check_in);
+    if (sortBy === "check_out") return new Date(a.check_out) - new Date(b.check_out);
+    if (sortBy === "guest") return a.guest_name.localeCompare(b.guest_name);
+    return 0;
+  });
+  
+  if (sortedBookings.length === 0) {
     return (
-      <div className="p-8 text-center text-muted-foreground">
-        <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-50" />
-        <p>No bookings in this category</p>
+      <div className="py-16 text-center text-muted-foreground">
+        <CalendarDays className="h-10 w-10 mx-auto mb-3 opacity-40" />
+        <p>No bookings found</p>
       </div>
     );
   }
-
+  
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Guest</TableHead>
+            <TableHead className="cursor-pointer hover:text-primary" onClick={() => onSort("guest")}>Guest</TableHead>
             <TableHead>Property</TableHead>
-            <TableHead>Check-in</TableHead>
-            <TableHead>Check-out</TableHead>
+            <TableHead className="cursor-pointer hover:text-primary" onClick={() => onSort("check_in")}>Check-in</TableHead>
+            <TableHead className="cursor-pointer hover:text-primary" onClick={() => onSort("check_out")}>Check-out</TableHead>
             <TableHead>Nights</TableHead>
-            <TableHead>Guests</TableHead>
-            <TableHead>Co-Host</TableHead>
-            <TableHead>Amount</TableHead>
+            <TableHead>Source</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Amount</TableHead>
             {isAdmin && <TableHead className="text-right">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {bookings.map((b) => (
+          {sortedBookings.map(b => (
             <TableRow key={b.id} data-testid={`booking-row-${b.id}`}>
-              <TableCell className="font-medium">
-                <div>
-                  {b.guest_name}
-                  {b.ota_source && (
-                    <Badge variant="outline" className="ml-2 text-xs">{b.ota_source}</Badge>
-                  )}
-                </div>
-              </TableCell>
+              <TableCell className="font-medium">{b.guest_name}</TableCell>
               <TableCell>{getPropName(b.property_id)}</TableCell>
               <TableCell>{b.check_in}</TableCell>
               <TableCell>{b.check_out}</TableCell>
+              <TableCell>{calcNights(b.check_in, b.check_out)}</TableCell>
               <TableCell>
-                <Badge variant="outline" className="font-data">
-                  {calcNights(b.check_in, b.check_out)}
+                {b.ota_source ? (
+                  <Badge variant="outline" className="text-xs capitalize">{b.ota_source}</Badge>
+                ) : (
+                  <span className="text-muted-foreground text-xs">Manual</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <Badge className={`text-xs capitalize ${statusColors[b.status] || ''}`}>
+                  {b.status?.replace('_', ' ')}
                 </Badge>
               </TableCell>
-              <TableCell>
-                <span className="flex items-center gap-1 text-sm"><UsersIcon className="h-3.5 w-3.5" />{b.guests_count || 1}</span>
-              </TableCell>
-              <TableCell>
-                {getCohostName(b.assigned_cohost) ? (
-                  <span className="flex items-center gap-1 text-sm"><UserCheck className="h-3.5 w-3.5 text-primary" />{getCohostName(b.assigned_cohost)}</span>
-                ) : <span className="text-xs text-muted-foreground">—</span>}
-              </TableCell>
-              <TableCell className="font-data">{fmt(b.total_amount)}</TableCell>
-              <TableCell>
-                <Badge 
-                  variant={b.status === "confirmed" ? "default" : b.status === "checked_in" ? "secondary" : b.status === "cancelled" ? "destructive" : "outline"} 
-                  className="capitalize"
-                >
-                  {b.status?.replace("_", " ")}
-                </Badge>
-              </TableCell>
+              <TableCell>{fmt(b.total_amount || 0)}</TableCell>
               {isAdmin && (
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`}>
+                  <Button variant="ghost" size="sm" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </TableCell>
@@ -116,50 +220,38 @@ function BookingTable({ bookings, properties, cohosts, isAdmin, onEdit, getPropN
 export default function Bookings() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [bookingsByStatus, setBookingsByStatus] = useState(null);
+  const [bookings, setBookings] = useState([]);
   const [properties, setProperties] = useState([]);
-  const [cohosts, setCohosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("checked_in_today");
+  
+  // View state
+  const [viewMode, setViewMode] = useState("calendar");
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [propertyFilter, setPropertyFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("check_in");
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
   const fetchData = async () => {
     try {
-      const [bookRes, propRes, cohostRes] = await Promise.all([
-        fetch(`${API}/api/bookings/by-status`, { credentials: "include" }),
+      const [bookRes, propRes] = await Promise.all([
+        fetch(`${API}/api/bookings`, { credentials: "include" }),
         fetch(`${API}/api/properties`, { credentials: "include" }),
-        fetch(`${API}/api/staff/cohosts`, { credentials: "include" }),
       ]);
-      if (bookRes.ok) setBookingsByStatus(await bookRes.json());
+      if (bookRes.ok) setBookings(await bookRes.json());
       if (propRes.ok) setProperties(await propRes.json());
-      if (cohostRes.ok) setCohosts(await cohostRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
   useEffect(() => { if (user?.company_id) fetchData(); }, [user]); // eslint-disable-line
 
   const nights = useMemo(() => calcNights(form.check_in, form.check_out), [form.check_in, form.check_out]);
-
-  const selectedPropertyCohost = useMemo(() => {
-    if (!form.property_id) return null;
-    const prop = properties.find(p => p.id === form.property_id);
-    return prop?.assigned_cohost || null;
-  }, [form.property_id, properties]);
-
-  const handlePropertyChange = (propId) => {
-    const prop = properties.find(p => p.id === propId);
-    setForm(prev => ({
-      ...prev,
-      property_id: propId,
-      assigned_cohost: prop?.assigned_cohost || prev.assigned_cohost,
-    }));
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -170,180 +262,258 @@ export default function Bookings() {
         ...form,
         total_amount: parseFloat(form.total_amount) || 0,
         guests_count: parseInt(form.guests_count) || 1,
-        assigned_cohost: form.assigned_cohost || null,
       };
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) });
       if (res.ok) {
         toast.success(editing ? "Booking updated" : "Booking created");
         setDialogOpen(false); setForm(empty); setEditing(null); fetchData();
       } else { const err = await res.json(); toast.error(err.detail || "Failed"); }
-    } catch (err) { toast.error("Error"); } finally { setSaving(false); }
-  };
-
-  const handleOTASync = async () => {
-    setSyncing(true);
-    try {
-      toast.info("Simulating OTA sync...");
-      const res = await fetch(`${API}/api/ota/simulate-sync`, { 
-        method: "POST", 
-        credentials: "include" 
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.synced > 0) {
-          toast.success(`Synced ${data.synced} bookings from OTAs`);
-        } else {
-          toast.info("No new bookings from OTAs");
-        }
-        await fetchData();
-      } else {
-        toast.error("Sync failed");
-      }
-    } catch (err) {
-      toast.error("Sync failed");
-    } finally {
-      setSyncing(false);
-    }
+    } catch (err) { toast.error("Error saving booking"); } finally { setSaving(false); }
   };
 
   const openEdit = (b) => {
     setForm({
-      property_id: b.property_id, guest_name: b.guest_name, check_in: b.check_in, check_out: b.check_out,
-      total_amount: b.total_amount, guests_count: b.guests_count || 1,
-      assigned_cohost: b.assigned_cohost || "", status: b.status,
+      property_id: b.property_id,
+      guest_name: b.guest_name,
+      check_in: b.check_in,
+      check_out: b.check_out,
+      total_amount: b.total_amount?.toString() || "",
+      guests_count: b.guests_count || 1,
+      status: b.status || "confirmed",
     });
-    setEditing(b.id); setDialogOpen(true);
+    setEditing(b.id);
+    setDialogOpen(true);
+    setSelectedBooking(null);
   };
 
-  const getPropName = (id) => properties.find(p => p.id === id)?.name || "—";
-  const getCohostName = (id) => { const ch = cohosts.find(c => c.id === id); return ch ? `${ch.first_name} ${ch.last_name}` : null; };
+  const handleMonthChange = (delta) => {
+    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+  };
+
+  const handleBookingClick = (b) => {
+    setSelectedBooking(b);
+  };
 
   if (authLoading || !user) return <div className="h-screen flex items-center justify-center bg-background"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   const isAdmin = user?.role === "company_admin";
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-  const totalBookings = bookingsByStatus 
-    ? Object.values(bookingsByStatus).reduce((sum, arr) => sum + arr.length, 0)
-    : 0;
-
   return (
     <Layout>
-      <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="bookings-page">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6" data-testid="bookings-page">
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="font-heading text-2xl font-bold">Bookings</h1>
-            <p className="text-sm text-muted-foreground mt-1">{totalBookings} total bookings</p>
+            <h1 className="text-xl font-semibold">Bookings</h1>
+            <p className="text-sm text-muted-foreground">{bookings.length} total bookings</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleOTASync} disabled={syncing} data-testid="ota-sync-btn">
-              <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-              Sync OTA
-            </Button>
+            {/* View Toggle */}
+            <div className="flex border rounded-lg p-0.5 bg-muted/50">
+              <Button 
+                variant={viewMode === "calendar" ? "default" : "ghost"} 
+                size="sm" 
+                className="h-8"
+                onClick={() => setViewMode("calendar")}
+                data-testid="calendar-view-btn"
+              >
+                <CalendarDays className="h-4 w-4 mr-1" /> Calendar
+              </Button>
+              <Button 
+                variant={viewMode === "list" ? "default" : "ghost"} 
+                size="sm"
+                className="h-8"
+                onClick={() => setViewMode("list")}
+                data-testid="list-view-btn"
+              >
+                <List className="h-4 w-4 mr-1" /> List
+              </Button>
+            </div>
             {isAdmin && (
-              <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-booking-btn">
-                <Plus className="mr-2 h-4 w-4" />Add Booking
+              <Button size="sm" onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-booking-btn">
+                <Plus className="mr-2 h-4 w-4" /> Add Booking
               </Button>
             )}
           </div>
         </div>
 
-        {loading ? (
-          <Card><CardContent className="p-6 h-32 animate-pulse bg-muted" /></Card>
-        ) : !bookingsByStatus || totalBookings === 0 ? (
-          <Card className="border-dashed"><CardContent className="p-12 text-center">
-            <CalendarDays className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No bookings yet</p>
-          </CardContent></Card>
-        ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid" data-testid="booking-tabs">
-              {Object.entries(statusConfig).map(([key, config]) => {
-                const count = bookingsByStatus[key]?.length || 0;
-                const IconComponent = config.icon;
-                return (
-                  <TabsTrigger key={key} value={key} className="gap-2" data-testid={`tab-${key}`}>
-                    <IconComponent className={`h-4 w-4 ${config.color}`} />
-                    <span className="hidden sm:inline">{config.label}</span>
-                    <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5">{count}</Badge>
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3">
+          <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+            <SelectTrigger className="w-[200px] h-9" data-testid="property-filter">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="All Properties" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Properties</SelectItem>
+              {properties.map(p => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {viewMode === "list" && (
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[160px] h-9" data-testid="status-filter">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="checked_in">Checked In</SelectItem>
+                <SelectItem value="checked_out">Checked Out</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
 
-            {Object.entries(statusConfig).map(([key, config]) => (
-              <TabsContent key={key} value={key}>
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                      <div className={`h-8 w-8 rounded-lg ${config.bg} flex items-center justify-center`}>
-                        <config.icon className={`h-4 w-4 ${config.color}`} />
-                      </div>
-                      {config.label}
-                      <Badge variant="outline" className="ml-auto">{bookingsByStatus[key]?.length || 0}</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <BookingTable 
-                    bookings={bookingsByStatus[key] || []}
-                    properties={properties}
-                    cohosts={cohosts}
-                    isAdmin={isAdmin}
-                    onEdit={openEdit}
-                    getPropName={getPropName}
-                    getCohostName={getCohostName}
-                  />
-                </Card>
-              </TabsContent>
-            ))}
-          </Tabs>
+        {/* Content */}
+        {loading ? (
+          <Card>
+            <CardContent className="p-8">
+              <div className="h-64 animate-pulse bg-muted/50 rounded-lg" />
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-4">
+              {viewMode === "calendar" ? (
+                <BookingCalendar 
+                  bookings={bookings}
+                  properties={properties}
+                  currentMonth={currentMonth}
+                  onMonthChange={handleMonthChange}
+                  onBookingClick={handleBookingClick}
+                  propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
+                />
+              ) : (
+                <BookingList 
+                  bookings={bookings}
+                  properties={properties}
+                  isAdmin={isAdmin}
+                  onEdit={openEdit}
+                  propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
+                  statusFilter={statusFilter === "all" ? "" : statusFilter}
+                  sortBy={sortBy}
+                  onSort={setSortBy}
+                />
+              )}
+            </CardContent>
+          </Card>
         )}
 
+        {/* Booking Detail Popup (Calendar click) */}
+        <Dialog open={!!selectedBooking} onOpenChange={() => setSelectedBooking(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Booking Details</DialogTitle>
+            </DialogHeader>
+            {selectedBooking && (
+              <div className="space-y-4 py-2">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Guest</p>
+                    <p className="font-medium">{selectedBooking.guest_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Property</p>
+                    <p>{properties.find(p => p.id === selectedBooking.property_id)?.name || "Unknown"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Check-in</p>
+                    <p>{selectedBooking.check_in}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Check-out</p>
+                    <p>{selectedBooking.check_out}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Nights</p>
+                    <p>{calcNights(selectedBooking.check_in, selectedBooking.check_out)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Status</p>
+                    <Badge className={`capitalize ${statusColors[selectedBooking.status] || ''}`}>
+                      {selectedBooking.status?.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  {selectedBooking.ota_source && (
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-1">Source</p>
+                      <Badge variant="outline" className="capitalize">{selectedBooking.ota_source}</Badge>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Amount</p>
+                    <p className="font-medium">{fmt(selectedBooking.total_amount || 0)}</p>
+                  </div>
+                </div>
+                {isAdmin && (
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button className="flex-1" onClick={() => openEdit(selectedBooking)}>
+                      <Pencil className="mr-2 h-4 w-4" /> Edit Booking
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Add/Edit Booking Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-lg">
-            <DialogHeader><DialogTitle className="font-heading">{editing ? "Edit Booking" : "Add Booking"}</DialogTitle></DialogHeader>
-            <div className="grid gap-4 py-2">
+            <DialogHeader>
+              <DialogTitle>{editing ? "Edit Booking" : "New Booking"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <Label>Property *</Label>
-                <Select value={form.property_id} onValueChange={handlePropertyChange}>
-                  <SelectTrigger data-testid="booking-property-select"><SelectValue placeholder="Select property..." /></SelectTrigger>
-                  <SelectContent>{properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                <Select value={form.property_id} onValueChange={v => set("property_id", v)}>
+                  <SelectTrigger data-testid="booking-property-select">
+                    <SelectValue placeholder="Select property..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2"><Label>Guest Name *</Label><Input data-testid="booking-guest-input" value={form.guest_name} onChange={e => set("guest_name", e.target.value)} placeholder="Guest name" /></div>
+              <div className="space-y-2">
+                <Label>Guest Name *</Label>
+                <Input value={form.guest_name} onChange={e => set("guest_name", e.target.value)} placeholder="Guest name" data-testid="booking-guest-input" />
+              </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Check-in</Label><Input data-testid="booking-checkin-input" type="date" value={form.check_in} onChange={e => set("check_in", e.target.value)} /></div>
-                <div className="space-y-2"><Label>Check-out</Label><Input data-testid="booking-checkout-input" type="date" value={form.check_out} onChange={e => set("check_out", e.target.value)} /></div>
+                <div className="space-y-2">
+                  <Label>Check-in *</Label>
+                  <Input type="date" value={form.check_in} onChange={e => set("check_in", e.target.value)} data-testid="booking-checkin-input" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Check-out *</Label>
+                  <Input type="date" value={form.check_out} onChange={e => set("check_out", e.target.value)} data-testid="booking-checkout-input" />
+                </div>
               </div>
               {nights > 0 && (
-                <div className="flex items-center gap-3 bg-muted/50 rounded-lg p-3 border" data-testid="nights-display">
-                  <MoonNight className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium">{nights} Night{nights !== 1 ? "s" : ""}</p>
-                    <p className="text-xs text-muted-foreground">{form.check_in} to {form.check_out}</p>
-                  </div>
+                <div className="text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
+                  Duration: <span className="font-medium text-foreground">{nights} night{nights !== 1 ? 's' : ''}</span>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Guests</Label><Input data-testid="booking-guests-input" type="number" min="1" value={form.guests_count} onChange={e => set("guests_count", e.target.value)} /></div>
-                <div className="space-y-2"><Label>Amount</Label><Input data-testid="booking-amount-input" type="number" step="0.01" value={form.total_amount} onChange={e => set("total_amount", e.target.value)} /></div>
+                <div className="space-y-2">
+                  <Label>Total Amount</Label>
+                  <Input type="number" value={form.total_amount} onChange={e => set("total_amount", e.target.value)} placeholder="0.00" data-testid="booking-amount-input" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Guests</Label>
+                  <Input type="number" min="1" value={form.guests_count} onChange={e => set("guests_count", e.target.value)} data-testid="booking-guests-input" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Assigned Co-Host</Label>
-                <Select value={form.assigned_cohost || "none"} onValueChange={v => set("assigned_cohost", v === "none" ? "" : v)}>
-                  <SelectTrigger data-testid="booking-cohost-select"><SelectValue placeholder="Select co-host..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No Co-Host</SelectItem>
-                    {cohosts.map(ch => <SelectItem key={ch.id} value={ch.id}>{ch.first_name} {ch.last_name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                {selectedPropertyCohost && getCohostName(selectedPropertyCohost) && form.assigned_cohost === selectedPropertyCohost && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400">Auto-assigned from property co-host</p>
-                )}
-              </div>
-              <Separator />
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select value={form.status} onValueChange={v => set("status", v)}>
-                  <SelectTrigger data-testid="booking-status-select"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-testid="booking-status-select">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="confirmed">Confirmed</SelectItem>
                     <SelectItem value="checked_in">Checked In</SelectItem>
@@ -355,7 +525,9 @@ export default function Bookings() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave} disabled={!form.property_id || !form.guest_name || saving} data-testid="save-booking-btn">{saving ? "Saving..." : editing ? "Update" : "Create"}</Button>
+              <Button onClick={handleSave} disabled={!form.property_id || !form.guest_name || !form.check_in || !form.check_out || saving} data-testid="save-booking-btn">
+                {saving ? "Saving..." : editing ? "Update" : "Create"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
