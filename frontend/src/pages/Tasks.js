@@ -49,22 +49,26 @@ const empty = {
   priority: "medium",
 };
 
-function TaskCard({ task, isAdmin, onEdit, onStatusChange }) {
+function TaskCard({ task, isAdmin, onEdit, onStatusChange, index = 0 }) {
   const typeConfig = TASK_TYPES.find(t => t.value === task.task_type) || TASK_TYPES[5];
   const priorityConfig = PRIORITIES.find(p => p.value === task.priority) || PRIORITIES[1];
   const statusConfig = STATUS_CONFIG[task.status] || STATUS_CONFIG.pending;
   const StatusIcon = statusConfig.icon;
 
   return (
-    <Card className="group hover:shadow-md transition-shadow" data-testid={`task-card-${task.id}`}>
+    <Card 
+      className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-200 animate-fade-in opacity-0" 
+      data-testid={`task-card-${task.id}`}
+      style={{ animationDelay: `${0.05 + index * 0.03}s` }}
+    >
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
-            <div className={`h-8 w-8 rounded-lg ${statusConfig.bg} flex items-center justify-center shrink-0`}>
+            <div className={`h-8 w-8 rounded-lg ${statusConfig.bg} flex items-center justify-center shrink-0 transition-transform group-hover:scale-110`}>
               <StatusIcon className={`h-4 w-4 ${statusConfig.color}`} />
             </div>
             <div className="min-w-0">
-              <h3 className="font-medium text-sm truncate">{task.title}</h3>
+              <h3 className="font-medium text-sm truncate text-foreground">{task.title}</h3>
               <Badge className={`text-xs ${typeConfig.color} border-0`}>{typeConfig.label}</Badge>
             </div>
           </div>
@@ -80,19 +84,19 @@ function TaskCard({ task, isAdmin, onEdit, onStatusChange }) {
         <div className="space-y-2 text-sm text-muted-foreground mb-4">
           {task.property_name && (
             <div className="flex items-center gap-2">
-              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <Building2 className="h-3.5 w-3.5 shrink-0 text-primary/60" />
               <span className="truncate">{task.property_name}</span>
             </div>
           )}
           {task.assigned_staff_name && (
             <div className="flex items-center gap-2">
-              <User className="h-3.5 w-3.5 shrink-0" />
+              <User className="h-3.5 w-3.5 shrink-0 text-primary/60" />
               <span>{task.assigned_staff_name}</span>
             </div>
           )}
           {task.due_date && (
             <div className="flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 shrink-0" />
+              <Calendar className="h-3.5 w-3.5 shrink-0 text-primary/60" />
               <span>Due: {task.due_date}</span>
             </div>
           )}
@@ -104,7 +108,7 @@ function TaskCard({ task, isAdmin, onEdit, onStatusChange }) {
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1"
+              className="flex-1 hover:bg-primary/5 hover:border-primary/30 hover:text-primary"
               onClick={() => onStatusChange(task.id, "in_progress")}
               data-testid={`start-task-${task.id}`}
             >
@@ -115,7 +119,7 @@ function TaskCard({ task, isAdmin, onEdit, onStatusChange }) {
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 text-emerald-600 hover:text-emerald-700"
+              className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
               onClick={() => onStatusChange(task.id, "completed")}
               data-testid={`complete-task-${task.id}`}
             >
@@ -126,6 +130,7 @@ function TaskCard({ task, isAdmin, onEdit, onStatusChange }) {
             <Button 
               variant="ghost" 
               size="sm"
+              className="hover:bg-primary/10 hover:text-primary"
               onClick={() => onEdit(task)}
               data-testid={`edit-task-${task.id}`}
             >
