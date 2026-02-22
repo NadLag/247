@@ -2143,7 +2143,7 @@ async def process_ical_booking(booking_data: Dict, company_id: str, feed_id: str
         "check_out": booking_data["check_out"],
         "total_amount": 0,  # iCal doesn't include pricing
         "guests_count": 1,
-        "status": "confirmed",
+        "status": booking_data.get("status", "confirmed"),  # Preserve blocked status from iCal
         "ota_source": booking_data["source"],
         "ota_external_id": uid,
         "ota_feed_id": feed_id,
