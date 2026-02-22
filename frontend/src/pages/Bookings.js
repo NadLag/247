@@ -343,6 +343,9 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
       <TableCell>
         <Badge variant="secondary" className="text-xs">Blocked</Badge>
       </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        <Badge variant="outline" className="text-[10px] capitalize">{getSourceLabel(b)}</Badge>
+      </TableCell>
       <TableCell className="text-sm text-muted-foreground">-</TableCell>
       {isAdmin && <TableCell />}
     </TableRow>
@@ -350,7 +353,7 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
   
   const SectionHeader = ({ icon: Icon, title, count, color = "text-foreground" }) => (
     <TableRow className="bg-muted/50 hover:bg-muted/50">
-      <TableCell colSpan={isAdmin ? 8 : 7} className="py-2">
+      <TableCell colSpan={isAdmin ? 9 : 8} className="py-2">
         <div className={`flex items-center gap-2 font-semibold text-sm ${color}`}>
           <Icon className="h-4 w-4" />
           {title}
@@ -369,6 +372,7 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
         <TableHead>Check-out</TableHead>
         <TableHead>Nights</TableHead>
         <TableHead>Status</TableHead>
+        <TableHead>Source</TableHead>
         <TableHead>Amount</TableHead>
         {isAdmin && <TableHead className="text-right">Actions</TableHead>}
       </TableRow>
