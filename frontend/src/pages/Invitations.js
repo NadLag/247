@@ -132,12 +132,12 @@ export default function Invitations() {
   return (
     <Layout>
       <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="invitations-page">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fade-in">
           <div>
-            <h1 className="font-heading text-2xl font-bold">Invitations</h1>
+            <h1 className="font-heading text-2xl font-bold text-foreground">Invitations</h1>
             <p className="text-sm text-muted-foreground mt-1">Invite owners and staff to your organization</p>
           </div>
-          <Button onClick={() => { setSelectedPerson(""); setManualEmail(""); setRole("staff"); setDialogOpen(true); }} data-testid="create-invitation-btn"><Plus className="mr-2 h-4 w-4" />Send Invitation</Button>
+          <Button onClick={() => { setSelectedPerson(""); setManualEmail(""); setRole("staff"); setDialogOpen(true); }} data-testid="create-invitation-btn" className="shadow-sm"><Plus className="mr-2 h-4 w-4" />Send Invitation</Button>
         </div>
 
         {loading ? (
