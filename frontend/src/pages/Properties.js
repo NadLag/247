@@ -2,22 +2,29 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Building2, MapPin, User, BedDouble, Bath, FileText, UserCheck, RefreshCw, Clock, Link2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, MapPin, User, BedDouble, Bath, FileText, UserCheck, RefreshCw, Clock, Link2, Globe, FileEdit, Loader2, CheckCircle } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const PROPERTY_TYPES = ["Apartment", "Villa", "Hotel", "Resort", "Cabin", "Townhouse", "Condo", "House", "Studio", "Penthouse"];
 const COUNTRIES = ["United States", "United Kingdom", "Canada", "Australia", "France", "Germany", "Spain", "Italy", "Portugal", "Greece", "Turkey", "UAE", "Thailand", "Mexico", "Brazil", "Japan", "Indonesia", "South Africa", "Morocco", "Egypt", "Saudi Arabia", "Switzerland", "Netherlands", "Austria", "Sweden"];
+const OTA_SOURCES = [
+  { value: "airbnb", label: "Airbnb" },
+  { value: "booking.com", label: "Booking.com" },
+  { value: "vrbo", label: "VRBO" },
+  { value: "expedia", label: "Expedia" },
+  { value: "other", label: "Other" },
+];
 
 const empty = {
   name: "", address: "", property_type: "", rooms: 1, suites: 0, bathrooms: 1,
