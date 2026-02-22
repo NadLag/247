@@ -790,7 +790,13 @@ export default function Bookings() {
                   {selectedBooking.ota_source && (
                     <div>
                       <p className="text-muted-foreground text-xs mb-1">Source</p>
-                      <Badge variant="outline" className="capitalize">{selectedBooking.ota_source}</Badge>
+                      <Badge variant="outline" className="capitalize">{selectedBooking.ota_source === "manual" ? "Direct" : selectedBooking.ota_source}</Badge>
+                    </div>
+                  )}
+                  {!selectedBooking.ota_source && (
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-1">Source</p>
+                      <Badge variant="outline">Direct</Badge>
                     </div>
                   )}
                   <div>
