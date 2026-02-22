@@ -378,7 +378,7 @@ export default function Properties() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {properties.map((prop) => (
+            {properties.map((prop, index) => (
               <PropertyCard 
                 key={prop.id}
                 prop={prop}
@@ -387,6 +387,7 @@ export default function Properties() {
                 onDelete={handleDelete}
                 onQuickView={setQuickViewProp}
                 getCohostName={getCohostName}
+                index={index}
               />
             ))}
           </div>
