@@ -748,6 +748,7 @@ export default function Bookings() {
             onEdit={openEdit}
             propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
             statusFilter={statusFilter === "all" ? "" : statusFilter}
+            sourceFilter={sourceFilter === "all" ? "" : sourceFilter}
           />
         )}
 
