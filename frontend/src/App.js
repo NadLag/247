@@ -14,6 +14,7 @@ import Settings from "@/pages/Settings";
 import Bookings from "@/pages/Bookings";
 import Services from "@/pages/Services";
 import Analytics from "@/pages/Analytics";
+import Tasks from "@/pages/Tasks";
 import InviteAccept from "@/pages/InviteAccept";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -36,6 +37,7 @@ function AppRouter() {
       <Route path="/bookings" element={<Bookings />} />
       <Route path="/services" element={<Services />} />
       <Route path="/analytics" element={<Analytics />} />
+      <Route path="/tasks" element={<Tasks />} />
       <Route path="/invitations" element={<Invitations />} />
       <Route path="/billing" element={<Billing />} />
       <Route path="/settings" element={<Settings />} />
