@@ -59,32 +59,22 @@ def auth_session(api_client):
 
 @pytest.fixture(scope="module")
 def admin_session(api_client):
-    """Use existing admin session or skip"""
-    # Get a working session - try multiple approaches
+    """Use existing admin session - requires pre-created test user"""
+    # Use the session token we created for testing
+    test_session_token = "test_ical_session_1771791643279"
     
-    # Method 1: Check for session token in cookies from previous tests
+    # Set the auth header
+    api_client.headers.update({"Authorization": f"Bearer {test_session_token}"})
+    
+    # Verify session works
     auth_me_response = api_client.get(f"{BASE_URL}/api/auth/me")
     if auth_me_response.status_code == 200:
         user_data = auth_me_response.json()
         if user_data.get("role") == "company_admin":
-            print(f"Using existing session for: {user_data.get('email')}")
+            print(f"Using test session for: {user_data.get('email')}")
             return api_client, user_data
     
-    # Method 2: Try to login with known test credentials
-    test_credentials = [
-        {"email": "admin@test.com", "password": "Test123!"},
-        {"email": "test@test.com", "password": "test123"},
-        {"email": "testadmin@test.com", "password": "password123"},
-    ]
-    
-    for creds in test_credentials:
-        login_resp = api_client.post(f"{BASE_URL}/api/auth/login", json=creds)
-        if login_resp.status_code == 200:
-            user_data = login_resp.json()
-            print(f"Logged in with: {creds['email']}")
-            return api_client, user_data
-    
-    pytest.skip("No admin session available for testing. Need to seed test admin user.")
+    pytest.skip("Test session not valid. Recreate test admin user.")
 
 
 class TestICalParsing:
