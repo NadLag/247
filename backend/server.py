@@ -769,6 +769,17 @@ async def create_property(data: PropertyCreate, user=Depends(require_admin)):
     await db.properties.insert_one(prop)
     return await db.properties.find_one({"id": prop["id"]}, {"_id": 0})
 
+@api_router.get("/properties/{prop_id}")
+async def get_property(prop_id: str, user=Depends(get_current_user)):
+    """Get a single property by ID"""
+    company_id = user.get("company_id")
+    if not company_id:
+        raise HTTPException(status_code=404, detail="Property not found")
+    prop = await db.properties.find_one({"id": prop_id, "company_id": company_id}, {"_id": 0})
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    return prop
+
 @api_router.put("/properties/{prop_id}")
 async def update_property(prop_id: str, data: PropertyUpdate, user=Depends(require_admin)):
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
