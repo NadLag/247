@@ -289,7 +289,7 @@ export default function Bookings() {
 
   const nights = useMemo(() => calcNights(form.check_in, form.check_out), [form.check_in, form.check_out]);
 
-  const handleSave = async () => {
+  const handleSave = async (forceOverride = false) => {
     setSaving(true);
     try {
       const method = editing ? "PUT" : "POST";
@@ -298,13 +298,36 @@ export default function Bookings() {
         ...form,
         total_amount: parseFloat(form.total_amount) || 0,
         guests_count: parseInt(form.guests_count) || 1,
+        force_override: forceOverride,
       };
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) });
+      
       if (res.ok) {
         toast.success(editing ? "Booking updated" : "Booking created");
-        setDialogOpen(false); setForm(empty); setEditing(null); fetchData();
-      } else { const err = await res.json(); toast.error(err.detail || "Failed"); }
+        setDialogOpen(false); setForm(empty); setEditing(null); 
+        setOverrideDialogOpen(false); setConflictDetails(null);
+        fetchData();
+      } else if (res.status === 409) {
+        // Conflict with blocked dates - show override dialog
+        const err = await res.json();
+        setConflictDetails(err.detail);
+        setDialogOpen(false);
+        setOverrideDialogOpen(true);
+      } else { 
+        const err = await res.json(); 
+        toast.error(typeof err.detail === 'string' ? err.detail : "Failed to save booking"); 
+      }
     } catch (err) { toast.error("Error saving booking"); } finally { setSaving(false); }
+  };
+  
+  const handleForceOverride = () => {
+    handleSave(true);
+  };
+  
+  const cancelOverride = () => {
+    setOverrideDialogOpen(false);
+    setConflictDetails(null);
+    setDialogOpen(true); // Reopen booking dialog
   };
 
   const openEdit = (b) => {
