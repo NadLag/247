@@ -132,12 +132,18 @@ export default function Layout({ children }) {
               <Menu className="h-5 w-5" />
             </Button>
             <h2 className="font-heading text-base md:text-lg font-semibold" data-testid="header-greeting">
-              Hey, {user?.name?.split(" ")[0] || "there"}
+              Hey, {user?.first_name || user?.name?.split(" ")[0] || "there"}
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            {user?.role === "company_admin" && (
-              <Badge variant="secondary" className="hidden sm:flex text-xs" data-testid="role-badge">Admin</Badge>
+            {user?.role && (
+              <Badge 
+                variant="secondary" 
+                className="hidden sm:flex text-xs" 
+                data-testid="role-badge"
+              >
+                {user.role === "company_admin" ? "Admin" : user.role === "owner" ? "Owner" : "Staff"}
+              </Badge>
             )}
             <Button variant="ghost" size="icon" onClick={toggleTheme} data-testid="theme-toggle-btn">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
