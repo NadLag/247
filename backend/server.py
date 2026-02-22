@@ -171,6 +171,19 @@ class OTASyncLogResponse(BaseModel):
     message: Optional[str] = None
     created_at: str
 
+# ===== OTA ICAL MODELS =====
+class OTAFeedCreate(BaseModel):
+    property_id: str
+    source: str  # airbnb, booking.com, vrbo, expedia, other
+    ical_url: str
+    name: Optional[str] = None
+
+class OTAFeedUpdate(BaseModel):
+    source: Optional[str] = None
+    ical_url: Optional[str] = None
+    name: Optional[str] = None
+    active: Optional[bool] = None
+
 # ===== SERVICE MODELS =====
 class ServiceCreate(BaseModel):
     name: str
