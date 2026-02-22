@@ -936,6 +936,210 @@ async def list_bookings_by_status(user=Depends(get_current_user)):
     
     return result
 
+# ===== TASK ROUTES =====
+@api_router.get("/tasks")
+async def list_tasks(
+    user=Depends(get_current_user),
+    status: Optional[str] = None,
+    assigned_to_me: bool = False,
+    property_id: Optional[str] = None
+):
+    """List tasks - admin sees all, staff sees only their assigned tasks"""
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    
+    query = {"company_id": company_id}
+    
+    # Staff can only see their own tasks
+    if user.get("role") == "staff" or assigned_to_me:
+        staff_doc = await db.staff.find_one({"company_id": company_id, "email": user.get("email")}, {"_id": 0})
+        if staff_doc:
+            query["assigned_staff_id"] = staff_doc["id"]
+        else:
+            return []
+    
+    if status:
+        query["status"] = status
+    if property_id:
+        query["property_id"] = property_id
+    
+    tasks = await db.tasks.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Enrich with staff and property names
+    for task in tasks:
+        if task.get("assigned_staff_id"):
+            staff = await db.staff.find_one({"id": task["assigned_staff_id"]}, {"_id": 0})
+            if staff:
+                task["assigned_staff_name"] = f"{staff.get('first_name', '')} {staff.get('last_name', '')}"
+        if task.get("property_id"):
+            prop = await db.properties.find_one({"id": task["property_id"]}, {"_id": 0})
+            if prop:
+                task["property_name"] = prop.get("name", "")
+    
+    return tasks
+
+@api_router.post("/tasks", status_code=201)
+async def create_task(data: TaskCreate, user=Depends(require_admin)):
+    """Create a new task (admin only)"""
+    # Validate assigned staff exists
+    staff = await db.staff.find_one({"id": data.assigned_staff_id, "company_id": user["company_id"]}, {"_id": 0})
+    if not staff:
+        raise HTTPException(status_code=404, detail="Assigned staff not found")
+    
+    # Validate property if provided
+    if data.property_id:
+        prop = await db.properties.find_one({"id": data.property_id, "company_id": user["company_id"]}, {"_id": 0})
+        if not prop:
+            raise HTTPException(status_code=404, detail="Property not found")
+    
+    task = {
+        "id": f"task_{uuid.uuid4().hex[:12]}",
+        "company_id": user["company_id"],
+        **data.model_dump(),
+        "status": "pending",
+        "created_by": user["user_id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.tasks.insert_one(task)
+    
+    # Add staff name to response
+    task["assigned_staff_name"] = f"{staff.get('first_name', '')} {staff.get('last_name', '')}"
+    return await db.tasks.find_one({"id": task["id"]}, {"_id": 0})
+
+@api_router.put("/tasks/{task_id}")
+async def update_task(task_id: str, data: TaskUpdate, user=Depends(get_current_user)):
+    """Update task - admin can update all fields, staff can only update status"""
+    task = await db.tasks.find_one({"id": task_id, "company_id": user["company_id"]}, {"_id": 0})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Staff can only update their own tasks' status
+    if user.get("role") == "staff":
+        staff_doc = await db.staff.find_one({"company_id": user["company_id"], "email": user.get("email")}, {"_id": 0})
+        if not staff_doc or task.get("assigned_staff_id") != staff_doc["id"]:
+            raise HTTPException(status_code=403, detail="You can only update your own tasks")
+        # Staff can only update status
+        update_data = {"status": data.status} if data.status else {}
+    else:
+        update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    
+    if not update_data:
+        return task
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # If status changed to completed, log completion time
+    if update_data.get("status") == "completed" and task.get("status") != "completed":
+        update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
+        update_data["completed_by"] = user["user_id"]
+    
+    await db.tasks.update_one({"id": task_id}, {"$set": update_data})
+    return await db.tasks.find_one({"id": task_id}, {"_id": 0})
+
+@api_router.delete("/tasks/{task_id}")
+async def delete_task(task_id: str, user=Depends(require_admin)):
+    """Delete task (admin only)"""
+    result = await db.tasks.delete_one({"id": task_id, "company_id": user["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"message": "Task deleted"}
+
+@api_router.get("/tasks/my-summary")
+async def get_my_task_summary(user=Depends(get_current_user)):
+    """Get task summary for staff member"""
+    if user.get("role") != "staff":
+        return {"pending": 0, "in_progress": 0, "completed_this_month": 0, "total": 0}
+    
+    company_id = user.get("company_id")
+    staff_doc = await db.staff.find_one({"company_id": company_id, "email": user.get("email")}, {"_id": 0})
+    if not staff_doc:
+        return {"pending": 0, "in_progress": 0, "completed_this_month": 0, "total": 0}
+    
+    staff_id = staff_doc["id"]
+    current_month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+    
+    pending = await db.tasks.count_documents({"company_id": company_id, "assigned_staff_id": staff_id, "status": "pending"})
+    in_progress = await db.tasks.count_documents({"company_id": company_id, "assigned_staff_id": staff_id, "status": "in_progress"})
+    completed = await db.tasks.count_documents({
+        "company_id": company_id, 
+        "assigned_staff_id": staff_id, 
+        "status": "completed",
+        "completed_at": {"$gte": current_month_start}
+    })
+    total = await db.tasks.count_documents({"company_id": company_id, "assigned_staff_id": staff_id})
+    
+    return {"pending": pending, "in_progress": in_progress, "completed_this_month": completed, "total": total}
+
+# ===== STAFF EARNINGS & PAYOUTS =====
+@api_router.get("/staff/my-earnings")
+async def get_my_earnings(user=Depends(get_current_user)):
+    """Get earnings summary for staff member"""
+    if user.get("role") != "staff":
+        raise HTTPException(status_code=403, detail="Staff access only")
+    
+    company_id = user.get("company_id")
+    staff_doc = await db.staff.find_one({"company_id": company_id, "email": user.get("email")}, {"_id": 0})
+    if not staff_doc:
+        raise HTTPException(status_code=404, detail="Staff record not found")
+    
+    now = datetime.now(timezone.utc)
+    current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    today_str = now.isoformat()[:10]
+    
+    # Calculate earnings based on payment type
+    if staff_doc.get("payment_type") == "per_job":
+        checkin_rate = staff_doc.get("per_checkin_rate", 0) or 0
+        checkout_rate = staff_doc.get("per_checkout_rate", 0) or 0
+        
+        # Count tasks completed this month
+        tasks_this_month = await db.tasks.count_documents({
+            "company_id": company_id,
+            "assigned_staff_id": staff_doc["id"],
+            "status": "completed",
+            "completed_at": {"$gte": current_month_start.isoformat()[:10]}
+        })
+        
+        # Also count check-ins/check-outs from bookings
+        property_ids = staff_doc.get("assigned_properties", [])
+        checkins = await db.bookings.count_documents({
+            "company_id": company_id,
+            "property_id": {"$in": property_ids},
+            "check_in": {"$gte": current_month_start.isoformat()[:10], "$lte": today_str},
+            "status": {"$in": ["checked_in", "checked_out"]}
+        })
+        checkouts = await db.bookings.count_documents({
+            "company_id": company_id,
+            "property_id": {"$in": property_ids},
+            "check_out": {"$gte": current_month_start.isoformat()[:10], "$lte": today_str},
+            "status": "checked_out"
+        })
+        
+        earnings_mtd = (checkins * checkin_rate) + (checkouts * checkout_rate)
+        payment_structure = f"${checkin_rate}/check-in, ${checkout_rate}/check-out"
+    else:
+        earnings_mtd = staff_doc.get("salary", 0)
+        payment_structure = f"${staff_doc.get('salary', 0)}/{staff_doc.get('payment_terms', 'Monthly')}"
+    
+    # Get payout history
+    payouts = await db.payouts.find(
+        {"company_id": company_id, "staff_id": staff_doc["id"]}, 
+        {"_id": 0}
+    ).sort("created_at", -1).limit(10).to_list(10)
+    
+    return {
+        "staff_id": staff_doc["id"],
+        "name": f"{staff_doc.get('first_name', '')} {staff_doc.get('last_name', '')}",
+        "role": staff_doc.get("staff_role", ""),
+        "payment_type": staff_doc.get("payment_type", "salary"),
+        "payment_structure": payment_structure,
+        "earnings_mtd": round(earnings_mtd, 2),
+        "payment_status": "pending",  # Would be calculated based on payouts
+        "next_payout_date": "End of month",
+        "payouts": payouts,
+    }
+
 # ===== SERVICE ROUTES =====
 @api_router.get("/services")
 async def list_services(user=Depends(get_current_user), category: Optional[str] = None, active_only: bool = True):
