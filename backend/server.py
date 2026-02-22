@@ -1619,6 +1619,70 @@ async def get_analytics(
             "previous_month": prev_month_start.strftime("%B %Y"),
         }
     }
+
+@api_router.get("/analytics/source-breakdown")
+async def get_source_breakdown(
+    user=Depends(get_current_user),
+    property_id: Optional[str] = None,
+    year: Optional[int] = None,
+    month: Optional[int] = None
+):
+    """Get booking analytics broken down by source (Airbnb, Booking.com, Direct, etc.)"""
+    company_id = user.get("company_id")
+    if not company_id:
+        return {"sources": [], "total_bookings": 0, "total_revenue": 0}
+    
+    now = datetime.now(timezone.utc)
+    target_year = year or now.year
+    target_month = month or now.month
+    
+    month_start = datetime(target_year, target_month, 1, tzinfo=timezone.utc)
+    if target_month == 12:
+        month_end = datetime(target_year + 1, 1, 1, tzinfo=timezone.utc)
+    else:
+        month_end = datetime(target_year, target_month + 1, 1, tzinfo=timezone.utc)
+    
+    query = {
+        "company_id": company_id,
+        "check_in": {"$gte": month_start.isoformat()[:10], "$lt": month_end.isoformat()[:10]},
+        "booking_type": {"$ne": "blocked"},
+        "status": {"$nin": ["blocked", "cancelled"]},
+    }
+    if property_id:
+        query["property_id"] = property_id
+    
+    bookings = await db.bookings.find(query, {"_id": 0, "ota_source": 1, "total_amount": 1, "check_in": 1, "check_out": 1}).to_list(5000)
+    
+    source_map = {}
+    for b in bookings:
+        src = b.get("ota_source") or "manual"
+        label = "Direct" if src == "manual" else src.replace("_", " ").replace(".", ".").title()
+        if label not in source_map:
+            source_map[label] = {"label": label, "key": src, "bookings": 0, "revenue": 0, "nights": 0}
+        source_map[label]["bookings"] += 1
+        source_map[label]["revenue"] += b.get("total_amount", 0) or 0
+        try:
+            ci = datetime.fromisoformat(b["check_in"])
+            co = datetime.fromisoformat(b["check_out"])
+            source_map[label]["nights"] += max((co - ci).days, 0)
+        except Exception:
+            pass
+    
+    sources = sorted(source_map.values(), key=lambda s: s["revenue"], reverse=True)
+    total_bookings = sum(s["bookings"] for s in sources)
+    total_revenue = sum(s["revenue"] for s in sources)
+    
+    for s in sources:
+        s["booking_pct"] = round((s["bookings"] / total_bookings * 100), 1) if total_bookings > 0 else 0
+        s["revenue_pct"] = round((s["revenue"] / total_revenue * 100), 1) if total_revenue > 0 else 0
+        s["revenue"] = round(s["revenue"], 2)
+    
+    return {
+        "sources": sources,
+        "total_bookings": total_bookings,
+        "total_revenue": round(total_revenue, 2),
+    }
+
 @api_router.get("/invitations")
 async def list_invitations(user=Depends(require_admin)):
     return await db.invitations.find({"company_id": user["company_id"]}, {"_id": 0}).to_list(1000)
