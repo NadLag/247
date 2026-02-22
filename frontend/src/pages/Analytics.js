@@ -233,6 +233,27 @@ export default function Analytics() {
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+              {/* Source Breakdown Charts */}
+              {sourceBreakdown && sourceBreakdown.sources.length > 0 && (
+                <>
+                  <SourceBreakdownChart 
+                    data={sourceBreakdown} 
+                    title="Bookings by Source"
+                    metric="bookings"
+                    pctKey="booking_pct"
+                    testId="source-bookings-chart"
+                  />
+                  <SourceBreakdownChart 
+                    data={sourceBreakdown} 
+                    metric="revenue"
+                    title="Revenue by Source"
+                    pctKey="revenue_pct"
+                    testId="source-revenue-chart"
+                  />
+                </>
+              )}
+
               {/* Revenue Trend Chart */}
               <Card className="lg:col-span-2" data-testid="revenue-trend-chart">
                 <CardHeader>
