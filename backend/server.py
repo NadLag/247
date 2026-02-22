@@ -2875,7 +2875,8 @@ async def startup():
     await db.bookings.create_index([("company_id", 1)])
     await db.bookings.create_index([("company_id", 1), ("ota_external_id", 1)])
     await db.bookings.create_index([("company_id", 1), ("status", 1)])
-    await db.bookings.create_index([("company_id", 1), ("booking_type", 1)])  # NEW index
+    await db.bookings.create_index([("company_id", 1), ("booking_type", 1)])
+    await db.bookings.create_index([("company_id", 1), ("ota_source", 1)])
     await db.invitations.create_index([("company_id", 1)])
     await db.invitations.create_index("token", unique=True)
     await db.payment_transactions.create_index("session_id")
@@ -2897,6 +2898,10 @@ async def startup():
     
     # Migrate existing blocked bookings to use booking_type field
     await migrate_blocked_bookings()
+    
+    # Run auto-checkout on startup and schedule periodic task
+    await auto_checkout_expired_bookings()
+    asyncio.create_task(periodic_auto_checkout())
 
 async def migrate_blocked_bookings():
     """One-time migration to add booking_type field to existing bookings"""
@@ -2923,6 +2928,29 @@ async def migrate_blocked_bookings():
         logger.info(f"Migration complete: {total_blocked} blocked dates updated, {reservation_result.modified_count} reservations updated")
     except Exception as e:
         logger.error(f"Migration error: {e}")
+
+async def auto_checkout_expired_bookings():
+    """Auto-update bookings to checked_out when checkout date has passed"""
+    try:
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        result = await db.bookings.update_many(
+            {
+                "check_out": {"$lt": today},
+                "status": {"$in": ["confirmed", "checked_in"]},
+                "booking_type": {"$ne": "blocked"}
+            },
+            {"$set": {"status": "checked_out", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        if result.modified_count > 0:
+            logger.info(f"Auto-checkout: Updated {result.modified_count} expired bookings to checked_out")
+    except Exception as e:
+        logger.error(f"Auto-checkout error: {e}")
+
+async def periodic_auto_checkout():
+    """Run auto-checkout every hour"""
+    while True:
+        await asyncio.sleep(3600)
+        await auto_checkout_expired_bookings()
 
 @app.on_event("shutdown")
 async def shutdown():
