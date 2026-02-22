@@ -76,20 +76,31 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Unified "Add Property" button** with choice modal:
   - **Sync from OTA** - Creates NEW property from iCal URL, imports bookings, opens edit dialog
   - **Add Manually** - Traditional property form
-- [x] **OTA Settings page** for managing existing feeds (Admin only)
-- [x] **"Sync from OTA" button** (appears when feeds_count > 0) - refreshes all feeds
+- [x] **"Refresh" button** (renamed from "Sync from OTA") - refreshes all OTA feeds
 - [x] iCal parser with `icalendar` library
 - [x] Mock URL format for testing: `mock://source/PropertyName`
 - [x] Background job processing with sync status polling
 - [x] Duplicate detection by UID or (property + date range + OTA source)
-- [x] Sync logs with stats (created, updated, cancelled, skipped)
 - [x] OTA source badges on Bookings page
-- [x] Auto-creates OTA feed for future syncs after property import
+
+### Properties Page (Updated Feb 22, 2026)
+- [x] **6-column grid** (desktop) → 4 columns (lg) → 3 columns (md) → 2 columns (sm) → 1 column (mobile)
+- [x] Compact property cards: Name, Address, Owner, Status, Last Sync
+- [x] **Quick View** popup with property details
+- [x] Single "Add Property" button with Sync/Manual choice
+
+### Bookings Page (Updated Feb 22, 2026)
+- [x] **Calendar View** (default) - Airbnb-style monthly grid
+- [x] **List View** - Sortable/filterable table
+- [x] Color-coded bookings (Teal=Confirmed, Blue=CheckedIn, Grey=CheckedOut, Red=Cancelled)
+- [x] Property and Status filters
+- [x] Click booking → details popup with Edit option
 
 ## Test Results (Feb 22, 2026 - Latest)
-- Backend: 100% (12/12 OTA import tests passed)
-- Frontend: 100% (All UI flows verified)
-- Unified Add Property Flow: WORKING - Full flow tested
+- Frontend: 100% (10/10 UI features verified)
+- Properties grid: 6 columns working
+- Bookings Calendar/List: Both views functional
+- Color theme: Teal (HSL 168 76% 32%) applied
 
 ## API Endpoints
 
