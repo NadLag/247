@@ -143,8 +143,8 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const [kpiRes, trendRes, bookRes, propRes] = await Promise.all([
-          fetch(`${API}/api/dashboard`, { credentials: "include" }),
-          fetch(`${API}/api/dashboard/trends`, { credentials: "include" }),
+          fetch(`${API}/api/dashboard/kpis`, { credentials: "include" }),
+          fetch(`${API}/api/dashboard/revenue-trends`, { credentials: "include" }),
           fetch(`${API}/api/bookings?limit=8`, { credentials: "include" }),
           fetch(`${API}/api/properties`, { credentials: "include" }),
         ]);
