@@ -12,6 +12,7 @@ import random
 import asyncio
 import resend
 import bcrypt
+from icalendar import Calendar
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
