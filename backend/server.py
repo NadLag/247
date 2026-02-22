@@ -2811,6 +2811,7 @@ async def startup():
     await db.bookings.create_index([("company_id", 1)])
     await db.bookings.create_index([("company_id", 1), ("ota_external_id", 1)])
     await db.bookings.create_index([("company_id", 1), ("status", 1)])
+    await db.bookings.create_index([("company_id", 1), ("booking_type", 1)])  # NEW index
     await db.invitations.create_index([("company_id", 1)])
     await db.invitations.create_index("token", unique=True)
     await db.payment_transactions.create_index("session_id")
@@ -2829,6 +2830,28 @@ async def startup():
     await db.ota_feeds.create_index([("company_id", 1)])
     await db.ota_feeds.create_index([("company_id", 1), ("property_id", 1)])
     logger.info("Database indexes created")
+    
+    # Migrate existing blocked bookings to use booking_type field
+    await migrate_blocked_bookings()
+
+async def migrate_blocked_bookings():
+    """One-time migration to add booking_type field to existing bookings"""
+    try:
+        # Update blocked bookings (status=blocked) to have booking_type=blocked
+        blocked_result = await db.bookings.update_many(
+            {"status": "blocked", "booking_type": {"$exists": False}},
+            {"$set": {"booking_type": "blocked", "guest_name": None, "total_amount": 0}}
+        )
+        
+        # Update all other bookings to have booking_type=reservation
+        reservation_result = await db.bookings.update_many(
+            {"status": {"$ne": "blocked"}, "booking_type": {"$exists": False}},
+            {"$set": {"booking_type": "reservation"}}
+        )
+        
+        logger.info(f"Migration complete: {blocked_result.modified_count} blocked dates updated, {reservation_result.modified_count} reservations updated")
+    except Exception as e:
+        logger.error(f"Migration error: {e}")
 
 @app.on_event("shutdown")
 async def shutdown():
