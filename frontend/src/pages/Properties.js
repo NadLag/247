@@ -199,7 +199,7 @@ export default function Properties() {
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) });
       if (res.ok) {
         toast.success(editing ? "Property updated" : "Property created");
-        setDialogOpen(false); setForm(empty); setEditing(null); fetchData();
+        setManualDialogOpen(false); setForm(empty); setEditing(null); fetchData();
       } else { const err = await res.json(); toast.error(err.detail || "Failed to save"); }
     } catch (err) { toast.error("Error saving property"); } finally { setSaving(false); }
   };
@@ -212,6 +212,66 @@ export default function Properties() {
     } catch (err) { toast.error("Error deleting property"); }
   };
 
+  // OTA Import - Create new property from iCal
+  const handleOTAImport = async () => {
+    if (!otaForm.name.trim()) {
+      toast.error("Please enter a property name");
+      return;
+    }
+    if (!otaForm.source) {
+      toast.error("Please select an OTA source");
+      return;
+    }
+    if (!otaForm.ical_url.trim()) {
+      toast.error("Please enter an iCal URL");
+      return;
+    }
+    
+    setImporting(true);
+    setImportResult(null);
+    
+    try {
+      const res = await fetch(`${API}/api/ota/import-property`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: otaForm.name.trim(),
+          source: otaForm.source,
+          ical_url: otaForm.ical_url.trim(),
+        }),
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setImportResult(data);
+        toast.success(`Property created with ${data.bookings_imported} bookings!`);
+        fetchData();
+        
+        // After successful import, offer to edit the property
+        if (data.property_id) {
+          // Fetch the new property and open edit dialog
+          const propRes = await fetch(`${API}/api/properties/${data.property_id}`, { credentials: "include" });
+          if (propRes.ok) {
+            const newProp = await propRes.json();
+            setOtaDialogOpen(false);
+            setOtaForm({ name: "", source: "", ical_url: "" });
+            setImportResult(null);
+            openEdit(newProp);
+          }
+        }
+      } else {
+        const err = await res.json();
+        toast.error(err.detail || "Failed to import property");
+      }
+    } catch (err) {
+      toast.error("Error importing property");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  // Global OTA Sync for all configured feeds
   const handleOTASync = async () => {
     setSyncing(true);
     try {
@@ -220,7 +280,7 @@ export default function Properties() {
       if (res.ok) {
         const data = await res.json();
         if (data.status === "no_feeds") {
-          toast.warning("No OTA feeds configured. Go to OTA Settings to add feeds.");
+          toast.warning("No OTA feeds configured. Add a property via OTA to enable sync.");
         } else {
           toast.success(data.message);
           // Poll for completion
