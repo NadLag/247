@@ -31,7 +31,7 @@ const statusColors = {
   checked_out: "bg-slate-400 text-white",
   cancelled: "bg-red-400 text-white",
   pending: "bg-amber-400 text-white",
-  blocked: "bg-slate-300 text-slate-600 border border-slate-400",
+  blocked: "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600",
 };
 
 // Calendar Component
