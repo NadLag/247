@@ -101,16 +101,20 @@ function PropertyCard({ prop, isAdmin, onEdit, onDelete, getCohostName }) {
         {/* Actions - Fixed at bottom */}
         {isAdmin && (
           <div className="flex gap-2 pt-3 mt-auto border-t">
-            <Button variant="outline" size="sm" className="flex-1" onClick={() => onOTASync(prop.id)} disabled={isSyncing} data-testid={`sync-property-${prop.id}`}>
-              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? "animate-spin" : ""}`} />
-              {isSyncing ? "Syncing..." : "Sync OTA"}
-            </Button>
             <Button variant="outline" size="sm" onClick={() => onEdit(prop)} data-testid={`edit-property-${prop.id}`}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/5" onClick={() => onDelete(prop.id)} data-testid={`delete-property-${prop.id}`}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
+          </div>
+        )}
+        
+        {/* Last Sync indicator */}
+        {prop.last_ota_sync_at && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2 pt-2 border-t">
+            <Clock className="h-3 w-3" />
+            <span>Last synced: {new Date(prop.last_ota_sync_at).toLocaleDateString()}</span>
           </div>
         )}
       </CardContent>
@@ -128,8 +132,8 @@ export default function Properties() {
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [syncingAll, setSyncingAll] = useState(false);
-  const [syncingPropId, setSyncingPropId] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSyncInfo, setLastSyncInfo] = useState(null);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
@@ -143,8 +147,21 @@ export default function Properties() {
       if (cohostRes.ok) setCohosts(await cohostRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
+  
+  const fetchSyncStatus = async () => {
+    try {
+      const res = await fetch(`${API}/api/ota/sync-status`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setLastSyncInfo(data);
+        if (data.is_syncing) {
+          setSyncing(true);
+        }
+      }
+    } catch (err) { console.error(err); }
+  };
 
-  useEffect(() => { if (user?.company_id) fetchData(); }, [user]); // eslint-disable-line
+  useEffect(() => { if (user?.company_id) { fetchData(); fetchSyncStatus(); } }, [user]); // eslint-disable-line
 
   const handleSave = async () => {
     setSaving(true);
