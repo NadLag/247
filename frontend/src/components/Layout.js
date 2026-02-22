@@ -46,22 +46,23 @@ const navConfig = {
 function NavItems({ items, currentPath, onNavigate }) {
   return (
     <nav className="flex-1 p-3 space-y-1">
-      {items.map((item) => {
+      {items.map((item, index) => {
         const isActive = currentPath === item.path;
         return (
           <button
             key={item.path}
             data-testid={`nav-${item.name.toLowerCase()}`}
             onClick={() => onNavigate(item.path)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+            style={{ animationDelay: `${index * 0.03}s` }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 animate-fade-in opacity-0 ${
               isActive
                 ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:translate-x-0.5"
             }`}
           >
-            <item.icon className="h-4 w-4 shrink-0" />
+            <item.icon className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isActive ? '' : 'group-hover:scale-110'}`} />
             <span>{item.name}</span>
-            {isActive && <ChevronRight className="h-3 w-3 ml-auto" />}
+            {isActive && <ChevronRight className="h-3 w-3 ml-auto animate-slide-in" />}
           </button>
         );
       })}
