@@ -35,7 +35,7 @@ const statusColors = {
 };
 
 // Calendar Component
-function BookingCalendar({ bookings, properties, currentMonth, onMonthChange, onBookingClick, propertyFilter }) {
+function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onMonthChange, onBookingClick, propertyFilter }) {
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   
@@ -56,6 +56,15 @@ function BookingCalendar({ bookings, properties, currentMonth, onMonthChange, on
       return b.check_in <= dateStr && b.check_out > dateStr;
     });
   };
+  
+  const getBlockedForDay = (day) => {
+    if (!day) return [];
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return blockedDates.filter(b => {
+      if (propertyFilter && b.property_id !== propertyFilter) return false;
+      return b.check_in <= dateStr && b.check_out > dateStr;
+    });
+  };
 
   const getPropName = (id) => {
     const p = properties.find(pr => pr.id === id);
@@ -71,7 +80,7 @@ function BookingCalendar({ bookings, properties, currentMonth, onMonthChange, on
         <Button variant="ghost" size="sm" onClick={() => onMonthChange(-1)}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="font-semibold">{monthNames[month]} {year}</h2>
+        <h2 className="font-semibold font-heading">{monthNames[month]} {year}</h2>
         <Button variant="ghost" size="sm" onClick={() => onMonthChange(1)}>
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -92,12 +101,14 @@ function BookingCalendar({ bookings, properties, currentMonth, onMonthChange, on
         <div className="grid grid-cols-7">
           {days.map((day, idx) => {
             const dayBookings = getBookingsForDay(day);
+            const dayBlocked = getBlockedForDay(day);
             const isToday = day && new Date().toDateString() === new Date(year, month, day).toDateString();
+            const hasBlocked = dayBlocked.length > 0;
             
             return (
               <div 
                 key={idx} 
-                className={`min-h-[100px] border-b border-r p-1 ${!day ? 'bg-muted/20' : ''} ${isToday ? 'bg-primary/5' : ''}`}
+                className={`min-h-[100px] border-b border-r p-1 ${!day ? 'bg-muted/20' : ''} ${isToday ? 'bg-primary/5' : ''} ${hasBlocked ? 'bg-slate-100 dark:bg-slate-800/50' : ''}`}
               >
                 {day && (
                   <>
@@ -105,19 +116,35 @@ function BookingCalendar({ bookings, properties, currentMonth, onMonthChange, on
                       {day}
                     </div>
                     <div className="space-y-0.5">
-                      {dayBookings.slice(0, 3).map((b, i) => (
+                      {/* Show blocked dates first with special styling */}
+                      {dayBlocked.slice(0, 1).map((b, i) => (
+                        <div 
+                          key={`blocked-${i}`}
+                          className="text-[10px] px-1 py-0.5 rounded bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-300 border border-slate-400 dark:border-slate-500 line-through italic cursor-default"
+                          title={`Unavailable - ${getPropName(b.property_id)}`}
+                        >
+                          Unavailable
+                        </div>
+                      ))}
+                      {dayBlocked.length > 1 && (
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 text-center italic">
+                          +{dayBlocked.length - 1} blocked
+                        </div>
+                      )}
+                      {/* Show real bookings */}
+                      {dayBookings.slice(0, hasBlocked ? 2 : 3).map((b, i) => (
                         <div 
                           key={i}
                           onClick={() => onBookingClick(b)}
                           className={`text-[10px] px-1 py-0.5 rounded cursor-pointer truncate ${statusColors[b.status] || 'bg-primary/80 text-white'}`}
                           title={`${b.guest_name} - ${getPropName(b.property_id)}`}
                         >
-                          {b.guest_name.split(' ')[0]}
+                          {b.guest_name?.split(' ')[0] || 'Guest'}
                         </div>
                       ))}
-                      {dayBookings.length > 3 && (
+                      {dayBookings.length > (hasBlocked ? 2 : 3) && (
                         <div className="text-[10px] text-muted-foreground text-center">
-                          +{dayBookings.length - 3} more
+                          +{dayBookings.length - (hasBlocked ? 2 : 3)} more
                         </div>
                       )}
                     </div>
@@ -135,7 +162,7 @@ function BookingCalendar({ bookings, properties, currentMonth, onMonthChange, on
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-blue-500" /> Checked In</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-slate-400" /> Checked Out</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-red-400" /> Cancelled</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-slate-300 border border-slate-400" /> Blocked</div>
+        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-slate-300 border border-slate-400 line-through" /> <span className="italic">Blocked/Unavailable</span></div>
       </div>
     </div>
   );
