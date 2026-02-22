@@ -191,3 +191,153 @@ code {
 .chart-container {
   @apply bg-white rounded-xl border border-gray-100 shadow-sm p-6;
 }
+
+/* ===== PREMIUM ENHANCEMENTS ===== */
+
+/* Smooth Page Transitions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInLeft 0.3s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.25s ease-out forwards;
+}
+
+/* Staggered animations for lists */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+
+/* Premium hover effects */
+.hover-lift {
+  @apply transition-all duration-200 ease-out;
+}
+.hover-lift:hover {
+  @apply -translate-y-0.5 shadow-lg;
+}
+
+.hover-glow {
+  @apply transition-all duration-200;
+}
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(13, 148, 136, 0.15);
+}
+
+/* Glass morphism */
+.glass {
+  @apply bg-white/70 backdrop-blur-xl border border-white/20;
+}
+
+.dark .glass {
+  @apply bg-gray-900/70 border-gray-800/50;
+}
+
+/* Gradient text */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-teal-400;
+}
+
+/* Premium skeleton loading */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Improved scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-gray-700;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-600;
+}
+
+/* Focus ring improvements */
+*:focus-visible {
+  @apply outline-none ring-2 ring-teal-500/30 ring-offset-2 ring-offset-background;
+}
+
+/* Better button transitions */
+button, a {
+  @apply transition-colors duration-150;
+}
+
+/* Page header styling */
+.page-header {
+  @apply mb-8;
+}
+
+.page-title {
+  @apply font-heading text-2xl font-bold tracking-tight text-foreground;
+}
+
+.page-subtitle {
+  @apply text-sm text-muted-foreground mt-1;
+}
+
+/* Data display */
+.data-value {
+  @apply font-heading font-bold tabular-nums tracking-tight;
+}
+
+.data-label {
+  @apply text-xs font-medium uppercase tracking-wider text-muted-foreground;
+}
+
+/* Improved card interactions */
+.card-interactive {
+  @apply transition-all duration-200 cursor-pointer;
+}
+
+.card-interactive:hover {
+  @apply shadow-md border-gray-200 dark:border-gray-700;
+}
+
+.card-interactive:active {
+  @apply scale-[0.99];
+}
