@@ -2501,6 +2501,8 @@ async def startup():
     await db.audit_logs.create_index([("company_id", 1)])
     await db.audit_logs.create_index([("user_id", 1)])
     await db.payouts.create_index([("company_id", 1), ("staff_id", 1)])
+    await db.ota_feeds.create_index([("company_id", 1)])
+    await db.ota_feeds.create_index([("company_id", 1), ("property_id", 1)])
     logger.info("Database indexes created")
 
 @app.on_event("shutdown")
