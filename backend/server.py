@@ -1963,6 +1963,7 @@ def parse_ical_bookings(ical_content: str, source: str, property_id: str) -> Lis
     """Parse iCal content and extract booking events"""
     bookings = []
     skipped_count = 0
+    blocked_count = 0
     try:
         cal = Calendar.from_ical(ical_content)
         
@@ -1991,11 +1992,31 @@ def parse_ical_bookings(ical_content: str, source: str, property_id: str) -> Lis
                 if hasattr(check_out, 'date'):
                     check_out = check_out.date()
                 
-                # Check for blocked/unavailable dates
-                summary_lower = summary.lower()
-                if any(blocked in summary_lower for blocked in ['blocked', 'unavailable', 'not available']):
-                    logger.debug(f"Skipping blocked date: {summary}")
+                # Calculate nights
+                nights = (check_out - check_in).days
+                if nights <= 0:
+                    logger.debug(f"Skipping zero/negative night booking: {summary}")
                     skipped_count += 1
+                    continue
+                
+                # Check for blocked/unavailable dates - import as blocked status
+                summary_lower = summary.lower()
+                is_blocked = any(blocked in summary_lower for blocked in ['blocked', 'unavailable', 'not available'])
+                
+                if is_blocked:
+                    # Import as blocked date
+                    bookings.append({
+                        "uid": uid,
+                        "guest_name": "Blocked",
+                        "check_in": check_in.isoformat() if hasattr(check_in, 'isoformat') else str(check_in),
+                        "check_out": check_out.isoformat() if hasattr(check_out, 'isoformat') else str(check_out),
+                        "nights": nights,
+                        "status": "blocked",
+                        "source": source,
+                        "property_id": property_id,
+                        "description": f"Blocked: {summary}",
+                    })
+                    blocked_count += 1
                     continue
                 
                 # Extract guest name from summary
@@ -2006,13 +2027,6 @@ def parse_ical_bookings(ical_content: str, source: str, property_id: str) -> Lis
                     guest_name = summary.split(' - ')[0].strip()
                 else:
                     guest_name = summary.strip()
-                
-                # Calculate nights
-                nights = (check_out - check_in).days
-                if nights <= 0:
-                    logger.debug(f"Skipping zero/negative night booking: {summary}")
-                    skipped_count += 1
-                    continue
                 
                 # Determine booking status from iCal status
                 booking_status = "confirmed"
@@ -2033,7 +2047,7 @@ def parse_ical_bookings(ical_content: str, source: str, property_id: str) -> Lis
                     "description": description[:500],
                 })
         
-        logger.info(f"Parsed iCal: {len(bookings)} bookings found, {skipped_count} skipped")
+        logger.info(f"Parsed iCal: {len(bookings)} total ({len(bookings) - blocked_count} bookings, {blocked_count} blocked), {skipped_count} skipped")
                 
     except Exception as e:
         logger.error(f"Failed to parse iCal content: {e}")
