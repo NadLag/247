@@ -56,6 +56,16 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Icon color consistency** - Primary color accents on icons
 - [x] **Removed OTA Settings page** - Consolidated into Properties
 
+### Blocked Dates Handling (Feb 22, 2026) - CRITICAL FIX
+- [x] **Proper Data Model** - `booking_type` field: `reservation` | `blocked`
+- [x] **Blocked dates NOT shown in Bookings list** - API filters them out by default
+- [x] **Blocked dates ONLY in Calendar view** - Grey strikethrough styling, "Unavailable" label
+- [x] **No fake "Blocked" guest name** - `guest_name: null` for blocked entries
+- [x] **KPIs exclude blocked dates** - No impact on revenue, ADR, RevPAN, occupancy
+- [x] **Manual booking override flow** - 409 conflict → confirmation dialog → audit log
+- [x] **Separate API endpoint** - `GET /api/bookings/blocked-dates` for calendar
+- [x] **Database migration** - Auto-converts `guest_name: "Blocked"` to proper blocked type
+
 ### Authentication System
 - [x] Google OAuth (Emergent Auth)
 - [x] Password-based registration via invitation links
