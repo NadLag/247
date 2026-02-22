@@ -135,12 +135,25 @@ export default function Properties() {
   const [properties, setProperties] = useState([]);
   const [cohosts, setCohosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Dialog states
+  const [choiceDialogOpen, setChoiceDialogOpen] = useState(false);
+  const [otaDialogOpen, setOtaDialogOpen] = useState(false);
+  const [manualDialogOpen, setManualDialogOpen] = useState(false);
+  
+  // Form states
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  
+  // OTA sync states
   const [syncing, setSyncing] = useState(false);
   const [lastSyncInfo, setLastSyncInfo] = useState(null);
+  
+  // OTA import states
+  const [otaForm, setOtaForm] = useState({ name: "", source: "", ical_url: "" });
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
