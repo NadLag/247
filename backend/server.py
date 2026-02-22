@@ -2076,6 +2076,7 @@ def parse_ical_bookings(ical_content: str, source: str, property_id: str) -> Lis
                     "check_out": check_out.isoformat() if hasattr(check_out, 'isoformat') else str(check_out),
                     "nights": nights,
                     "status": booking_status,
+                    "booking_type": "reservation",  # NEW: Real booking
                     "source": source,
                     "property_id": property_id,
                     "description": description[:500],
