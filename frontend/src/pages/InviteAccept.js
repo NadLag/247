@@ -25,10 +25,6 @@ export default function InviteAccept() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   
   const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone: "",
     password: "",
     confirm_password: "",
   });
