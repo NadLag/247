@@ -1,0 +1,86 @@
+{
+  "summary": "Iteration 10 - Tested unified Add Property flow with OTA import. All 10 features working correctly: (1) Single Add Property button opens choice modal, (2) Choice modal has Sync from OTA and Add Manually options, (3) Sync from OTA opens import dialog with name/source/URL fields, (4) POST /api/ota/import-property creates property and imports bookings, (5) After OTA import edit dialog opens immediately, (6) Add Manually opens manual form, (7) Manual form save works, (8) GET /api/properties/{id} returns single property, (9) Sync from OTA button shows when feeds_count > 0, (10) Imported bookings show OTA source badges on Bookings page.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ota_import.py",
+    "/app/test_reports/pytest/pytest_ota_import.xml"
+  ],
+  "passed_tests": [
+    "✅ POST /api/ota/import-property - creates property and imports bookings",
+    "✅ GET /api/properties/{id} - returns single property by ID",
+    "✅ GET /api/properties/{id} - returns 404 for invalid ID",
+    "✅ GET /api/ota/sync-status - returns feeds_count > 0 after import",
+    "✅ GET /api/bookings - imported bookings have ota_source, ota_external_id, ota_feed_id",
+    "✅ POST /api/properties - manual property creation works",
+    "✅ PUT /api/properties/{id} - property update works",
+    "✅ OTA feeds created automatically after import",
+    "✅ Import from different sources (airbnb, vrbo, booking.com, expedia)",
+    "✅ Invalid URL handling (returns 500 as expected)",
+    "✅ Authentication endpoint working",
+    "✅ UI: Properties page shows 'Add Property' button",
+    "✅ UI: Add Property opens choice modal with two options",
+    "✅ UI: 'Sync from OTA' choice shows with globe icon and description",
+    "✅ UI: 'Add Manually' choice shows with edit icon and description",
+    "✅ UI: OTA import dialog has property name, source select, iCal URL fields",
+    "✅ UI: OTA import dialog has 'Generate Mock URL' button",
+    "✅ UI: OTA import creates property and opens edit dialog immediately",
+    "✅ UI: Success toast shows 'Property created with X bookings!'",
+    "✅ UI: Manual add form has all property fields (rooms, location, owner details)",
+    "✅ UI: Sync from OTA button visible when feeds_count > 0",
+    "✅ UI: Bookings page shows OTA source badges (airbnb, vrbo, booking.com, expedia)",
+    "✅ UI: Properties show 'Last synced' timestamps and 'Imported from' notes"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_ota_import.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (All UI flows verified)"
+  },
+  "test_credentials": {
+    "session_token": "test_import_session_1771787827199",
+    "company_id": "comp_import_1771787827199"
+  },
+  "seed_data_creation": "Created test admin user with company. Imported properties via OTA: Test Beach House (airbnb), Test Mountain Cabin (vrbo), City Apartment (booking.com), Beach Villa (expedia), Playwright Test House (airbnb). 22 bookings imported total.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 10 verified unified Add Property flow: (1) Single 'Add Property' button opens choice modal, (2) 'Sync from OTA' imports property+bookings from iCal URL, (3) After import, edit dialog opens immediately, (4) 'Add Manually' shows traditional form. Mock URL format: mock://source/PropertyName. Backend endpoint: POST /api/ota/import-property. All features from iteration 9 (OTA Settings, feeds CRUD, sync) still working.",
+  "features_tested": {
+    "unified_add_property_flow": {
+      "trigger": "Click 'Add Property' button",
+      "choice_modal": "Two options: 'Sync from OTA' and 'Add Manually'",
+      "ota_import": "Creates property + OTA feed + imports bookings from iCal",
+      "post_import": "Edit dialog opens immediately for user to add details",
+      "manual_add": "Opens traditional property form"
+    },
+    "backend_endpoints": {
+      "import_property": "POST /api/ota/import-property - {name, source, ical_url}",
+      "get_single_property": "GET /api/properties/{id}",
+      "sync_status": "GET /api/ota/sync-status - {is_syncing, feeds_count, latest_sync}"
+    },
+    "ui_elements": {
+      "add_property_btn": "[data-testid='add-property-btn']",
+      "ota_choice": "[data-testid='add-from-ota-choice']",
+      "manual_choice": "[data-testid='add-manual-choice']",
+      "ota_name_input": "[data-testid='ota-property-name']",
+      "ota_source_select": "[data-testid='ota-source-select']",
+      "ota_url_input": "[data-testid='ota-ical-url']",
+      "import_btn": "[data-testid='import-ota-btn']",
+      "sync_ota_btn": "[data-testid='sync-ota-btn']"
+    }
+  },
+  "mocked_apis": {
+    "has_mocked": true,
+    "details": "iCal feeds use mock:// URL format for testing. Mock URLs return generated VEVENT data with random guest names and check-in/check-out dates."
+  }
+}
