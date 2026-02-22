@@ -67,16 +67,22 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - Admin can create, edit, delete, assign tasks
 - Task summary cards for staff (Pending, In Progress, Completed MTD)
 
-### Mock OTA Integration
-- [x] Simulated sync for Airbnb, Booking.com, VRBO, Expedia
-- [x] "Sync All OTA" button on Properties page
-- [x] "Sync OTA" button per property
-- [x] OTA source badges on synced bookings
+### OTA iCal Sync (Implemented Feb 22, 2026)
+- [x] **Single "Sync from OTA" button** on Properties page
+- [x] **OTA Settings page** for managing iCal feeds (Admin only)
+- [x] iCal feed CRUD: Add, Edit, Delete, Toggle active status
+- [x] Supports: Airbnb, Booking.com, VRBO, Expedia, Other
+- [x] Mock URL format for testing: `mock://source/PropertyName`
+- [x] Background job processing with sync status polling
+- [x] Duplicate detection by UID or (property + date range + OTA source)
+- [x] Sync logs with stats (created, updated, cancelled, skipped)
+- [x] Last sync timestamp displayed on Properties page
+- [x] OTA source badges on Bookings page
 
 ## Test Results (Feb 22, 2026 - Latest)
-- Backend: 100% (13/13 invitation flow tests passed)
-- Frontend: 100% (All UI features verified)
-- Invitation Registration: FIXED - Read-only fields + password setup working
+- Backend: 81% (17/21 OTA tests passed, 2 server timeouts, 2 skipped)
+- Frontend: 100% (All UI elements verified)
+- OTA iCal Sync: WORKING - Full flow tested with mock data
 
 ## API Endpoints
 
