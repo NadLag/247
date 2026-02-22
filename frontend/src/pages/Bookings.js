@@ -184,7 +184,7 @@ function BookingList({ bookings, properties, isAdmin, onEdit, propertyFilter, st
   const sortedBookings = [...filteredBookings].sort((a, b) => {
     if (sortBy === "check_in") return new Date(a.check_in) - new Date(b.check_in);
     if (sortBy === "check_out") return new Date(a.check_out) - new Date(b.check_out);
-    if (sortBy === "guest") return a.guest_name.localeCompare(b.guest_name);
+    if (sortBy === "guest") return (a.guest_name || '').localeCompare(b.guest_name || '');
     return 0;
   });
   
