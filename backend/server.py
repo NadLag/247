@@ -906,9 +906,33 @@ async def list_bookings(user=Depends(get_current_user)):
 
 @api_router.post("/bookings", status_code=201)
 async def create_booking(data: BookingCreate, user=Depends(require_admin)):
+    company_id = user["company_id"]
+    
+    # Check for overlapping blocked dates
+    if data.property_id and data.check_in and data.check_out:
+        overlapping_blocked = await db.bookings.find_one({
+            "company_id": company_id,
+            "property_id": data.property_id,
+            "status": "blocked",
+            "$or": [
+                # New booking starts during blocked period
+                {"check_in": {"$lte": data.check_in}, "check_out": {"$gt": data.check_in}},
+                # New booking ends during blocked period
+                {"check_in": {"$lt": data.check_out}, "check_out": {"$gte": data.check_out}},
+                # New booking contains blocked period
+                {"check_in": {"$gte": data.check_in}, "check_out": {"$lte": data.check_out}},
+            ]
+        }, {"_id": 0})
+        
+        if overlapping_blocked:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"This date range is blocked and unavailable ({overlapping_blocked.get('check_in')} to {overlapping_blocked.get('check_out')})"
+            )
+    
     booking = {
         "id": f"book_{uuid.uuid4().hex[:12]}",
-        "company_id": user["company_id"],
+        "company_id": company_id,
         **data.model_dump(),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
