@@ -239,6 +239,7 @@ export default function Layout({ children }) {
             </h2>
           </div>
           <div className="flex items-center gap-2">
+            <NotificationBell />
             {user?.role && (
               <Badge 
                 variant="secondary" 
