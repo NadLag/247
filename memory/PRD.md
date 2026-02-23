@@ -173,8 +173,8 @@ SENDER_EMAIL=onboarding@resend.dev
 
 ### P1 (Next)
 - Real OTA API integrations (Airbnb, Booking.com)
-- Role-based property access enforcement at query level for owners/staff
 - PDF export for owner reports
+- Backend refactoring - Split server.py into modular routes/models/services
 
 ### P2
 - JWT authentication migration
