@@ -10,100 +10,100 @@ import pytest
 import requests
 import os
 import time
+import subprocess
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
     BASE_URL = "https://booking-hub-174.preview.emergentagent.com"
 
 
-@pytest.fixture(scope="module")
-def test_setup():
+# Store test data globally for access across tests
+TEST_DATA = {}
+
+
+def setup_module(module):
     """Create test user, company, and property for the test session"""
-    import subprocess
     ts = str(int(time.time() * 1000))
+    
+    session_token = f"test_pytest_notif_{ts}"
+    company_id = f"comp_pytest_{ts}"
+    property_id = f"prop_pytest_{ts}"
+    user_id = f"user_pytest_{ts}"
     
     # Create test data in MongoDB
     mongo_script = f"""
     use('test_database');
-    var userId = 'test-notif-pytest-{ts}';
-    var companyId = 'comp_pytest_{ts}';
-    var sessionToken = 'test_pytest_session_{ts}';
-    var propertyId = 'prop_pytest_{ts}';
     
     db.companies.insertOne({{
-      company_id: companyId,
-      name: 'Pytest Notification Company',
-      subscription_status: 'trial',
+      company_id: "{company_id}",
+      name: "Pytest Notification Company",
+      subscription_status: "trial",
       subscription_plan: null,
       created_at: new Date(),
       updated_at: new Date()
     }});
     
     db.users.insertOne({{
-      user_id: userId,
-      email: 'pytest.notif.{ts}@example.com',
-      name: 'Pytest User',
-      picture: '',
-      company_id: companyId,
-      role: 'company_admin',
+      user_id: "{user_id}",
+      email: "pytest.notif.{ts}@example.com",
+      name: "Pytest User",
+      picture: "",
+      company_id: "{company_id}",
+      role: "company_admin",
       created_at: new Date(),
       updated_at: new Date()
     }});
     
     db.user_sessions.insertOne({{
-      user_id: userId,
-      session_token: sessionToken,
+      user_id: "{user_id}",
+      session_token: "{session_token}",
       expires_at: new Date(Date.now() + 7*24*60*60*1000),
       created_at: new Date()
     }});
     
     db.properties.insertOne({{
-      id: propertyId,
-      company_id: companyId,
-      name: 'Pytest Test Property',
-      address: '123 Test St',
-      property_type: 'vacation_home',
+      id: "{property_id}",
+      company_id: "{company_id}",
+      name: "Pytest Test Property",
+      address: "123 Test St",
+      property_type: "vacation_home",
       rooms: 3, suites: 1, bathrooms: 2,
-      city: 'Test City', country: 'USA',
-      notes: '', assigned_cohost: null,
-      owner_first_name: 'Owner',
-      owner_last_name: 'Test',
-      owner_phone: '555-1234',
-      owner_email: 'owner@test.com',
+      city: "Test City", country: "USA",
+      notes: "", assigned_cohost: null,
+      owner_first_name: "Owner",
+      owner_last_name: "Test",
+      owner_phone: "555-1234",
+      owner_email: "owner@test.com",
       units: 1, active: true,
       created_at: new Date(),
       updated_at: new Date()
     }});
     
-    printjson({{
-      session_token: sessionToken,
-      company_id: companyId,
-      property_id: propertyId,
-      user_id: userId
-    }});
+    print("SETUP COMPLETE");
     """
     
-    result = subprocess.run(
-        ['mongosh', '--quiet', '--eval', mongo_script],
-        capture_output=True, text=True
-    )
+    result = subprocess.run(['mongosh', '--quiet', '--eval', mongo_script], capture_output=True, text=True)
     
-    # Parse output
-    output = result.stdout.strip()
-    import json
-    data = json.loads(output)
+    TEST_DATA['session_token'] = session_token
+    TEST_DATA['company_id'] = company_id
+    TEST_DATA['property_id'] = property_id
+    TEST_DATA['user_id'] = user_id
+    TEST_DATA['ts'] = ts
     
-    yield data
-    
-    # Cleanup after tests
+    print(f"Test setup complete: company_id={company_id}")
+
+
+def teardown_module(module):
+    """Cleanup test data"""
     cleanup_script = f"""
     use('test_database');
-    db.users.deleteOne({{user_id: '{data["user_id"]}'}});
-    db.user_sessions.deleteOne({{session_token: '{data["session_token"]}'}});
-    db.companies.deleteOne({{company_id: '{data["company_id"]}'}});
-    db.properties.deleteOne({{id: '{data["property_id"]}'}});
-    db.bookings.deleteMany({{company_id: '{data["company_id"]}'}});
-    db.notifications.deleteMany({{company_id: '{data["company_id"]}'}});
+    db.users.deleteMany({{user_id: /^user_pytest_/}});
+    db.user_sessions.deleteMany({{session_token: /^test_pytest_notif_/}});
+    db.companies.deleteMany({{company_id: /^comp_pytest_/}});
+    db.properties.deleteMany({{id: /^prop_pytest_/}});
+    db.bookings.deleteMany({{company_id: /^comp_pytest_/}});
+    db.notifications.deleteMany({{company_id: /^comp_pytest_/}});
+    print("CLEANUP COMPLETE");
     """
     subprocess.run(['mongosh', '--quiet', '--eval', cleanup_script], capture_output=True)
 
@@ -111,22 +111,22 @@ def test_setup():
 class TestNotificationEndpoints:
     """Test notification API endpoints"""
     
-    def test_01_notifications_empty_initially(self, test_setup):
+    def test_01_notifications_empty_initially(self):
         """GET /api/notifications returns empty list for new company"""
         response = requests.get(
             f"{BASE_URL}/api/notifications",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
         print(f"✓ GET /api/notifications returns {len(data)} notifications initially")
     
-    def test_02_unread_count_zero_initially(self, test_setup):
+    def test_02_unread_count_zero_initially(self):
         """GET /api/notifications/unread-count returns 0 for new company"""
         response = requests.get(
             f"{BASE_URL}/api/notifications/unread-count",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -138,48 +138,41 @@ class TestNotificationEndpoints:
 class TestIncompleteBookingsFilter:
     """Test incomplete bookings filter"""
     
-    def test_03_create_incomplete_booking(self, test_setup):
+    def test_03_create_incomplete_booking(self):
         """Create an incomplete booking (missing guest_name and amount)"""
-        import subprocess
-        ts = str(int(time.time() * 1000))
+        ts = TEST_DATA['ts']
+        booking_id = f"book_pytest_incomplete_{ts}"
         
         mongo_script = f"""
         use('test_database');
         db.bookings.insertOne({{
-          id: 'book_pytest_incomplete_{ts}',
-          company_id: '{test_setup["company_id"]}',
-          property_id: '{test_setup["property_id"]}',
-          guest_name: '',
-          check_in: '2026-04-01',
-          check_out: '2026-04-05',
+          id: "{booking_id}",
+          company_id: "{TEST_DATA['company_id']}",
+          property_id: "{TEST_DATA['property_id']}",
+          guest_name: "",
+          check_in: "2026-04-01",
+          check_out: "2026-04-05",
           total_amount: 0,
           guests_count: 1,
-          status: 'confirmed',
-          booking_type: 'reservation',
-          ota_source: 'airbnb',
+          status: "confirmed",
+          booking_type: "reservation",
+          ota_source: "airbnb",
           is_data_complete: false,
           created_at: new Date(),
           updated_at: new Date()
         }});
-        print('book_pytest_incomplete_{ts}');
+        print("CREATED");
         """
         
-        result = subprocess.run(
-            ['mongosh', '--quiet', '--eval', mongo_script],
-            capture_output=True, text=True
-        )
-        
-        booking_id = result.stdout.strip()
-        test_setup['incomplete_booking_id'] = booking_id
-        
-        assert booking_id.startswith('book_pytest_incomplete_')
+        subprocess.run(['mongosh', '--quiet', '--eval', mongo_script], capture_output=True)
+        TEST_DATA['incomplete_booking_id'] = booking_id
         print(f"✓ Created incomplete booking: {booking_id}")
     
-    def test_04_incomplete_only_filter(self, test_setup):
+    def test_04_incomplete_only_filter(self):
         """GET /api/bookings?incomplete_only=true returns only incomplete bookings"""
         response = requests.get(
             f"{BASE_URL}/api/bookings?incomplete_only=true",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -196,17 +189,16 @@ class TestIncompleteBookingsFilter:
 class TestNotificationCreationAndUpdate:
     """Test notification creation and updates on booking changes"""
     
-    def test_05_trigger_notification_creation(self, test_setup):
+    def test_05_trigger_notification_creation(self):
         """Updating an incomplete booking triggers notification creation/update"""
-        booking_id = test_setup.get('incomplete_booking_id')
-        if not booking_id:
-            pytest.skip("No incomplete booking created")
+        booking_id = TEST_DATA.get('incomplete_booking_id')
+        assert booking_id, "No incomplete booking created"
         
         # Update booking to trigger notification check
         response = requests.put(
             f"{BASE_URL}/api/bookings/{booking_id}",
             headers={
-                "Authorization": f"Bearer {test_setup['session_token']}",
+                "Authorization": f"Bearer {TEST_DATA['session_token']}",
                 "Content-Type": "application/json"
             },
             json={"guest_name": ""}  # Keep it incomplete
@@ -216,7 +208,7 @@ class TestNotificationCreationAndUpdate:
         # Check notifications
         notif_response = requests.get(
             f"{BASE_URL}/api/notifications",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert notif_response.status_code == 200
         notifications = notif_response.json()
@@ -233,14 +225,14 @@ class TestNotificationCreationAndUpdate:
         assert incomplete_notif.get('read') == False
         assert incomplete_notif.get('count') >= 1
         
-        test_setup['notification_id'] = incomplete_notif['id']
+        TEST_DATA['notification_id'] = incomplete_notif['id']
         print(f"✓ Notification created: {incomplete_notif['title']} with count={incomplete_notif['count']}")
     
-    def test_06_unread_count_updated(self, test_setup):
+    def test_06_unread_count_updated(self):
         """Unread count increases when notification is created"""
         response = requests.get(
             f"{BASE_URL}/api/notifications/unread-count",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -251,15 +243,14 @@ class TestNotificationCreationAndUpdate:
 class TestMarkNotificationRead:
     """Test marking notifications as read"""
     
-    def test_07_mark_single_read(self, test_setup):
+    def test_07_mark_single_read(self):
         """PUT /api/notifications/{id}/read marks notification as read"""
-        notif_id = test_setup.get('notification_id')
-        if not notif_id:
-            pytest.skip("No notification ID available")
+        notif_id = TEST_DATA.get('notification_id')
+        assert notif_id, "No notification ID available"
         
         response = requests.put(
             f"{BASE_URL}/api/notifications/{notif_id}/read",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -268,7 +259,7 @@ class TestMarkNotificationRead:
         # Verify notification is marked as read
         notif_response = requests.get(
             f"{BASE_URL}/api/notifications",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         notifications = notif_response.json()
         notif = next((n for n in notifications if n['id'] == notif_id), None)
@@ -277,15 +268,15 @@ class TestMarkNotificationRead:
         
         print(f"✓ Notification {notif_id} marked as read")
     
-    def test_08_mark_all_read(self, test_setup):
+    def test_08_mark_all_read(self):
         """PUT /api/notifications/read-all marks all notifications as read"""
         # First, make notification unread again by triggering an update
-        booking_id = test_setup.get('incomplete_booking_id')
+        booking_id = TEST_DATA.get('incomplete_booking_id')
         if booking_id:
             requests.put(
                 f"{BASE_URL}/api/bookings/{booking_id}",
                 headers={
-                    "Authorization": f"Bearer {test_setup['session_token']}",
+                    "Authorization": f"Bearer {TEST_DATA['session_token']}",
                     "Content-Type": "application/json"
                 },
                 json={"guest_name": ""}  # Keep incomplete, triggers notification update
@@ -294,7 +285,7 @@ class TestMarkNotificationRead:
         # Mark all as read
         response = requests.put(
             f"{BASE_URL}/api/notifications/read-all",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -303,7 +294,7 @@ class TestMarkNotificationRead:
         # Verify unread count is 0
         count_response = requests.get(
             f"{BASE_URL}/api/notifications/unread-count",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert count_response.json()["count"] == 0
         
@@ -313,16 +304,15 @@ class TestMarkNotificationRead:
 class TestBookingCompletionAndAutoResolve:
     """Test is_data_complete recalculation and notification auto-resolve"""
     
-    def test_09_complete_booking_updates_is_data_complete(self, test_setup):
+    def test_09_complete_booking_updates_is_data_complete(self):
         """Updating booking with guest_name and total_amount sets is_data_complete=true"""
-        booking_id = test_setup.get('incomplete_booking_id')
-        if not booking_id:
-            pytest.skip("No incomplete booking available")
+        booking_id = TEST_DATA.get('incomplete_booking_id')
+        assert booking_id, "No incomplete booking available"
         
         response = requests.put(
             f"{BASE_URL}/api/bookings/{booking_id}",
             headers={
-                "Authorization": f"Bearer {test_setup['session_token']}",
+                "Authorization": f"Bearer {TEST_DATA['session_token']}",
                 "Content-Type": "application/json"
             },
             json={"guest_name": "Test Guest", "total_amount": 500}
@@ -336,11 +326,11 @@ class TestBookingCompletionAndAutoResolve:
         
         print(f"✓ Booking {booking_id} is now complete (is_data_complete=true)")
     
-    def test_10_incomplete_bookings_empty_after_completion(self, test_setup):
+    def test_10_incomplete_bookings_empty_after_completion(self):
         """GET /api/bookings?incomplete_only=true returns empty after all bookings complete"""
         response = requests.get(
             f"{BASE_URL}/api/bookings?incomplete_only=true",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -348,21 +338,20 @@ class TestBookingCompletionAndAutoResolve:
         # Filter to only our company's bookings
         company_incomplete = [
             b for b in data 
-            if b.get('company_id') == test_setup['company_id']
+            if b.get('company_id') == TEST_DATA['company_id']
         ]
         
         assert len(company_incomplete) == 0, "All company bookings should be complete now"
         print("✓ No incomplete bookings remain for company")
     
-    def test_11_notification_auto_resolved(self, test_setup):
+    def test_11_notification_auto_resolved(self):
         """Notification is auto-resolved when all bookings are complete"""
-        notif_id = test_setup.get('notification_id')
-        if not notif_id:
-            pytest.skip("No notification ID available")
+        notif_id = TEST_DATA.get('notification_id')
+        assert notif_id, "No notification ID available"
         
         response = requests.get(
             f"{BASE_URL}/api/notifications",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         notifications = response.json()
@@ -378,11 +367,11 @@ class TestBookingCompletionAndAutoResolve:
 class TestNotificationNotFound:
     """Test error cases for notifications"""
     
-    def test_12_mark_nonexistent_notification(self, test_setup):
+    def test_12_mark_nonexistent_notification(self):
         """PUT /api/notifications/{invalid_id}/read returns 404"""
         response = requests.put(
             f"{BASE_URL}/api/notifications/notif_nonexistent123/read",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 404
         print("✓ Marking nonexistent notification returns 404")
@@ -391,30 +380,30 @@ class TestNotificationNotFound:
 class TestBookingIsDataCompleteLogic:
     """Test is_data_complete calculation logic"""
     
-    def test_13_booking_incomplete_without_guest_name(self, test_setup):
+    def test_13_booking_incomplete_without_guest_name(self):
         """Booking without guest_name is incomplete"""
-        import subprocess
         ts = str(int(time.time() * 1000))
+        booking_id = f"book_pytest_noguestname_{ts}"
         
         mongo_script = f"""
         use('test_database');
         db.bookings.insertOne({{
-          id: 'book_pytest_noguestname_{ts}',
-          company_id: '{test_setup["company_id"]}',
-          property_id: '{test_setup["property_id"]}',
-          guest_name: '',
-          check_in: '2026-05-01',
-          check_out: '2026-05-05',
+          id: "{booking_id}",
+          company_id: "{TEST_DATA['company_id']}",
+          property_id: "{TEST_DATA['property_id']}",
+          guest_name: "",
+          check_in: "2026-05-01",
+          check_out: "2026-05-05",
           total_amount: 500,
           guests_count: 1,
-          status: 'confirmed',
-          booking_type: 'reservation',
-          ota_source: 'vrbo',
+          status: "confirmed",
+          booking_type: "reservation",
+          ota_source: "vrbo",
           is_data_complete: false,
           created_at: new Date(),
           updated_at: new Date()
         }});
-        print('book_pytest_noguestname_{ts}');
+        print("CREATED");
         """
         
         subprocess.run(['mongosh', '--quiet', '--eval', mongo_script], capture_output=True)
@@ -422,65 +411,65 @@ class TestBookingIsDataCompleteLogic:
         # Check incomplete filter
         response = requests.get(
             f"{BASE_URL}/api/bookings?incomplete_only=true",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         data = response.json()
         
-        no_guest = [b for b in data if b.get('id', '').startswith('book_pytest_noguestname_')]
+        no_guest = [b for b in data if b.get('id') == booking_id]
         assert len(no_guest) >= 1
         
         print("✓ Booking without guest_name is considered incomplete")
         
         # Cleanup
         subprocess.run(
-            ['mongosh', '--quiet', '--eval', f"use('test_database'); db.bookings.deleteOne({{id: 'book_pytest_noguestname_{ts}'}});"],
+            ['mongosh', '--quiet', '--eval', f'use("test_database"); db.bookings.deleteOne({{id: "{booking_id}"}});'],
             capture_output=True
         )
     
-    def test_14_booking_incomplete_without_amount(self, test_setup):
+    def test_14_booking_incomplete_without_amount(self):
         """Booking without total_amount is incomplete"""
-        import subprocess
         ts = str(int(time.time() * 1000))
+        booking_id = f"book_pytest_noamount_{ts}"
         
         mongo_script = f"""
         use('test_database');
         db.bookings.insertOne({{
-          id: 'book_pytest_noamount_{ts}',
-          company_id: '{test_setup["company_id"]}',
-          property_id: '{test_setup["property_id"]}',
-          guest_name: 'Has Name',
-          check_in: '2026-06-01',
-          check_out: '2026-06-05',
+          id: "{booking_id}",
+          company_id: "{TEST_DATA['company_id']}",
+          property_id: "{TEST_DATA['property_id']}",
+          guest_name: "Has Name",
+          check_in: "2026-06-01",
+          check_out: "2026-06-05",
           total_amount: 0,
           guests_count: 1,
-          status: 'confirmed',
-          booking_type: 'reservation',
-          ota_source: 'expedia',
+          status: "confirmed",
+          booking_type: "reservation",
+          ota_source: "expedia",
           is_data_complete: false,
           created_at: new Date(),
           updated_at: new Date()
         }});
-        print('book_pytest_noamount_{ts}');
+        print("CREATED");
         """
         
         subprocess.run(['mongosh', '--quiet', '--eval', mongo_script], capture_output=True)
         
         response = requests.get(
             f"{BASE_URL}/api/bookings?incomplete_only=true",
-            headers={"Authorization": f"Bearer {test_setup['session_token']}"}
+            headers={"Authorization": f"Bearer {TEST_DATA['session_token']}"}
         )
         assert response.status_code == 200
         data = response.json()
         
-        no_amount = [b for b in data if b.get('id', '').startswith('book_pytest_noamount_')]
+        no_amount = [b for b in data if b.get('id') == booking_id]
         assert len(no_amount) >= 1
         
         print("✓ Booking without total_amount is considered incomplete")
         
         # Cleanup
         subprocess.run(
-            ['mongosh', '--quiet', '--eval', f"use('test_database'); db.bookings.deleteOne({{id: 'book_pytest_noamount_{ts}'}});"],
+            ['mongosh', '--quiet', '--eval', f'use("test_database"); db.bookings.deleteOne({{id: "{booking_id}"}});'],
             capture_output=True
         )
 
