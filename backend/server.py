@@ -2031,13 +2031,13 @@ async def cancel_invitation(inv_id: str, user=Depends(require_admin)):
     if invitation.get("used"):
         raise HTTPException(status_code=400, detail="Cannot cancel an accepted invitation")
     
-    # Use $unset to remove token field to avoid duplicate key error on unique index
+    # Generate unique cancelled token to avoid duplicate key error on unique index
+    # Using a prefix so it can be easily identified as cancelled
+    cancelled_token = f"cancelled_{uuid.uuid4().hex}"
+    
     await db.invitations.update_one(
         {"id": inv_id},
-        {
-            "$set": {"status": "cancelled", "updated_at": datetime.now(timezone.utc).isoformat()},
-            "$unset": {"token": ""}
-        }
+        {"$set": {"status": "cancelled", "token": cancelled_token, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     return {"message": "Invitation cancelled"}
 
