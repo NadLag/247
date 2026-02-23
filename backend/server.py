@@ -1890,7 +1890,7 @@ async def send_invitation_email(email: str, role: str, token: str, company_name:
                         <span style="color: #64748b; word-break: break-all;">{invite_link}</span>
                     </p>
                     <p style="margin: 24px 0 0; color: #94a3b8; font-size: 13px; text-align: center;">
-                        This invitation expires in 7 days.
+                        This invitation expires in 48 hours.
                     </p>
                 </td>
             </tr>
