@@ -520,6 +520,7 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
 export default function Bookings() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [bookings, setBookings] = useState([]);
   const [blockedDates, setBlockedDates] = useState([]);
   const [properties, setProperties] = useState([]);
