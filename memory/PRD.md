@@ -66,6 +66,15 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Separate API endpoint** - `GET /api/bookings/blocked-dates` for calendar
 - [x] **Database migration** - Auto-converts `guest_name: "Blocked"` to proper blocked type
 
+### Email Delivery & Invitation Registration Fix (Feb 23, 2026)
+- [x] **Email from address** - Fixed: uses `onboarding@resend.dev` for Gmail/Yahoo/Hotmail senders (Resend free-tier requirement). User's email set as reply-to.
+- [x] **Invite link URL** - Fixed: uses `FRONTEND_URL` env var instead of internal `request.base_url` which was generating broken links
+- [x] **Token validation** - Properly checks cancelled/expired status with clear error messages (404 invalid, 400 cancelled/expired)
+- [x] **Registration flow** - Full form with first_name, last_name, phone, password. Google OAuth option. Checks cancelled tokens before registration
+- [x] **Error screens** - InviteAccept page shows proper error screens: expired (with reasons list), cancelled, already used, invalid
+- [x] **Email delivery logging** - Stores delivery status (sent/failed), provider response, and error in database. Visible in Invite page table
+- [x] **User assigned_properties** - Registration now stores assigned_properties and permissions from invitation on the new user record
+
 ### Production Email, Staff Payouts & Owner Reports (Feb 23, 2026)
 - [x] **Production Resend API** - Configured with production API key and verified sender email (nadir.lagnadi@gmail.com). Invitation emails now deliver for real.
 - [x] **Staff Payouts** - Full CRUD: create/read/update/delete payouts. Staff page now has "Staff Members" and "Payouts" tabs. Payout fields: staff, property, period, task, amount, payment method, status (pending/paid). Summary cards show total/pending/paid amounts. Mark as Paid auto-sets payment_date.
