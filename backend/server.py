@@ -2045,10 +2045,16 @@ async def delete_invitation(inv_id: str, user=Depends(require_admin)):
 @api_router.get("/invitations/validate/{token}")
 async def validate_invitation(token: str):
     """Validate invitation token and return pre-filled user data"""
-    # First check if invitation exists (including used ones)
+    if not token:
+        raise HTTPException(status_code=404, detail="Invalid invitation link")
+    
     invitation = await db.invitations.find_one({"token": token}, {"_id": 0})
     if not invitation:
-        raise HTTPException(status_code=404, detail="Invalid or expired invitation")
+        raise HTTPException(status_code=404, detail="Invalid or expired invitation link")
+    
+    # Check if cancelled
+    if invitation.get("status") == "cancelled":
+        raise HTTPException(status_code=400, detail="This invitation has been cancelled")
     
     # Check if already used
     if invitation.get("used", False):
