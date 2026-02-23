@@ -271,7 +271,17 @@ export default function Invitations() {
                           {getPropNames(inv.assigned_properties)}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={sc.className}>{sc.label}</Badge>
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="outline" className={sc.className}>{sc.label}</Badge>
+                            {inv.email_delivery_status && (
+                              <span className={`text-[10px] ${inv.email_delivery_status === 'sent' ? 'text-emerald-500' : 'text-red-400'}`}>
+                                {inv.email_delivery_status === 'sent' ? 'Email delivered' : 'Email failed'}
+                              </span>
+                            )}
+                            {!inv.email_delivery_status && inv.email_sent && (
+                              <span className="text-[10px] text-emerald-500">Email sent</span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {inv.created_at?.slice(0, 10)}
