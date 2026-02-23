@@ -1013,9 +1013,29 @@ async def list_properties(user=Depends(get_current_user)):
     company_id = user.get("company_id")
     if not company_id:
         return []
-    query = {"company_id": company_id}
-    if user.get("role") == "owner":
-        query["owner_email"] = user.get("email")
+    
+    role = user.get("role")
+    user_assigned_properties = user.get("assigned_properties", [])
+    
+    if role == "owner":
+        # Owners see properties assigned via invitation OR by owner_email
+        if user_assigned_properties:
+            query = {"company_id": company_id, "id": {"$in": user_assigned_properties}}
+        else:
+            query = {"company_id": company_id, "owner_email": user.get("email")}
+    elif role == "staff":
+        # Staff see only their assigned properties
+        if user_assigned_properties:
+            query = {"company_id": company_id, "id": {"$in": user_assigned_properties}}
+        else:
+            # Fallback to staff record
+            staff_doc = await db.staff.find_one({"company_id": company_id, "email": user.get("email")}, {"_id": 0})
+            assigned = staff_doc.get("assigned_properties", []) if staff_doc else []
+            query = {"company_id": company_id, "id": {"$in": assigned}}
+    else:
+        # Admins see all properties
+        query = {"company_id": company_id}
+    
     properties = await db.properties.find(query, {"_id": 0}).to_list(1000)
     return properties
 
