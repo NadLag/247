@@ -1211,6 +1211,7 @@ async def create_booking(data: BookingCreate, user=Depends(require_admin)):
         **booking_data,
         "booking_type": "reservation",  # Manual bookings are always reservations
         "ota_source": "manual",
+        "is_data_complete": True,  # Manual bookings have all data
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -1221,9 +1222,20 @@ async def create_booking(data: BookingCreate, user=Depends(require_admin)):
 async def update_booking(booking_id: str, data: BookingUpdate, user=Depends(require_admin)):
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
-    result = await db.bookings.update_one({"id": booking_id, "company_id": user["company_id"]}, {"$set": update_data})
-    if result.matched_count == 0:
+    
+    # Recalculate is_data_complete after update
+    existing = await db.bookings.find_one({"id": booking_id, "company_id": user["company_id"]}, {"_id": 0})
+    if not existing:
         raise HTTPException(status_code=404, detail="Booking not found")
+    
+    merged = {**existing, **update_data}
+    update_data["is_data_complete"] = booking_is_data_complete(merged)
+    
+    await db.bookings.update_one({"id": booking_id, "company_id": user["company_id"]}, {"$set": update_data})
+    
+    # Re-check incomplete notifications for this company
+    await check_and_create_incomplete_notification(user["company_id"])
+    
     return await db.bookings.find_one({"id": booking_id}, {"_id": 0})
 
 @api_router.get("/bookings/by-status")
