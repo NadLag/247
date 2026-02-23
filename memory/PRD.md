@@ -66,6 +66,16 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Separate API endpoint** - `GET /api/bookings/blocked-dates` for calendar
 - [x] **Database migration** - Auto-converts `guest_name: "Blocked"` to proper blocked type
 
+### Unified Invite Page & Collapsible Sidebar (Feb 23, 2026)
+- [x] **Unified Invite page** - Centralized page for all invitation management (owners & staff). Renamed sidebar item from "Invitations" to "Invite"
+- [x] **Enhanced invite form** - Role selection, person picker (from existing staff/owners), name, email, property multi-select, staff permissions (view financials, manage bookings, manage tasks)
+- [x] **Enhanced table** - Columns: Name, Email, Role, Properties, Status, Sent, Expires, Actions
+- [x] **Status filter tabs** - All, Pending, Accepted, Expired, Cancelled with count badges. Status auto-computed from expiry/used/cancelled state
+- [x] **Resend logic** - Invalidates old token, generates new token, new 48h expiry, sends new email
+- [x] **Cancel invitation** - Sets status to cancelled, invalidates token
+- [x] **Collapsible sidebar** - Toggle button to collapse/expand sidebar (60px collapsed, 240px expanded). Shows only icons when collapsed. State persisted in localStorage
+- [x] **Role-based user creation** - Accepted invitations store assigned_properties and permissions on user record
+
 ### Missing Booking Details Notification System (Feb 23, 2026)
 - [x] **is_data_complete flag** - Every booking has `is_data_complete` field. Auto-calculated on create/update. Migration sets it for all existing bookings
 - [x] **Notification system** - `notifications` collection with full CRUD: GET /api/notifications, GET /api/notifications/unread-count, PUT /api/notifications/{id}/read, PUT /api/notifications/read-all
