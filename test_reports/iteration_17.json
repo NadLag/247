@@ -1,0 +1,102 @@
+{
+  "summary": "Tested Missing Booking Details Notification feature for iCal imports. All 14 backend tests PASSED. All frontend UI components verified working. Fixed 1 bug during testing: auto-resolve notifications regardless of read status.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_notification_incomplete_bookings.py",
+    "/app/test_reports/pytest/pytest_notification_incomplete.xml"
+  ],
+  "passed_tests": [
+    "Backend: test_01_notifications_empty_initially - GET /api/notifications returns empty list for new company",
+    "Backend: test_02_unread_count_zero_initially - GET /api/notifications/unread-count returns 0",
+    "Backend: test_03_create_incomplete_booking - Create booking with is_data_complete=false",
+    "Backend: test_04_incomplete_only_filter - GET /api/bookings?incomplete_only=true returns only incomplete bookings",
+    "Backend: test_05_trigger_notification_creation - Updating incomplete booking creates notification",
+    "Backend: test_06_unread_count_updated - Unread count increases when notification created",
+    "Backend: test_07_mark_single_read - PUT /api/notifications/{id}/read marks notification as read",
+    "Backend: test_08_mark_all_read - PUT /api/notifications/read-all marks all notifications as read",
+    "Backend: test_09_complete_booking_updates_is_data_complete - Adding guest_name and total_amount sets is_data_complete=true",
+    "Backend: test_10_incomplete_bookings_empty_after_completion - No incomplete bookings after all completed",
+    "Backend: test_11_notification_auto_resolved - Notification auto-resolved when all bookings complete",
+    "Backend: test_12_mark_nonexistent_notification - PUT /api/notifications/{invalid_id}/read returns 404",
+    "Backend: test_13_booking_incomplete_without_guest_name - Booking without guest_name is incomplete",
+    "Backend: test_14_booking_incomplete_without_amount - Booking without total_amount is incomplete",
+    "Frontend: Dashboard shows notification bell icon with unread badge when notifications exist",
+    "Frontend: Notification dropdown shows 'Missing Booking Details' notification with 'Review Bookings' link",
+    "Frontend: Clicking notification navigates to /bookings?filter=incomplete",
+    "Frontend: Bookings page auto-switches to list view when incomplete filter is active",
+    "Frontend: Incomplete filter button shows amber/yellow active state",
+    "Frontend: Incomplete booking rows have yellow highlight (bg-amber-50)",
+    "Frontend: Warning icons (AlertTriangle) appear on incomplete booking rows",
+    "Frontend: 'Guest name required' and 'Amount required' messages show on incomplete bookings",
+    "Frontend: Edit booking dialog allows adding missing guest_name and total_amount",
+    "Frontend: Completing booking removes warning icon and yellow highlight",
+    "Frontend: Notification badge disappears after all bookings completed (auto-resolved)",
+    "Frontend: Revenue KPIs exclude incomplete bookings, include completed ones ($0 -> $750)"
+  ],
+  "features_verified": {
+    "notification_endpoints": {
+      "status": "WORKING",
+      "details": "GET /api/notifications, GET /api/notifications/unread-count, PUT /api/notifications/{id}/read, PUT /api/notifications/read-all all working correctly"
+    },
+    "incomplete_bookings_filter": {
+      "status": "WORKING",
+      "details": "GET /api/bookings?incomplete_only=true returns only bookings with is_data_complete=false"
+    },
+    "is_data_complete_recalculation": {
+      "status": "WORKING",
+      "details": "PUT /api/bookings/{id} recalculates is_data_complete based on guest_name and total_amount presence"
+    },
+    "notification_auto_resolve": {
+      "status": "WORKING",
+      "details": "When all incomplete bookings are completed, notification is auto-resolved and marked as read"
+    },
+    "frontend_notification_bell": {
+      "status": "WORKING",
+      "details": "Bell icon in Layout header shows unread badge, dropdown with notifications, 'Review Bookings' link"
+    },
+    "frontend_incomplete_filter": {
+      "status": "WORKING",
+      "details": "Incomplete button toggles filter, URL param ?filter=incomplete activates it and switches to list view"
+    },
+    "frontend_incomplete_indicators": {
+      "status": "WORKING",
+      "details": "Yellow highlight on rows, warning icons, 'Guest name required'/'Amount required' messages"
+    },
+    "incomplete_excluded_from_kpis": {
+      "status": "WORKING",
+      "details": "Revenue MTD shows $0 for incomplete booking, updates to $750 after completing"
+    }
+  },
+  "bug_fixed_during_testing": {
+    "issue": "Notification auto-resolve only worked for unread notifications",
+    "fix": "Changed query from {read: False} to {resolved: {$ne: True}} in check_and_create_incomplete_notification",
+    "file": "/app/backend/server.py",
+    "line": "287-289"
+  },
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/server.py (fixed auto-resolve bug)",
+    "/app/frontend/src/pages/Bookings.js (added useSearchParams destructuring)",
+    "/app/backend/tests/test_notification_incomplete_bookings.py (new test file)"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100% (All 12 UI verifications passed)"
+  },
+  "test_credentials": {
+    "note": "Tests create their own test users/sessions with timestamps for isolation"
+  },
+  "seed_data_creation": "Test creates temporary test users, properties, bookings, and notifications - cleaned up after tests",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Missing Booking Details Notification feature fully verified. Backend APIs: GET /api/notifications, GET /api/notifications/unread-count, PUT /api/notifications/{id}/read, PUT /api/notifications/read-all. Incomplete bookings filter via GET /api/bookings?incomplete_only=true. is_data_complete auto-calculated on booking update. Frontend: notification bell in Layout header, incomplete filter button on Bookings page, warning icons and yellow highlights for incomplete rows. Revenue KPIs exclude incomplete bookings. Migration ran on startup and sets is_data_complete for existing bookings."
+}
