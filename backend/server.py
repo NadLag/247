@@ -3082,6 +3082,9 @@ async def startup():
     await db.bookings.create_index([("company_id", 1), ("status", 1)])
     await db.bookings.create_index([("company_id", 1), ("booking_type", 1)])
     await db.bookings.create_index([("company_id", 1), ("ota_source", 1)])
+    await db.bookings.create_index([("company_id", 1), ("is_data_complete", 1)])
+    await db.notifications.create_index([("company_id", 1)])
+    await db.notifications.create_index([("company_id", 1), ("read", 1)])
     await db.invitations.create_index([("company_id", 1)])
     await db.invitations.create_index("token", unique=True)
     await db.payment_transactions.create_index("session_id")
@@ -3107,6 +3110,9 @@ async def startup():
     # Run auto-checkout on startup and schedule periodic task
     await auto_checkout_expired_bookings()
     asyncio.create_task(periodic_auto_checkout())
+    
+    # Migrate existing bookings to set is_data_complete
+    await migrate_is_data_complete()
 
 async def migrate_blocked_bookings():
     """One-time migration to add booking_type field to existing bookings"""
