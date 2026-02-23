@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="14" failures="0" skipped="0" tests="14" time="0.636" timestamp="2026-02-23T00:53:32.801224+00:00" hostname="agent-env-bd5fad4e-e903-4983-adfc-3f0fb43cad07"><testcase classname="backend.tests.test_notification_incomplete_bookings.TestNotificationEndpoints" name="test_01_notifications_empty_initially" time="0.398"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestNotificationEndpoints" name="test_02_unread_count_zero_initially" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestIncompleteBookingsFilter" name="test_03_create_incomplete_booking" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestIncompleteBookingsFilter" name="test_04_incomplete_only_filter" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestNotificationCreationAndUpdate" name="test_05_trigger_notification_creation" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestNotificationCreationAndUpdate" name="test_06_unread_count_updated" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestMarkNotificationRead" name="test_07_mark_single_read" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestMarkNotificationRead" name="test_08_mark_all_read" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestBookingCompletionAndAutoResolve" name="test_09_complete_booking_updates_is_data_complete" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestBookingCompletionAndAutoResolve" name="test_10_incomplete_bookings_empty_after_completion" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestBookingCompletionAndAutoResolve" name="test_11_notification_auto_resolved" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestNotificationNotFound" name="test_12_mark_nonexistent_notification" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestBookingIsDataCompleteLogic" name="test_13_booking_incomplete_without_guest_name" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase><testcase classname="backend.tests.test_notification_incomplete_bookings.TestBookingIsDataCompleteLogic" name="test_14_booking_incomplete_without_amount" time="0.000"><error message="failed on setup with &quot;json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)&quot;">backend/tests/test_notification_incomplete_bookings.py:94: in test_setup
+    data = json.loads(output)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)</error></testcase></testsuite></testsuites>
