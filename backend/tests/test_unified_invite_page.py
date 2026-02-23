@@ -446,13 +446,13 @@ class TestValidateInvitation:
         token = inv["token"]
         
         # Cancel the invitation
-        requests.put(f"{BASE_URL}/api/invitations/{inv_id}/cancel", headers=headers)
+        cancel_response = requests.put(f"{BASE_URL}/api/invitations/{inv_id}/cancel", headers=headers)
+        assert cancel_response.status_code == 200, f"Cancel failed: {cancel_response.text}"
         
-        # Try to validate with the original token (which is now cleared)
-        # Since token is cleared, it should return 404
+        # Try to validate with the original token (which is now removed/invalid)
         validate_response = requests.get(f"{BASE_URL}/api/invitations/validate/{token}")
         
-        # Should fail because token was cleared
+        # Should fail because token was removed ($unset) from the invitation
         assert validate_response.status_code in [400, 404], f"Expected 400/404 for cancelled invitation, got {validate_response.status_code}"
         print("✓ Cancelled invitation token correctly rejected")
     
