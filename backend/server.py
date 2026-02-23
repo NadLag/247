@@ -2596,6 +2596,9 @@ async def sync_ota_feeds_background(company_id: str, sync_log_id: str):
         
         logger.info(f"OTA sync completed for company {company_id}: {message}")
         
+        # Check for incomplete bookings and create notification
+        await check_and_create_incomplete_notification(company_id)
+        
     except Exception as e:
         logger.error(f"OTA sync background task failed: {e}")
         await db.ota_sync_logs.update_one(
