@@ -246,7 +246,7 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
 }
 
 // List View Component - Sectioned by Status
-function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, propertyFilter, statusFilter, sourceFilter }) {
+function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, propertyFilter, statusFilter, sourceFilter, incompleteFilter }) {
   const getPropName = (id) => {
     const prop = properties.find(p => p.id === id);
     return prop?.name || "Unknown Property";
