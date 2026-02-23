@@ -68,7 +68,11 @@ export default function InviteAccept() {
   }, [user, invitation, navigate]);
 
   const handleGoogleAuth = () => {
-    window.location.href = `${API}/api/auth/google?invitation_token=${token}`;
+    // Store invitation token in sessionStorage so it persists through OAuth redirect
+    sessionStorage.setItem("invitation_token", token);
+    // Use the standard Emergent Auth flow - token will be retrieved in AuthCallback
+    const redirectUrl = window.location.origin + "/dashboard";
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
   const handlePasswordRegister = async (e) => {
