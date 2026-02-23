@@ -2494,6 +2494,10 @@ async def process_ical_booking(booking_data: Dict, company_id: str, feed_id: str
         "ota_source": booking_data["source"],
         "ota_external_id": uid,
         "ota_feed_id": feed_id,
+        "is_data_complete": booking_is_data_complete({
+            "guest_name": booking_data["guest_name"] if booking_type == "reservation" else None,
+            "total_amount": booking_data.get("total_amount", 0) if booking_type == "reservation" else 0,
+        }) if booking_type == "reservation" else True,
         "imported_at": now_str,
         "created_at": now_str,
         "updated_at": now_str,
