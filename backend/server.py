@@ -159,6 +159,23 @@ class InvitationCreate(BaseModel):
     assigned_properties: Optional[List[str]] = None
     permissions: Optional[Dict] = None
 
+class PayoutCreate(BaseModel):
+    staff_id: str
+    property_id: Optional[str] = None
+    period_start: str
+    period_end: str
+    task_description: Optional[str] = None
+    amount: float
+    breakdown: Optional[Dict] = None
+    payment_method: Optional[str] = None
+    notes: Optional[str] = None
+
+class PayoutUpdate(BaseModel):
+    status: Optional[str] = None
+    payment_method: Optional[str] = None
+    payment_date: Optional[str] = None
+    notes: Optional[str] = None
+
 class CheckoutRequest(BaseModel):
     plan: str
     origin_url: str
