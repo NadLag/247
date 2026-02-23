@@ -1904,15 +1904,20 @@ async def create_invitation(data: InvitationCreate, request: Request, background
         raise HTTPException(status_code=400, detail="Invitation already pending for this email")
 
     token = secrets.token_urlsafe(32)
+    expires_at = (datetime.now(timezone.utc) + timedelta(hours=48)).isoformat()
     invitation = {
         "id": f"inv_{uuid.uuid4().hex[:12]}",
         "company_id": user["company_id"],
         "email": data.email,
+        "name": data.name or "",
         "role": data.role,
+        "assigned_properties": data.assigned_properties or [],
+        "permissions": data.permissions or {},
         "token": token,
+        "status": "pending",
         "used": False,
         "email_sent": False,
-        "expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+        "expires_at": expires_at,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.invitations.insert_one(invitation)
