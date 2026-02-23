@@ -3157,6 +3157,52 @@ async def auto_checkout_expired_bookings():
     except Exception as e:
         logger.error(f"Auto-checkout error: {e}")
 
+async def migrate_is_data_complete():
+    """One-time migration to set is_data_complete on existing bookings"""
+    try:
+        bookings_without_flag = await db.bookings.find(
+            {"is_data_complete": {"$exists": False}, "booking_type": {"$ne": "blocked"}},
+            {"_id": 0, "id": 1, "guest_name": 1, "total_amount": 1}
+        ).to_list(5000)
+        
+        complete_ids = []
+        incomplete_ids = []
+        for b in bookings_without_flag:
+            if booking_is_data_complete(b):
+                complete_ids.append(b["id"])
+            else:
+                incomplete_ids.append(b["id"])
+        
+        if complete_ids:
+            await db.bookings.update_many(
+                {"id": {"$in": complete_ids}},
+                {"$set": {"is_data_complete": True}}
+            )
+        if incomplete_ids:
+            await db.bookings.update_many(
+                {"id": {"$in": incomplete_ids}},
+                {"$set": {"is_data_complete": False}}
+            )
+        
+        # Set blocked bookings as complete (they don't need guest/amount)
+        await db.bookings.update_many(
+            {"is_data_complete": {"$exists": False}, "booking_type": "blocked"},
+            {"$set": {"is_data_complete": True}}
+        )
+        
+        total = len(complete_ids) + len(incomplete_ids)
+        if total > 0:
+            logger.info(f"is_data_complete migration: {len(complete_ids)} complete, {len(incomplete_ids)} incomplete")
+        
+        # Create notifications for companies with incomplete bookings
+        if incomplete_ids:
+            # Get unique company_ids from incomplete bookings
+            company_ids = await db.bookings.distinct("company_id", {"id": {"$in": incomplete_ids}})
+            for cid in company_ids:
+                await check_and_create_incomplete_notification(cid)
+    except Exception as e:
+        logger.error(f"is_data_complete migration error: {e}")
+
 async def periodic_auto_checkout():
     """Run auto-checkout every hour"""
     while True:
