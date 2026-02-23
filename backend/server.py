@@ -984,6 +984,27 @@ async def get_revenue_trends(user=Depends(get_current_user)):
     company_id = user.get("company_id")
     if not company_id:
         return []
+    
+    # Get property filter for role-based access
+    role = user.get("role")
+    user_assigned_properties = user.get("assigned_properties", [])
+    property_filter = None
+    
+    if role == "owner":
+        if user_assigned_properties:
+            property_filter = {"property_id": {"$in": user_assigned_properties}}
+        else:
+            props = await db.properties.find({"company_id": company_id, "owner_email": user.get("email")}, {"id": 1, "_id": 0}).to_list(1000)
+            prop_ids = [p["id"] for p in props]
+            property_filter = {"property_id": {"$in": prop_ids}} if prop_ids else {"property_id": {"$in": []}}
+    elif role == "staff":
+        if user_assigned_properties:
+            property_filter = {"property_id": {"$in": user_assigned_properties}}
+        else:
+            staff_doc = await db.staff.find_one({"company_id": company_id, "email": user.get("email")}, {"_id": 0})
+            assigned = staff_doc.get("assigned_properties", []) if staff_doc else []
+            property_filter = {"property_id": {"$in": assigned}} if assigned else {"property_id": {"$in": []}}
+    
     now = datetime.now(timezone.utc)
     trends = []
     for i in range(6):
@@ -994,12 +1015,15 @@ async def get_revenue_trends(user=Depends(get_current_user)):
         else:
             next_month_start = month_start.replace(month=month_start.month + 1)
 
-        bookings = await db.bookings.find(
-            {"company_id": company_id, "check_in": {"$gte": month_start.isoformat()[:10], "$lt": next_month_start.isoformat()[:10]}}, {"_id": 0}
-        ).to_list(1000)
-        expenses = await db.expenses.find(
-            {"company_id": company_id, "date": {"$gte": month_start.isoformat()[:10], "$lt": next_month_start.isoformat()[:10]}}, {"_id": 0}
-        ).to_list(1000)
+        booking_query = {"company_id": company_id, "check_in": {"$gte": month_start.isoformat()[:10], "$lt": next_month_start.isoformat()[:10]}}
+        expense_query = {"company_id": company_id, "date": {"$gte": month_start.isoformat()[:10], "$lt": next_month_start.isoformat()[:10]}}
+        
+        if property_filter:
+            booking_query.update(property_filter)
+            expense_query.update(property_filter)
+        
+        bookings = await db.bookings.find(booking_query, {"_id": 0}).to_list(1000)
+        expenses = await db.expenses.find(expense_query, {"_id": 0}).to_list(1000)
 
         revenue = sum(b.get("total_amount", 0) for b in bookings)
         expense_total = sum(e.get("amount", 0) for e in expenses)
