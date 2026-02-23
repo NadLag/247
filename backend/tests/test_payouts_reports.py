@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://booking-hub-174.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://property-hub-dev-1.preview.emergentagent.com')
 
 # Test session/data from MongoDB seed
 SESSION_TOKEN = "test_pay_session_1771873001514"
