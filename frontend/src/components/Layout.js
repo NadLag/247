@@ -216,25 +216,39 @@ export default function Layout({ children }) {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-60 border-r bg-card/50 backdrop-blur-sm flex-col shrink-0">
-        <div className="h-14 flex items-center px-5 border-b bg-card">
-          <span className="font-heading font-bold text-lg tracking-tight text-gradient" data-testid="app-logo">
-            PropStack
-          </span>
+      <aside className={`hidden md:flex ${collapsed ? 'w-16' : 'w-60'} border-r bg-card/50 backdrop-blur-sm flex-col shrink-0 transition-all duration-300`}>
+        <div className={`h-14 flex items-center ${collapsed ? 'justify-center px-2' : 'justify-between px-5'} border-b bg-card`}>
+          {!collapsed && (
+            <span className="font-heading font-bold text-lg tracking-tight text-gradient" data-testid="app-logo">
+              PropStack
+            </span>
+          )}
+          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent shrink-0" onClick={toggleSidebar} data-testid="sidebar-toggle-btn">
+            {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </Button>
         </div>
-        <NavItems items={navItems} currentPath={location.pathname} onNavigate={handleNavigate} />
+        <NavItems items={navItems} currentPath={location.pathname} onNavigate={handleNavigate} collapsed={collapsed} />
         <Separator />
-        <div className="p-3">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-            <Avatar className="h-8 w-8 ring-2 ring-background">
-              <AvatarImage src={user?.picture} alt={user?.name} />
-              <AvatarFallback className="text-xs bg-primary/10 text-primary">{user?.name?.[0]}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.name}</p>
-              <p className="text-xs text-muted-foreground truncate capitalize">{user?.role?.replace("_", " ")}</p>
+        <div className={collapsed ? "p-2" : "p-3"}>
+          {collapsed ? (
+            <div className="flex justify-center">
+              <Avatar className="h-8 w-8 ring-2 ring-background">
+                <AvatarImage src={user?.picture} alt={user?.name} />
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">{user?.name?.[0]}</AvatarFallback>
+              </Avatar>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+              <Avatar className="h-8 w-8 ring-2 ring-background">
+                <AvatarImage src={user?.picture} alt={user?.name} />
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">{user?.name?.[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{user?.name}</p>
+                <p className="text-xs text-muted-foreground truncate capitalize">{user?.role?.replace("_", " ")}</p>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
