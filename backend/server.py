@@ -1826,6 +1826,244 @@ async def get_source_breakdown(
         "total_revenue": round(total_revenue, 2),
     }
 
+# ===== PAYOUT ROUTES =====
+@api_router.get("/payouts")
+async def list_payouts(user=Depends(get_current_user), staff_id: Optional[str] = None):
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    query = {"company_id": company_id}
+    if staff_id:
+        query["staff_id"] = staff_id
+    payouts = await db.payouts.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Enrich with staff and property names
+    staff_cache = {}
+    prop_cache = {}
+    for p in payouts:
+        sid = p.get("staff_id")
+        if sid and sid not in staff_cache:
+            s = await db.staff.find_one({"id": sid, "company_id": company_id}, {"_id": 0, "first_name": 1, "last_name": 1, "staff_role": 1})
+            staff_cache[sid] = s or {}
+        s_info = staff_cache.get(sid, {})
+        p["staff_name"] = f"{s_info.get('first_name', '')} {s_info.get('last_name', '')}".strip() or "Unknown"
+        p["staff_role"] = s_info.get("staff_role", "")
+        
+        pid = p.get("property_id")
+        if pid and pid not in prop_cache:
+            pr = await db.properties.find_one({"id": pid, "company_id": company_id}, {"_id": 0, "name": 1})
+            prop_cache[pid] = pr or {}
+        p["property_name"] = prop_cache.get(pid, {}).get("name", "All Properties") if pid else "All Properties"
+    
+    return payouts
+
+@api_router.post("/payouts")
+async def create_payout(data: PayoutCreate, user=Depends(require_admin)):
+    company_id = user["company_id"]
+    payout = {
+        "id": f"pay_{uuid.uuid4().hex[:12]}",
+        "company_id": company_id,
+        "staff_id": data.staff_id,
+        "property_id": data.property_id,
+        "period_start": data.period_start,
+        "period_end": data.period_end,
+        "task_description": data.task_description or "",
+        "amount": data.amount,
+        "breakdown": data.breakdown or {},
+        "status": "pending",
+        "payment_method": data.payment_method or "",
+        "payment_date": None,
+        "notes": data.notes or "",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.payouts.insert_one(payout)
+    return await db.payouts.find_one({"id": payout["id"]}, {"_id": 0})
+
+@api_router.put("/payouts/{payout_id}")
+async def update_payout(payout_id: str, data: PayoutUpdate, user=Depends(require_admin)):
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # If marking as paid, set payment_date if not provided
+    if update_data.get("status") == "paid" and not update_data.get("payment_date"):
+        update_data["payment_date"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    result = await db.payouts.update_one(
+        {"id": payout_id, "company_id": user["company_id"]},
+        {"$set": update_data}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Payout not found")
+    return await db.payouts.find_one({"id": payout_id}, {"_id": 0})
+
+@api_router.delete("/payouts/{payout_id}")
+async def delete_payout(payout_id: str, user=Depends(require_admin)):
+    result = await db.payouts.delete_one({"id": payout_id, "company_id": user["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Payout not found")
+    return {"message": "Payout deleted"}
+
+# ===== OWNER REPORT ROUTES =====
+@api_router.get("/reports/owner")
+async def get_owner_report(
+    user=Depends(get_current_user),
+    property_id: Optional[str] = None,
+    year: Optional[int] = None,
+    month: Optional[int] = None
+):
+    """Generate owner financial report"""
+    company_id = user.get("company_id")
+    if not company_id:
+        raise HTTPException(status_code=400, detail="No company")
+    
+    now = datetime.now(timezone.utc)
+    target_year = year or now.year
+    target_month = month or now.month
+    
+    month_start = datetime(target_year, target_month, 1, tzinfo=timezone.utc)
+    if target_month == 12:
+        month_end = datetime(target_year + 1, 1, 1, tzinfo=timezone.utc)
+    else:
+        month_end = datetime(target_year, target_month + 1, 1, tzinfo=timezone.utc)
+    
+    total_days = (month_end - month_start).days
+    start_str = month_start.isoformat()[:10]
+    end_str = month_end.isoformat()[:10]
+    
+    # Get properties
+    prop_query = {"company_id": company_id, "active": True}
+    if property_id:
+        prop_query["id"] = property_id
+    # If owner role, filter to assigned properties
+    if user.get("role") == "owner":
+        assigned = user.get("assigned_properties", [])
+        if assigned:
+            prop_query["id"] = {"$in": assigned}
+    
+    props = await db.properties.find(prop_query, {"_id": 0}).to_list(500)
+    prop_ids = [p["id"] for p in props]
+    
+    if not prop_ids:
+        return {"properties": [], "summary": {}, "period": {"year": target_year, "month": target_month}}
+    
+    # Get bookings for period
+    booking_query = {
+        "company_id": company_id,
+        "property_id": {"$in": prop_ids},
+        "check_in": {"$lt": end_str},
+        "check_out": {"$gt": start_str},
+        "booking_type": "reservation",
+        "status": {"$nin": ["cancelled", "blocked"]},
+    }
+    bookings = await db.bookings.find(booking_query, {"_id": 0}).to_list(5000)
+    
+    # Get expenses for period
+    expense_query = {
+        "company_id": company_id,
+        "property_id": {"$in": prop_ids},
+        "date": {"$gte": start_str, "$lt": end_str},
+    }
+    expenses = await db.expenses.find(expense_query, {"_id": 0}).to_list(5000)
+    
+    # Get payouts for period
+    payout_query = {
+        "company_id": company_id,
+        "period_start": {"$lte": end_str},
+        "period_end": {"$gte": start_str},
+    }
+    payouts = await db.payouts.find(payout_query, {"_id": 0}).to_list(1000)
+    
+    # Build per-property report
+    prop_reports = []
+    total_revenue = 0
+    total_expenses_amt = 0
+    total_nights = 0
+    
+    for prop in props:
+        pid = prop["id"]
+        prop_bookings = [b for b in bookings if b.get("property_id") == pid]
+        prop_expenses = [e for e in expenses if e.get("property_id") == pid]
+        prop_payouts = [p for p in payouts if p.get("property_id") == pid]
+        
+        # Revenue by source
+        revenue_by_source = {}
+        booking_count = 0
+        nights = 0
+        gross_revenue = 0
+        
+        for b in prop_bookings:
+            amt = b.get("total_amount", 0) or 0
+            if b.get("is_data_complete") is False and amt <= 0:
+                continue  # Skip incomplete bookings
+            
+            src = b.get("ota_source", "manual")
+            label = "Direct" if src == "manual" else src.replace("_", " ").title()
+            revenue_by_source[label] = revenue_by_source.get(label, 0) + amt
+            gross_revenue += amt
+            booking_count += 1
+            try:
+                ci = max(datetime.fromisoformat(b["check_in"]), month_start)
+                co = min(datetime.fromisoformat(b["check_out"]), month_end)
+                nights += max((co - ci).days, 0)
+            except Exception:
+                pass
+        
+        expense_total = sum(e.get("amount", 0) for e in prop_expenses)
+        payout_total = sum(p.get("amount", 0) for p in prop_payouts)
+        net_profit = gross_revenue - expense_total
+        occupancy = round((nights / total_days * 100), 1) if total_days > 0 else 0
+        
+        # Owner share (default 100% if not specified)
+        owner_share_pct = prop.get("owner_share_pct", 100)
+        owner_payout_amount = round(net_profit * owner_share_pct / 100, 2)
+        
+        # Payout status
+        payout_status = "pending"
+        payout_date = None
+        payout_method = ""
+        for py in prop_payouts:
+            if py.get("status") == "paid":
+                payout_status = "paid"
+                payout_date = py.get("payment_date")
+                payout_method = py.get("payment_method", "")
+        
+        prop_reports.append({
+            "property_id": pid,
+            "property_name": prop["name"],
+            "total_bookings": booking_count,
+            "occupancy_rate": occupancy,
+            "nights_booked": nights,
+            "gross_revenue": round(gross_revenue, 2),
+            "revenue_by_source": revenue_by_source,
+            "total_expenses": round(expense_total, 2),
+            "net_profit": round(net_profit, 2),
+            "owner_share_pct": owner_share_pct,
+            "owner_payout_amount": round(owner_payout_amount, 2),
+            "payout_status": payout_status,
+            "payment_date": payout_date,
+            "payment_method": payout_method,
+        })
+        
+        total_revenue += gross_revenue
+        total_expenses_amt += expense_total
+        total_nights += nights
+    
+    summary = {
+        "total_revenue": round(total_revenue, 2),
+        "total_expenses": round(total_expenses_amt, 2),
+        "net_profit": round(total_revenue - total_expenses_amt, 2),
+        "total_nights_booked": total_nights,
+        "avg_occupancy": round((total_nights / (total_days * len(prop_ids)) * 100), 1) if total_days > 0 and len(prop_ids) > 0 else 0,
+        "total_properties": len(prop_ids),
+    }
+    
+    return {
+        "properties": prop_reports,
+        "summary": summary,
+        "period": {"year": target_year, "month": target_month, "days_in_month": total_days},
+    }
+
 @api_router.get("/invitations")
 async def list_invitations(user=Depends(require_admin)):
     invitations = await db.invitations.find({"company_id": user["company_id"]}, {"_id": 0}).sort("created_at", -1).to_list(1000)
