@@ -638,6 +638,47 @@ async def get_my_company(user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Company not found")
     return company
 
+# ===== NOTIFICATION ROUTES =====
+@api_router.get("/notifications")
+async def list_notifications(user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    return await db.notifications.find(
+        {"company_id": company_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+
+@api_router.get("/notifications/unread-count")
+async def get_unread_count(user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    if not company_id:
+        return {"count": 0}
+    count = await db.notifications.count_documents({"company_id": company_id, "read": False})
+    return {"count": count}
+
+@api_router.put("/notifications/{notif_id}/read")
+async def mark_notification_read(notif_id: str, user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    result = await db.notifications.update_one(
+        {"id": notif_id, "company_id": company_id},
+        {"$set": {"read": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return {"message": "Notification marked as read"}
+
+@api_router.put("/notifications/read-all")
+async def mark_all_read(user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    if not company_id:
+        return {"message": "No company"}
+    await db.notifications.update_many(
+        {"company_id": company_id, "read": False},
+        {"$set": {"read": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "All notifications marked as read"}
+
 # ===== DASHBOARD ROUTES =====
 @api_router.get("/dashboard/kpis")
 async def get_dashboard_kpis(user=Depends(get_current_user)):
