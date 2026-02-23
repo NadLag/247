@@ -73,6 +73,105 @@ function NavItems({ items, currentPath, onNavigate }) {
   );
 }
 
+function NotificationBell() {
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [open, setOpen] = useState(false);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const [notifRes, countRes] = await Promise.all([
+        fetch(`${API}/api/notifications`, { credentials: "include" }),
+        fetch(`${API}/api/notifications/unread-count`, { credentials: "include" }),
+      ]);
+      if (notifRes.ok) setNotifications(await notifRes.json());
+      if (countRes.ok) {
+        const data = await countRes.json();
+        setUnreadCount(data.count);
+      }
+    } catch (err) { console.error(err); }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  const handleAction = async (notif) => {
+    // Mark as read
+    await fetch(`${API}/api/notifications/${notif.id}/read`, {
+      method: "PUT", credentials: "include",
+    });
+    setOpen(false);
+    fetchNotifications();
+    if (notif.action_url) navigate(notif.action_url);
+  };
+
+  const markAllRead = async () => {
+    await fetch(`${API}/api/notifications/read-all`, {
+      method: "PUT", credentials: "include",
+    });
+    fetchNotifications();
+  };
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative hover:bg-accent" data-testid="notification-bell">
+          <Bell className="h-4 w-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1" data-testid="notification-badge">
+              {unreadCount}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80 animate-scale-in" data-testid="notification-dropdown">
+        <div className="flex items-center justify-between px-3 py-2 border-b">
+          <span className="text-sm font-semibold">Notifications</span>
+          {unreadCount > 0 && (
+            <Button variant="ghost" size="sm" className="text-xs h-7 text-primary" onClick={markAllRead}>
+              Mark all read
+            </Button>
+          )}
+        </div>
+        <ScrollArea className="max-h-[320px]">
+          {notifications.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              No notifications
+            </div>
+          ) : (
+            notifications.map(notif => (
+              <DropdownMenuItem
+                key={notif.id}
+                className={`flex flex-col items-start gap-1 px-3 py-3 cursor-pointer ${!notif.read ? 'bg-primary/5' : ''}`}
+                onClick={() => handleAction(notif)}
+                data-testid={`notification-item-${notif.id}`}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <AlertTriangle className={`h-4 w-4 shrink-0 ${!notif.read ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                  <span className={`text-sm font-medium flex-1 ${!notif.read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    {notif.title}
+                  </span>
+                  {!notif.read && <div className="h-2 w-2 rounded-full bg-primary shrink-0" />}
+                </div>
+                <p className="text-xs text-muted-foreground pl-6">{notif.message}</p>
+                {notif.action_url && (
+                  <span className="text-xs text-primary font-medium pl-6 flex items-center gap-1">
+                    Review Bookings <ExternalLink className="h-3 w-3" />
+                  </span>
+                )}
+              </DropdownMenuItem>
+            ))
+          )}
+        </ScrollArea>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function Layout({ children }) {
   const { user, logout, setupCompany } = useAuth();
   const { theme, toggleTheme } = useTheme();
