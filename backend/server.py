@@ -532,7 +532,7 @@ async def register_with_invite(data: InviteRegistration, response: Response):
     # Mark invitation as used
     await db.invitations.update_one(
         {"token": data.token},
-        {"$set": {"used": True, "used_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"used": True, "status": "accepted", "used_at": datetime.now(timezone.utc).isoformat()}}
     )
     
     # Create audit log
