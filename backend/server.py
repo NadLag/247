@@ -2386,6 +2386,13 @@ async def validate_invitation(token: str):
             last_name = prop.get("owner_last_name", "")
             phone = prop.get("owner_phone", "")
     
+    # If name was provided in the invitation, use it as fallback
+    inv_name = invitation.get("name", "")
+    if inv_name and not first_name:
+        parts = inv_name.split(" ", 1)
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ""
+    
     return {
         "email": invitation["email"],
         "role": invitation["role"],
