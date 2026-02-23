@@ -15,6 +15,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { LayoutDashboard, Building2, Users, Receipt, CalendarDays, Mail, CreditCard, Settings, Sun, Moon, Menu, LogOut, ChevronRight, Package, BarChart3, ClipboardList, Bell, AlertTriangle, ExternalLink } from "lucide-react";
 
+const API = process.env.REACT_APP_BACKEND_URL;
+
 const navConfig = {
   company_admin: [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
