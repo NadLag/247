@@ -146,8 +146,6 @@ SENDER_EMAIL=onboarding@resend.dev
 ## Prioritized Backlog
 
 ### P1 (Next)
-- Properties page 6-column responsive grid layout
-- Collapsible sidebar for better usability
 - Real OTA API integrations (Airbnb, Booking.com)
 - Production Resend API key for real emails
 - Staff payout tracking and history
