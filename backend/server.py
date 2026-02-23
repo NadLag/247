@@ -283,9 +283,9 @@ async def check_and_create_incomplete_notification(company_id: str):
     })
     
     if incomplete_count == 0:
-        # Auto-resolve any existing unread notifications of this type
+        # Auto-resolve any existing unresolved notifications of this type
         await db.notifications.update_many(
-            {"company_id": company_id, "type": "incomplete_bookings", "read": False},
+            {"company_id": company_id, "type": "incomplete_bookings", "resolved": {"$ne": True}},
             {"$set": {"read": True, "resolved": True, "resolved_at": datetime.now(timezone.utc).isoformat()}}
         )
         return
