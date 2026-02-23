@@ -2173,7 +2173,7 @@ async def send_invitation_email(email: str, role: str, token: str, company_name:
         # Resend requires 'from' to be a verified domain. Use Resend sandbox as from, user's email as reply-to.
         from_addr = sender_email
         if '@gmail.com' in sender_email or '@yahoo.com' in sender_email or '@hotmail.com' in sender_email:
-            from_addr = f"PropStack <onboarding@resend.dev>"
+            from_addr = "PropStack <onboarding@resend.dev>"
         
         params = {
             "from": from_addr,
