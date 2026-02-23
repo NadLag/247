@@ -1024,7 +1024,8 @@ async def delete_expense(expense_id: str, user=Depends(require_admin)):
 async def list_bookings(
     user=Depends(get_current_user),
     include_blocked: bool = False,
-    source: Optional[str] = None
+    source: Optional[str] = None,
+    incomplete_only: bool = False
 ):
     """List bookings. By default, blocked dates are excluded from the list."""
     company_id = user.get("company_id")
@@ -1058,6 +1059,11 @@ async def list_bookings(
             ]
         else:
             query["ota_source"] = source
+    
+    # Filter incomplete bookings only
+    if incomplete_only:
+        query["is_data_complete"] = False
+        query["booking_type"] = "reservation"
     
     return await db.bookings.find(query, {"_id": 0}).sort("check_in", -1).to_list(1000)
 
