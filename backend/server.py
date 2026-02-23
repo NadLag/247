@@ -346,7 +346,7 @@ async def check_and_create_incomplete_notification(company_id: str):
             "updated_at": now_str,
         })
 
-SUBSCRIPTION_EXEMPT_PATHS = ["/api/auth/", "/api/subscription/", "/api/companies/", "/api/webhook/", "/api/invitations/validate/", "/api/seed-demo-data"]
+SUBSCRIPTION_EXEMPT_PATHS = ["/api/auth/", "/api/subscription/", "/api/companies/", "/api/webhook/", "/api/invitations/", "/api/seed-demo-data", "/api/notifications/"]
 
 SUBSCRIPTION_PLANS = {
     "starter": {"name": "Starter", "price": 29.00, "max_properties": 5},
