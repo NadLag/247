@@ -27,6 +27,7 @@ const navConfig = {
     { name: "Expenses", path: "/expenses", icon: Receipt },
     { name: "Services", path: "/services", icon: Package },
     { name: "Analytics", path: "/analytics", icon: BarChart3 },
+    { name: "Reports", path: "/reports", icon: FileText },
     { name: "Invite", path: "/invitations", icon: Mail },
     { name: "Billing", path: "/billing", icon: CreditCard },
     { name: "Settings", path: "/settings", icon: Settings },
