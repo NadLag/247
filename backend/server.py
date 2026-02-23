@@ -3422,6 +3422,8 @@ async def startup():
     await db.bookings.create_index([("company_id", 1), ("is_data_complete", 1)])
     await db.notifications.create_index([("company_id", 1)])
     await db.notifications.create_index([("company_id", 1), ("read", 1)])
+    await db.payouts.create_index([("company_id", 1)])
+    await db.payouts.create_index([("company_id", 1), ("staff_id", 1)])
     await db.invitations.create_index([("company_id", 1)])
     await db.invitations.create_index("token", unique=True)
     await db.payment_transactions.create_index("session_id")
