@@ -805,6 +805,18 @@ export default function Bookings() {
             </DialogHeader>
             {selectedBooking && (
               <div className="space-y-4 py-2">
+                {selectedBooking.is_data_complete === false && (
+                  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3 text-sm text-amber-700 dark:text-amber-300" data-testid="booking-detail-incomplete-warning">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <div>
+                      <p className="font-medium">Missing Booking Details</p>
+                      <p className="text-xs mt-0.5">
+                        {(!selectedBooking.guest_name || !selectedBooking.guest_name.trim()) && "Guest name required. "}
+                        {(!selectedBooking.total_amount || selectedBooking.total_amount <= 0) && "Amount required."}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground text-xs mb-1">Guest</p>
