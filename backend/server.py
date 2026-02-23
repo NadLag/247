@@ -264,6 +264,109 @@ class TaskUpdate(BaseModel):
     priority: Optional[str] = None
     status: Optional[str] = None  # pending, in_progress, completed, cancelled
 
+# ===== HELPERS =====
+def booking_is_data_complete(booking: dict) -> bool:
+    """Check if a booking has all required data (guest name and amount)"""
+    guest_name = booking.get("guest_name")
+    total_amount = booking.get("total_amount")
+    has_guest = bool(guest_name and guest_name.strip())
+    has_amount = total_amount is not None and total_amount > 0
+    return has_guest and has_amount
+
+async def check_and_create_incomplete_notification(company_id: str):
+    """Check for incomplete iCal bookings and create/update notification"""
+    incomplete_count = await db.bookings.count_documents({
+        "company_id": company_id,
+        "is_data_complete": False,
+        "booking_type": "reservation",
+        "status": {"$nin": ["cancelled", "blocked"]},
+    })
+    
+    if incomplete_count == 0:
+        # Auto-resolve any existing unread notifications of this type
+        await db.notifications.update_many(
+            {"company_id": company_id, "type": "incomplete_bookings", "read": False},
+            {"$set": {"read": True, "resolved": True, "resolved_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        return
+    
+    # Check if there's already an unresolved notification
+    existing = await db.notifications.find_one({
+        "company_id": company_id,
+        "type": "incomplete_bookings",
+        "resolved": {"$ne": True},
+    }, {"_id": 0})
+    
+    now_str = datetime.now(timezone.utc).isoformat()
+    
+    if existing:
+        # Update the count
+        await db.notifications.update_one(
+            {"id": existing["id"]},
+            {"$set": {
+                "count": incomplete_count,
+                "message": f"{incomplete_count} booking{'s' if incomplete_count != 1 else ''} require{'s' if incomplete_count == 1 else ''} guest name and/or amount.",
+                "read": False,
+                "updated_at": now_str,
+            }}
+        )
+    else:
+        # Create new notification
+        await db.notifications.insert_one({
+            "id": f"notif_{uuid.uuid4().hex[:12]}",
+            "company_id": company_id,
+            "type": "incomplete_bookings",
+            "title": "Missing Booking Details",
+            "message": f"{incomplete_count} booking{'s' if incomplete_count != 1 else ''} require{'s' if incomplete_count == 1 else ''} guest name and/or amount.",
+            "count": incomplete_count,
+            "action_url": "/bookings?filter=incomplete",
+            "read": False,
+            "resolved": False,
+            "created_at": now_str,
+            "updated_at": now_str,
+        })
+
+# ===== NOTIFICATION ROUTES =====
+@api_router.get("/notifications")
+async def list_notifications(user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    return await db.notifications.find(
+        {"company_id": company_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+
+@api_router.get("/notifications/unread-count")
+async def get_unread_count(user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    if not company_id:
+        return {"count": 0}
+    count = await db.notifications.count_documents({"company_id": company_id, "read": False})
+    return {"count": count}
+
+@api_router.put("/notifications/{notif_id}/read")
+async def mark_notification_read(notif_id: str, user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    result = await db.notifications.update_one(
+        {"id": notif_id, "company_id": company_id},
+        {"$set": {"read": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return {"message": "Notification marked as read"}
+
+@api_router.put("/notifications/read-all")
+async def mark_all_read(user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    if not company_id:
+        return {"message": "No company"}
+    await db.notifications.update_many(
+        {"company_id": company_id, "read": False},
+        {"$set": {"read": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "All notifications marked as read"}
+
 SUBSCRIPTION_EXEMPT_PATHS = ["/api/auth/", "/api/subscription/", "/api/companies/", "/api/webhook/", "/api/invitations/validate/", "/api/seed-demo-data"]
 
 SUBSCRIPTION_PLANS = {
