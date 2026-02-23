@@ -10,10 +10,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Trash2, Mail, Copy, Check, Send, RefreshCw } from "lucide-react";
+import { Plus, Mail, Copy, Check, Send, RefreshCw, XCircle, Filter, UserPlus, Shield, Building2, Clock, CheckCircle } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+const statusConfig = {
+  pending: { label: "Pending", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200" },
+  accepted: { label: "Accepted", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200" },
+  expired: { label: "Expired", className: "bg-red-500/10 text-red-500 dark:text-red-400 border-red-200" },
+  cancelled: { label: "Cancelled", className: "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-200" },
+};
 
 export default function Invitations() {
   const { user, loading: authLoading } = useAuth();
@@ -23,12 +31,20 @@ export default function Invitations() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [role, setRole] = useState("staff");
-  const [selectedPerson, setSelectedPerson] = useState("");
-  const [manualEmail, setManualEmail] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [copiedId, setCopiedId] = useState(null);
   const [resendingId, setResendingId] = useState(null);
+
+  // Form state
+  const [form, setForm] = useState({
+    role: "staff",
+    selectedPerson: "",
+    manualEmail: "",
+    name: "",
+    assignedProperties: [],
+    permissions: { view_financials: false, manage_bookings: true, manage_tasks: true },
+  });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
   useEffect(() => { if (!authLoading && user && user.role !== "company_admin") navigate("/dashboard"); }, [user, authLoading, navigate]);
@@ -55,7 +71,7 @@ export default function Invitations() {
       if (p.owner_email) {
         const key = p.owner_email;
         if (!map.has(key)) {
-          map.set(key, { email: p.owner_email, name: `${p.owner_first_name} ${p.owner_last_name}`, properties: [p.name] });
+          map.set(key, { email: p.owner_email, name: `${p.owner_first_name || ""} ${p.owner_last_name || ""}`.trim(), properties: [p.name] });
         } else {
           map.get(key).properties.push(p.name);
         }
@@ -66,19 +82,33 @@ export default function Invitations() {
 
   // People list based on role
   const people = useMemo(() => {
-    if (role === "staff") {
+    if (form.role === "staff") {
       return staff.map(s => ({ id: s.id, name: `${s.first_name} ${s.last_name}`, email: s.email, detail: s.staff_role?.replace("_", " ") || "" }));
     }
     return owners.map((o, i) => ({ id: `owner_${i}`, name: o.name, email: o.email, detail: o.properties.join(", ") }));
-  }, [role, staff, owners]);
+  }, [form.role, staff, owners]);
 
   const resolvedEmail = useMemo(() => {
-    if (selectedPerson && selectedPerson !== "manual") {
-      const person = people.find(p => p.id === selectedPerson);
+    if (form.selectedPerson && form.selectedPerson !== "manual") {
+      const person = people.find(p => p.id === form.selectedPerson);
       return person?.email || "";
     }
-    return manualEmail;
-  }, [selectedPerson, manualEmail, people]);
+    return form.manualEmail;
+  }, [form.selectedPerson, form.manualEmail, people]);
+
+  const resolvedName = useMemo(() => {
+    if (form.name) return form.name;
+    if (form.selectedPerson && form.selectedPerson !== "manual") {
+      const person = people.find(p => p.id === form.selectedPerson);
+      return person?.name || "";
+    }
+    return "";
+  }, [form.name, form.selectedPerson, people]);
+
+  const resetForm = () => setForm({
+    role: "staff", selectedPerson: "", manualEmail: "", name: "",
+    assignedProperties: [], permissions: { view_financials: false, manage_bookings: true, manage_tasks: true },
+  });
 
   const handleCreate = async () => {
     if (!resolvedEmail) { toast.error("Email is required"); return; }
@@ -86,40 +116,51 @@ export default function Invitations() {
     try {
       const res = await fetch(`${API}/api/invitations`, {
         method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
-        body: JSON.stringify({ email: resolvedEmail, role }),
+        body: JSON.stringify({
+          email: resolvedEmail,
+          role: form.role,
+          name: resolvedName,
+          assigned_properties: form.assignedProperties,
+          permissions: form.role === "staff" ? form.permissions : {},
+        }),
       });
       if (res.ok) {
-        toast.success("Invitation created and email sent!");
-        setDialogOpen(false); setSelectedPerson(""); setManualEmail(""); setRole("staff"); fetchData();
+        toast.success("Invitation sent!");
+        setDialogOpen(false);
+        resetForm();
+        fetchData();
       } else { const err = await res.json(); toast.error(err.detail || "Failed"); }
-    } catch (err) { toast.error("Error"); } finally { setSaving(false); }
+    } catch (err) { toast.error("Error sending invitation"); } finally { setSaving(false); }
+  };
+
+  const handleCancel = async (id) => {
+    try {
+      const res = await fetch(`${API}/api/invitations/${id}/cancel`, { method: "PUT", credentials: "include" });
+      if (res.ok) { toast.success("Invitation cancelled"); fetchData(); }
+      else { const err = await res.json(); toast.error(err.detail || "Failed"); }
+    } catch (err) { toast.error("Error"); }
+  };
+
+  const handleResend = async (id) => {
+    setResendingId(id);
+    try {
+      const res = await fetch(`${API}/api/invitations/${id}/resend`, { method: "POST", credentials: "include" });
+      if (res.ok) {
+        toast.success("New invitation sent! Previous link invalidated.");
+        fetchData();
+      } else { const err = await res.json(); toast.error(err.detail || "Failed"); }
+    } catch (err) { toast.error("Error"); } finally { setResendingId(null); }
   };
 
   const handleDelete = async (id) => {
     try {
       const res = await fetch(`${API}/api/invitations/${id}`, { method: "DELETE", credentials: "include" });
-      if (res.ok) { toast.success("Invitation deleted"); fetchData(); }
+      if (res.ok) { toast.success("Invitation removed"); fetchData(); }
     } catch (err) { toast.error("Error"); }
   };
 
-  const handleResendEmail = async (id) => {
-    setResendingId(id);
-    try {
-      const res = await fetch(`${API}/api/invitations/${id}/resend`, { method: "POST", credentials: "include" });
-      if (res.ok) {
-        toast.success("Invitation email resent!");
-        fetchData();
-      } else {
-        toast.error("Failed to resend email");
-      }
-    } catch (err) {
-      toast.error("Error resending email");
-    } finally {
-      setResendingId(null);
-    }
-  };
-
   const copyLink = (token) => {
+    if (!token) { toast.error("No active link for this invitation"); return; }
     const link = `${window.location.origin}/invite/${token}`;
     navigator.clipboard.writeText(link);
     setCopiedId(token);
@@ -127,25 +168,72 @@ export default function Invitations() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const toggleProperty = (propId) => {
+    setForm(prev => ({
+      ...prev,
+      assignedProperties: prev.assignedProperties.includes(propId)
+        ? prev.assignedProperties.filter(id => id !== propId)
+        : [...prev.assignedProperties, propId],
+    }));
+  };
+
+  const togglePermission = (key) => {
+    setForm(prev => ({ ...prev, permissions: { ...prev.permissions, [key]: !prev.permissions[key] } }));
+  };
+
+  const filteredInvitations = useMemo(() => {
+    if (statusFilter === "all") return invitations;
+    return invitations.filter(inv => inv.status === statusFilter);
+  }, [invitations, statusFilter]);
+
+  const getPropNames = (ids) => {
+    if (!ids || ids.length === 0) return "All";
+    return ids.map(id => properties.find(p => p.id === id)?.name || id).join(", ");
+  };
+
   if (authLoading || !user) return <div className="h-screen flex items-center justify-center bg-background"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
 
   return (
     <Layout>
-      <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="invitations-page">
+      <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="invite-page">
+        {/* Header */}
         <div className="flex items-center justify-between animate-fade-in">
           <div>
-            <h1 className="font-heading text-2xl font-bold text-foreground">Invitations</h1>
+            <h1 className="font-heading text-2xl font-bold text-foreground">Invite</h1>
             <p className="text-sm text-muted-foreground mt-1">Invite owners and staff to your organization</p>
           </div>
-          <Button onClick={() => { setSelectedPerson(""); setManualEmail(""); setRole("staff"); setDialogOpen(true); }} data-testid="create-invitation-btn" className="shadow-sm"><Plus className="mr-2 h-4 w-4" />Send Invitation</Button>
+          <Button onClick={() => { resetForm(); setDialogOpen(true); }} data-testid="send-invitation-btn" className="shadow-sm">
+            <UserPlus className="mr-2 h-4 w-4" />Send Invitation
+          </Button>
         </div>
 
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-2" data-testid="invite-status-filter">
+          {["all", "pending", "accepted", "expired", "cancelled"].map(s => (
+            <Button
+              key={s}
+              variant={statusFilter === s ? "default" : "outline"}
+              size="sm"
+              className="capitalize h-8"
+              onClick={() => setStatusFilter(s)}
+            >
+              {s === "all" ? "All" : statusConfig[s]?.label || s}
+              {s !== "all" && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-[10px]">
+                  {invitations.filter(i => i.status === s).length}
+                </Badge>
+              )}
+            </Button>
+          ))}
+        </div>
+
+        {/* Invitations Table */}
         {loading ? (
           <Card><CardContent className="p-6 h-32 animate-pulse bg-muted" /></Card>
-        ) : invitations.length === 0 ? (
+        ) : filteredInvitations.length === 0 ? (
           <Card className="border-dashed"><CardContent className="p-12 text-center">
             <Mail className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No invitations sent yet</p>
+            <p className="text-muted-foreground">{statusFilter !== "all" ? `No ${statusFilter} invitations` : "No invitations sent yet"}</p>
           </CardContent></Card>
         ) : (
           <Card>
@@ -153,140 +241,209 @@ export default function Invitations() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Properties</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Email Sent</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead>Sent</TableHead>
+                    <TableHead>Expires</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {invitations.map((inv) => (
-                    <TableRow key={inv.id} data-testid={`invitation-row-${inv.id}`}>
-                      <TableCell className="font-medium">{inv.email}</TableCell>
-                      <TableCell><Badge variant="outline" className="capitalize">{inv.role}</Badge></TableCell>
-                      <TableCell>
-                        {inv.used ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0">Accepted</Badge>
-                        ) : (
-                          <Badge variant="secondary">Pending</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {inv.email_sent ? (
-                          <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-0">
-                            <Check className="h-3 w-3 mr-1" />Sent
+                  {filteredInvitations.map((inv) => {
+                    const sc = statusConfig[inv.status] || statusConfig.pending;
+                    const canResend = inv.status === "pending" || inv.status === "expired";
+                    const canCancel = inv.status === "pending" || inv.status === "expired";
+
+                    return (
+                      <TableRow key={inv.id} data-testid={`invitation-row-${inv.id}`}>
+                        <TableCell className="font-medium">{inv.name || "-"}</TableCell>
+                        <TableCell className="text-sm">{inv.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {inv.role === "owner" ? <Building2 className="h-3 w-3 mr-1" /> : <Shield className="h-3 w-3 mr-1" />}
+                            {inv.role}
                           </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-amber-600 dark:text-amber-400">
-                            Not sent
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{inv.created_at?.slice(0, 10)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          {!inv.used && (
-                            <>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => handleResendEmail(inv.id)} 
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                          {getPropNames(inv.assigned_properties)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={sc.className}>{sc.label}</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {inv.created_at?.slice(0, 10)}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {inv.expires_at?.slice(0, 10) || "-"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            {canResend && (
+                              <Button
+                                variant="ghost" size="icon"
+                                onClick={() => handleResend(inv.id)}
                                 disabled={resendingId === inv.id}
-                                title="Resend invitation email"
-                                data-testid={`resend-email-${inv.id}`}
+                                title="Resend (invalidates old link)"
+                                data-testid={`resend-btn-${inv.id}`}
                               >
-                                {resendingId === inv.id ? (
-                                  <RefreshCw className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Send className="h-4 w-4" />
-                                )}
+                                {resendingId === inv.id ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => copyLink(inv.token)} data-testid={`copy-link-${inv.id}`}>
+                            )}
+                            {inv.token && !inv.used && (
+                              <Button variant="ghost" size="icon" onClick={() => copyLink(inv.token)} title="Copy link" data-testid={`copy-link-${inv.id}`}>
                                 {copiedId === inv.token ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                               </Button>
-                            </>
-                          )}
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(inv.id)} className="text-destructive" data-testid={`delete-invitation-${inv.id}`}><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            )}
+                            {canCancel && (
+                              <Button variant="ghost" size="icon" onClick={() => handleCancel(inv.id)} className="text-destructive" title="Cancel invitation" data-testid={`cancel-btn-${inv.id}`}>
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {(inv.status === "cancelled" || inv.status === "accepted") && (
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(inv.id)} className="text-muted-foreground" title="Remove" data-testid={`delete-btn-${inv.id}`}>
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
           </Card>
         )}
 
+        {/* Send Invitation Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle className="font-heading">Send Invitation</DialogTitle>
-              <DialogDescription>Pick a staff member or owner from your existing records, or enter an email manually. An invitation email will be sent automatically.</DialogDescription>
+              <DialogTitle className="font-heading flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Send Invitation
+              </DialogTitle>
+              <DialogDescription>
+                Invite an owner or staff member. An email will be sent with a secure registration link.
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-2">
               {/* Role */}
               <div className="space-y-2">
-                <Label>Role</Label>
-                <Select value={role} onValueChange={(v) => { setRole(v); setSelectedPerson(""); }}>
+                <Label>Role *</Label>
+                <Select value={form.role} onValueChange={(v) => setForm(prev => ({ ...prev, role: v, selectedPerson: "" }))}>
                   <SelectTrigger data-testid="invite-role-select"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="owner">Owner (View Only)</SelectItem>
+                    <SelectItem value="owner">Owner (Property Owner)</SelectItem>
                     <SelectItem value="staff">Staff</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {/* Person Picker */}
+
+              {/* Person Picker (from existing records) */}
               <div className="space-y-2">
-                <Label>Select {role === "staff" ? "Staff Member" : "Property Owner"}</Label>
-                <Select value={selectedPerson} onValueChange={setSelectedPerson}>
-                  <SelectTrigger data-testid="invite-person-select"><SelectValue placeholder={`Pick a ${role}...`} /></SelectTrigger>
+                <Label>Select {form.role === "staff" ? "Staff Member" : "Property Owner"}</Label>
+                <Select value={form.selectedPerson} onValueChange={v => setForm(prev => ({ ...prev, selectedPerson: v }))}>
+                  <SelectTrigger data-testid="invite-person-select"><SelectValue placeholder={`Pick a ${form.role}...`} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="manual">Enter email manually</SelectItem>
+                    <SelectItem value="manual">Enter details manually</SelectItem>
                     {people.map(p => (
                       <SelectItem key={p.id} value={p.id}>
-                        <div className="flex flex-col">
-                          <span>{p.name}</span>
-                          <span className="text-xs text-muted-foreground">{p.email}{p.detail ? ` - ${p.detail}` : ""}</span>
-                        </div>
+                        <span>{p.name}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{p.email}</span>
                       </SelectItem>
                     ))}
-                    {people.length === 0 && (
-                      <SelectItem value="manual" disabled>
-                        No {role === "staff" ? "staff members" : "property owners"} found
-                      </SelectItem>
-                    )}
                   </SelectContent>
                 </Select>
               </div>
-              {/* Manual email or resolved display */}
-              {selectedPerson === "manual" ? (
+
+              {/* Name & Email */}
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>Email Address</Label>
-                  <Input data-testid="invite-email-input" type="email" value={manualEmail} onChange={e => setManualEmail(e.target.value)} placeholder="user@example.com" />
+                  <Label>Full Name</Label>
+                  <Input
+                    data-testid="invite-name-input"
+                    value={form.selectedPerson && form.selectedPerson !== "manual" ? (people.find(p => p.id === form.selectedPerson)?.name || "") : form.name}
+                    onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="John Doe"
+                    disabled={form.selectedPerson && form.selectedPerson !== "manual"}
+                  />
                 </div>
-              ) : selectedPerson ? (
-                <div className="bg-muted/50 rounded-lg p-3 border">
-                  <p className="text-sm"><span className="font-medium">Will send to:</span> {resolvedEmail}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {people.find(p => p.id === selectedPerson)?.name} — {people.find(p => p.id === selectedPerson)?.detail}
-                  </p>
+                <div className="space-y-2">
+                  <Label>Email Address *</Label>
+                  <Input
+                    data-testid="invite-email-input"
+                    type="email"
+                    value={form.selectedPerson && form.selectedPerson !== "manual" ? resolvedEmail : form.manualEmail}
+                    onChange={e => setForm(prev => ({ ...prev, manualEmail: e.target.value }))}
+                    placeholder="user@example.com"
+                    disabled={form.selectedPerson && form.selectedPerson !== "manual"}
+                  />
                 </div>
-              ) : null}
-              
-              {/* Email info */}
+              </div>
+
+              {/* Assign Properties */}
+              <div className="space-y-2">
+                <Label>Assign Properties</Label>
+                <div className="border rounded-lg p-3 max-h-[140px] overflow-y-auto space-y-2" data-testid="invite-properties-list">
+                  {properties.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No properties yet</p>
+                  ) : properties.map(p => (
+                    <div key={p.id} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`prop-${p.id}`}
+                        checked={form.assignedProperties.includes(p.id)}
+                        onCheckedChange={() => toggleProperty(p.id)}
+                        data-testid={`assign-prop-${p.id}`}
+                      />
+                      <label htmlFor={`prop-${p.id}`} className="text-sm cursor-pointer flex-1">{p.name}</label>
+                    </div>
+                  ))}
+                </div>
+                {form.assignedProperties.length === 0 && (
+                  <p className="text-xs text-muted-foreground">Leave empty to grant access to all properties</p>
+                )}
+              </div>
+
+              {/* Staff Permissions */}
+              {form.role === "staff" && (
+                <div className="space-y-2">
+                  <Label>Permissions</Label>
+                  <div className="border rounded-lg p-3 space-y-2" data-testid="invite-permissions">
+                    {[
+                      { key: "view_financials", label: "View Financial Data" },
+                      { key: "manage_bookings", label: "Manage Bookings" },
+                      { key: "manage_tasks", label: "Manage Tasks" },
+                    ].map(perm => (
+                      <div key={perm.key} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`perm-${perm.key}`}
+                          checked={form.permissions[perm.key] || false}
+                          onCheckedChange={() => togglePermission(perm.key)}
+                          data-testid={`perm-${perm.key}`}
+                        />
+                        <label htmlFor={`perm-${perm.key}`} className="text-sm cursor-pointer">{perm.label}</label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Info */}
               <div className="flex items-start gap-2 bg-blue-500/5 rounded-lg p-3 border border-blue-500/10">
                 <Mail className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  An invitation email will be sent automatically with a link to join your organization.
+                  A secure invitation email will be sent with a registration link that expires in 48 hours. Resending invalidates previous links.
                 </p>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={!resolvedEmail || saving} data-testid="send-invitation-btn">
-                <Mail className="mr-2 h-4 w-4" />
+              <Button onClick={handleCreate} disabled={!resolvedEmail || saving} data-testid="confirm-send-invitation-btn">
+                <Send className="mr-2 h-4 w-4" />
                 {saving ? "Sending..." : "Send Invitation"}
               </Button>
             </DialogFooter>
