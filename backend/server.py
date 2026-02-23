@@ -2015,7 +2015,6 @@ async def get_owner_report(
                 pass
         
         expense_total = sum(e.get("amount", 0) for e in prop_expenses)
-        payout_total = sum(p.get("amount", 0) for p in prop_payouts)
         net_profit = gross_revenue - expense_total
         occupancy = round((nights / total_days * 100), 1) if total_days > 0 else 0
         
