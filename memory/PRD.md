@@ -71,6 +71,13 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Subscription middleware** - Added `/api/invitations/` and `/api/notifications/` to exempt paths so invitation management works without active subscription
 - [x] **Resend free tier limitation** - Documented: Resend testing mode only allows sending to account owner email (nadir.lagnadi@gmail.com). Need to verify a domain at resend.com/domains for production. Copy-link fallback works in the meantime.
 
+### CRITICAL FIX: Owner OAuth Registration & Property Assignment (Feb 23, 2026)
+- [x] **Google OAuth invitation flow** - Fixed: InviteAccept.js now stores invitation_token in sessionStorage before redirecting to Emergent Auth, AuthCallback.js retrieves and sends to backend
+- [x] **Existing user OAuth linking** - Fixed: exchange_session now checks for valid invitations BEFORE handling existing user logic, updates company_id, role, and assigned_properties for existing users
+- [x] **New OAuth user properties** - Fixed: New users created via OAuth now get assigned_properties from invitation (was missing before)
+- [x] **Role-based property filtering** - Fixed: Dashboard KPIs, properties list, bookings list, and revenue trends all use user.assigned_properties for owner/staff role filtering
+- [x] **Owner dashboard data** - Fixed: Owners now see correct property data, bookings, and financial KPIs for their assigned properties (was showing $0 before)
+
 ### Email Delivery & Invitation Registration Fix (Feb 23, 2026)
 - [x] **Email from address** - Fixed: uses `onboarding@resend.dev` for Gmail/Yahoo/Hotmail senders (Resend free-tier requirement). User's email set as reply-to.
 - [x] **Invite link URL** - Fixed: uses `FRONTEND_URL` env var instead of internal `request.base_url` which was generating broken links
