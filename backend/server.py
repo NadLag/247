@@ -523,6 +523,8 @@ async def register_with_invite(data: InviteRegistration, response: Response):
         "picture": "",
         "company_id": invitation["company_id"],
         "role": invitation["role"],
+        "assigned_properties": invitation.get("assigned_properties", []),
+        "permissions": invitation.get("permissions", {}),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
