@@ -46,9 +46,9 @@ const navConfig = {
   ],
 };
 
-function NavItems({ items, currentPath, onNavigate }) {
+function NavItems({ items, currentPath, onNavigate, collapsed = false }) {
   return (
-    <nav className="flex-1 p-3 space-y-1">
+    <nav className={`flex-1 space-y-1 ${collapsed ? 'p-2' : 'p-3'}`}>
       {items.map((item, index) => {
         const isActive = currentPath === item.path;
         return (
@@ -56,16 +56,17 @@ function NavItems({ items, currentPath, onNavigate }) {
             key={item.path}
             data-testid={`nav-${item.name.toLowerCase()}`}
             onClick={() => onNavigate(item.path)}
+            title={collapsed ? item.name : undefined}
             style={{ animationDelay: `${index * 0.03}s` }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 animate-fade-in opacity-0 ${
+            className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-0 py-2.5' : 'px-3 py-2.5'} rounded-lg text-sm font-medium transition-all duration-200 animate-fade-in opacity-0 ${
               isActive
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:translate-x-0.5"
             }`}
           >
             <item.icon className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isActive ? '' : 'group-hover:scale-110'}`} />
-            <span>{item.name}</span>
-            {isActive && <ChevronRight className="h-3 w-3 ml-auto animate-slide-in" />}
+            {!collapsed && <span>{item.name}</span>}
+            {!collapsed && isActive && <ChevronRight className="h-3 w-3 ml-auto animate-slide-in" />}
           </button>
         );
       })}
