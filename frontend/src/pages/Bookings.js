@@ -723,6 +723,24 @@ export default function Bookings() {
                   ))}
                 </SelectContent>
               </Select>
+              
+              <Button 
+                variant={incompleteFilter ? "default" : "outline"} 
+                size="sm" 
+                className={`h-9 gap-2 ${incompleteFilter ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}`}
+                onClick={() => {
+                  setIncompleteFilter(f => !f);
+                  // Clean URL param
+                  if (incompleteFilter) {
+                    searchParams.delete("filter");
+                    setSearchParams(searchParams);
+                  }
+                }}
+                data-testid="incomplete-filter-btn"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Incomplete
+              </Button>
             </>
           )}
         </div>
