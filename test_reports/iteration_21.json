@@ -1,0 +1,109 @@
+{
+  "summary": "Tested Owner OAuth Registration via Invitation bug fixes. All 12 backend API tests PASSED. Frontend InviteAccept page, password registration flow, and dashboard display verified working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard charts", "issues": ["Minor: Chart component shows width/height warning in console - non-blocking, charts still render"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_owner_oauth_invitation.py",
+    "/app/test_reports/pytest/pytest_owner_oauth.xml"
+  ],
+  "passed_tests": [
+    "Backend: test_01_validate_invitation_returns_correct_data - GET /api/invitations/validate/{token} returns email, role, company_name, first_name, last_name",
+    "Backend: test_02_validate_invitation_returns_404_for_invalid_token - Invalid tokens return 404",
+    "Backend: test_03_password_registration_assigns_properties - POST /api/auth/register-with-invite creates user with role AND assigned_properties from invitation",
+    "Backend: test_04_owner_dashboard_kpis_filtered_by_assigned_properties - GET /api/dashboard/kpis filters by user.assigned_properties for owners",
+    "Backend: test_05_owner_properties_list_filtered - GET /api/properties returns only assigned properties for owner role",
+    "Backend: test_06_owner_bookings_list_filtered - GET /api/bookings returns only bookings for assigned properties",
+    "Backend: test_07_owner_revenue_trends_filtered - GET /api/dashboard/revenue-trends filtered by assigned_properties",
+    "Backend: test_08_invitation_marked_as_used - Invitation marked used=true after registration",
+    "Backend: test_01_validate_oauth_invitation - OAuth invitation validation works",
+    "Backend: test_01_existing_user_password_registration_updates_role - Existing users get company_id, role, and assigned_properties updated",
+    "Backend: test_01_admin_sees_all_properties - Admin sees all properties (not filtered)",
+    "Backend: test_02_admin_kpis_include_all_properties - Admin KPIs include all company properties",
+    "Frontend: InviteAccept page loads with role badge (Property Owner)",
+    "Frontend: InviteAccept shows Google OAuth button",
+    "Frontend: InviteAccept shows password registration form with all fields",
+    "Frontend: InviteAccept pre-fills first_name, last_name from invitation data",
+    "Frontend: InviteAccept shows invitation email",
+    "Frontend: Invalid token shows error page with 'Invalid Invitation' message",
+    "Frontend: Password registration creates user and redirects to dashboard",
+    "Frontend: Dashboard shows 'Hey, {FirstName}' greeting after registration",
+    "Frontend: Dashboard shows 'Owner' role badge after registration",
+    "Frontend: Owner navigation shows: Dashboard, Properties, Bookings, Reports, Analytics, Settings"
+  ],
+  "features_verified": {
+    "invitation_validation_api": {
+      "status": "WORKING",
+      "details": "GET /api/invitations/validate/{token} returns invitation details including role, email, company_name, and pre-filled name/phone from owner records"
+    },
+    "password_registration_with_invite": {
+      "status": "WORKING",
+      "details": "POST /api/auth/register-with-invite creates user with correct role AND assigned_properties from invitation, works for both new and existing users"
+    },
+    "oauth_invitation_token_preservation": {
+      "status": "WORKING",
+      "details": "InviteAccept.js handleGoogleAuth (line 72) stores invitation_token in sessionStorage, AuthCallback.js (line 24-31) retrieves and sends to /api/auth/session"
+    },
+    "owner_dashboard_filtering": {
+      "status": "WORKING",
+      "details": "Dashboard KPIs (line 826-848), properties list (line 1042-1058), bookings list (line 1234-1251), and revenue trends (line 990-1006) all filter by user.assigned_properties for owner role"
+    },
+    "existing_user_invitation_handling": {
+      "status": "WORKING",
+      "details": "exchange_session (line 452-474) now updates existing users' company_id, role, and assigned_properties when they have a valid invitation"
+    }
+  },
+  "code_review_highlights": {
+    "frontend_sessionStorage": "InviteAccept.js line 72: sessionStorage.setItem('invitation_token', token) - CORRECT implementation preserves token through OAuth redirect",
+    "backend_exchange_session": "server.py line 452-474: Now properly handles invitations for EXISTING users by updating company_id, role, and assigned_properties",
+    "backend_assigned_properties": "server.py line 487, 514: New OAuth users get assigned_properties from invitation (was missing before)",
+    "role_based_filtering": "Dashboard KPIs, properties, bookings, revenue trends all check user.assigned_properties for owner/staff roles"
+  },
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✅ sessionStorage correctly used to preserve invitation_token through OAuth redirect (InviteAccept.js line 72)",
+    "✅ AuthCallback.js correctly retrieves invitation_token and passes to backend (line 24-31)",
+    "✅ exchange_session now handles both new AND existing users with valid invitations (line 413-476)",
+    "✅ assigned_properties correctly set for new OAuth users (line 487, 514)",
+    "✅ Role-based filtering implemented in all dashboard/list endpoints"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_owner_oauth_invitation.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (All UI features verified)"
+  },
+  "test_credentials": {
+    "note": "Tests use dynamic timestamp-based data for isolation, cleanup runs after each test class"
+  },
+  "seed_data_creation": "Tests create: companies, users, sessions, properties with owner_email, invitations with assigned_properties, bookings for properties",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 21 verified Owner OAuth Registration via Invitation fixes: (1) InviteAccept.js handleGoogleAuth stores invitation_token in sessionStorage before redirect, (2) AuthCallback retrieves and sends token to backend, (3) exchange_session now updates EXISTING users' company_id, role, and assigned_properties when they have valid invitation, (4) New OAuth users get assigned_properties from invitation, (5) Dashboard KPIs, properties list, bookings list, revenue trends all filter by user.assigned_properties for owner role, (6) Password registration also correctly assigns properties from invitation. The critical bug where owners couldn't register via Google OAuth and saw 0 values in dashboard is FIXED.",
+  "rca_of_the_issue": {
+    "root_cause": "The exchange_session endpoint (server.py line 397-535) was not updating existing users with invitation data. When an existing Google user had a valid invitation, the code only updated their name/picture but skipped company_id, role, and assigned_properties. Additionally, assigned_properties was never being set for new OAuth users.",
+    "reproduction_steps": [
+      "1. Create invitation for owner with assigned_properties",
+      "2. User clicks Google OAuth button on invite page",
+      "3. User already has existing Google account in system (or creates new one)",
+      "4. After OAuth, user's company_id, role, assigned_properties were NOT updated from invitation",
+      "5. Dashboard shows 0 values because properties filtering uses assigned_properties which was empty"
+    ],
+    "fix_implemented": [
+      "1. InviteAccept.js now stores invitation_token in sessionStorage before OAuth redirect (line 72)",
+      "2. AuthCallback.js retrieves token and sends to /api/auth/session (line 24-31)",
+      "3. exchange_session now checks for valid invitation BEFORE handling existing/new user logic (line 413-436)",
+      "4. For EXISTING users with valid invitation: updates company_id, role, assigned_properties, marks invitation used (line 452-474)",
+      "5. For NEW users with valid invitation: sets assigned_properties from invitation (line 487, 514)"
+    ]
+  }
+}
