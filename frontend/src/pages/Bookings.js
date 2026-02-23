@@ -293,6 +293,9 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
   
   const BookingRow = ({ b }) => {
     const isIcalImport = b.ota_source && b.ota_source !== 'manual';
+    const isIncomplete = b.is_data_complete === false;
+    const missingGuest = !b.guest_name || !b.guest_name.trim();
+    const missingAmount = !b.total_amount || b.total_amount <= 0;
     const guestDisplay = b.guest_name || (isIcalImport ? `${b.ota_source} Guest` : 'Guest');
     const amountDisplay = b.total_amount > 0 ? fmt(b.total_amount) : (isIcalImport ? <span className="text-muted-foreground text-xs italic">Not in iCal</span> : '$0.00');
     const sourceLabel = getSourceLabel(b);
@@ -301,12 +304,20 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
       : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700";
     
     return (
-      <TableRow key={b.id} data-testid={`booking-row-${b.id}`} className="hover:bg-muted/30">
+      <TableRow key={b.id} data-testid={`booking-row-${b.id}`} className={`hover:bg-muted/30 ${isIncomplete ? 'bg-amber-50/50 dark:bg-amber-950/10' : ''}`}>
         <TableCell className="font-medium">
-          {guestDisplay}
-          {isIcalImport && b.guest_name?.includes('Guest') && (
-            <span className="block text-[10px] text-muted-foreground">via iCal</span>
-          )}
+          <div className="flex items-center gap-2">
+            {isIncomplete && <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" data-testid={`incomplete-warning-${b.id}`} />}
+            <div>
+              {guestDisplay}
+              {isIncomplete && missingGuest && (
+                <span className="block text-[10px] text-amber-600 dark:text-amber-400 font-medium">Guest name required</span>
+              )}
+              {!isIncomplete && isIcalImport && b.guest_name?.includes('Guest') && (
+                <span className="block text-[10px] text-muted-foreground">via iCal</span>
+              )}
+            </div>
+          </div>
         </TableCell>
         <TableCell className="text-sm">{getPropName(b.property_id)}</TableCell>
         <TableCell className="text-sm">{b.check_in}</TableCell>
@@ -322,10 +333,15 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
             {sourceLabel}
           </Badge>
         </TableCell>
-        <TableCell className="text-sm">{amountDisplay}</TableCell>
+        <TableCell className="text-sm">
+          {amountDisplay}
+          {isIncomplete && missingAmount && (
+            <span className="block text-[10px] text-amber-600 dark:text-amber-400 font-medium">Amount required</span>
+          )}
+        </TableCell>
         {isAdmin && (
           <TableCell className="text-right">
-            <Button variant="ghost" size="sm" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`}>
+            <Button variant={isIncomplete ? "outline" : "ghost"} size="sm" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`} className={isIncomplete ? "border-amber-300 hover:bg-amber-50" : ""}>
               <Pencil className="h-4 w-4" />
             </Button>
           </TableCell>
