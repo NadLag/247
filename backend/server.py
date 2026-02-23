@@ -155,6 +155,9 @@ class BookingUpdate(BaseModel):
 class InvitationCreate(BaseModel):
     email: str
     role: str
+    name: Optional[str] = None
+    assigned_properties: Optional[List[str]] = None
+    permissions: Optional[Dict] = None
 
 class CheckoutRequest(BaseModel):
     plan: str
