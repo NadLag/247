@@ -2251,9 +2251,16 @@ async def create_invitation(data: InvitationCreate, request: Request, background
 
 async def send_invitation_email_and_update(inv_id: str, email: str, role: str, token: str, company_name: str, inviter_name: str, base_url: str):
     """Send email and update invitation status"""
+    logger.info(f"Sending invitation email to {email} (inv_id={inv_id})")
     success = await send_invitation_email(email, role, token, company_name, inviter_name, base_url)
+    await db.invitations.update_one(
+        {"id": inv_id},
+        {"$set": {"email_sent": success, "email_sent_at": datetime.now(timezone.utc).isoformat()}}
+    )
     if success:
-        await db.invitations.update_one({"id": inv_id}, {"$set": {"email_sent": True}})
+        logger.info(f"Invitation email delivered to {email}")
+    else:
+        logger.error(f"Failed to deliver invitation email to {email}")
 
 @api_router.post("/invitations/{inv_id}/resend")
 async def resend_invitation_email(inv_id: str, request: Request, background_tasks: BackgroundTasks, user=Depends(require_admin)):
