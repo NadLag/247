@@ -410,50 +410,109 @@ async def exchange_session(data: SessionExchange, response: Response):
     picture = auth_data.get("picture", "")
     session_token = auth_data["session_token"]
 
-    existing_user = await db.users.find_one({"email": email}, {"_id": 0})
+    # FIRST: Check for valid invitation (applies to both new AND existing users)
+    invitation = None
+    if data.invitation_token:
+        invitation = await db.invitations.find_one(
+            {"token": data.invitation_token, "used": False, "status": {"$ne": "cancelled"}}, {"_id": 0}
+        )
+    # Fallback: Check if there's any pending invitation for this email
+    if not invitation:
+        invitation = await db.invitations.find_one(
+            {"email": email.lower(), "used": False, "status": {"$ne": "cancelled"}}, {"_id": 0}
+        )
+    
+    # Validate invitation if found
+    valid_invitation = None
+    if invitation:
+        exp = invitation.get("expires_at", "")
+        if isinstance(exp, str):
+            exp = datetime.fromisoformat(exp)
+        if exp.tzinfo is None:
+            exp = exp.replace(tzinfo=timezone.utc)
+        if exp >= datetime.now(timezone.utc):
+            # Check email matches
+            if invitation["email"].lower() == email.lower():
+                valid_invitation = invitation
+                logger.info(f"Valid invitation found for {email}, role: {invitation['role']}")
+            else:
+                logger.warning(f"Invitation email mismatch: {invitation['email']} vs {email}")
+    
+    existing_user = await db.users.find_one({"email": email.lower()}, {"_id": 0})
 
     if existing_user:
-        await db.users.update_one(
-            {"email": email},
-            {"$set": {"name": name, "picture": picture, "updated_at": datetime.now(timezone.utc).isoformat()}}
-        )
         user_id = existing_user["user_id"]
+        update_fields = {
+            "name": name,
+            "picture": picture,
+            "auth_method": "google",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # CRITICAL: If there's a valid invitation, update the user's company, role, and properties
+        if valid_invitation:
+            logger.info(f"Linking existing user {email} to invitation: company={valid_invitation['company_id']}, role={valid_invitation['role']}")
+            update_fields["company_id"] = valid_invitation["company_id"]
+            update_fields["role"] = valid_invitation["role"]
+            update_fields["assigned_properties"] = valid_invitation.get("assigned_properties", [])
+            update_fields["permissions"] = valid_invitation.get("permissions", {})
+            
+            # Mark invitation as used
+            await db.invitations.update_one(
+                {"token": valid_invitation["token"]},
+                {"$set": {"used": True, "status": "accepted", "used_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+            # Create audit log
+            await db.audit_logs.insert_one({
+                "id": f"audit_{uuid.uuid4().hex[:12]}",
+                "company_id": valid_invitation["company_id"],
+                "user_id": user_id,
+                "action": "invitation_accepted",
+                "details": {"role": valid_invitation["role"], "method": "google_oauth"},
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+        
+        await db.users.update_one({"email": email.lower()}, {"$set": update_fields})
     else:
         user_id = f"user_{uuid.uuid4().hex[:12]}"
         company_id = None
         role = None
+        assigned_properties = []
+        permissions = {}
 
-        invitation = None
-        if data.invitation_token:
-            invitation = await db.invitations.find_one(
-                {"token": data.invitation_token, "used": False}, {"_id": 0}
+        if valid_invitation:
+            company_id = valid_invitation["company_id"]
+            role = valid_invitation["role"]
+            assigned_properties = valid_invitation.get("assigned_properties", [])
+            permissions = valid_invitation.get("permissions", {})
+            
+            # Mark invitation as used
+            await db.invitations.update_one(
+                {"token": valid_invitation["token"]},
+                {"$set": {"used": True, "status": "accepted", "used_at": datetime.now(timezone.utc).isoformat()}}
             )
-        if not invitation:
-            invitation = await db.invitations.find_one(
-                {"email": email, "used": False}, {"_id": 0}
-            )
-
-        if invitation:
-            exp = invitation.get("expires_at", "")
-            if isinstance(exp, str):
-                exp = datetime.fromisoformat(exp)
-            if exp.tzinfo is None:
-                exp = exp.replace(tzinfo=timezone.utc)
-            if exp >= datetime.now(timezone.utc):
-                company_id = invitation["company_id"]
-                role = invitation["role"]
-                await db.invitations.update_one(
-                    {"token": invitation["token"]},
-                    {"$set": {"used": True, "used_at": datetime.now(timezone.utc).isoformat()}}
-                )
+            
+            # Create audit log
+            await db.audit_logs.insert_one({
+                "id": f"audit_{uuid.uuid4().hex[:12]}",
+                "company_id": company_id,
+                "user_id": user_id,
+                "action": "account_created",
+                "details": {"role": role, "method": "google_oauth"},
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
 
         new_user = {
             "user_id": user_id,
-            "email": email,
+            "email": email.lower(),
             "name": name,
             "picture": picture,
+            "auth_method": "google",
             "company_id": company_id,
             "role": role,
+            "assigned_properties": assigned_properties,
+            "permissions": permissions,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
