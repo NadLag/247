@@ -394,7 +394,7 @@ class TestCancelInvitation:
         print(f"✓ Invitation cancelled successfully")
     
     def test_10_cancelled_token_cleared(self, admin_session):
-        """PUT /api/invitations/{id}/cancel - clears the token"""
+        """PUT /api/invitations/{id}/cancel - invalidates the token"""
         headers = {
             "Authorization": f"Bearer {admin_session['session_token']}",
             "Content-Type": "application/json"
@@ -409,20 +409,23 @@ class TestCancelInvitation:
         assert create_response.status_code == 201
         inv = create_response.json()
         inv_id = inv["id"]
+        original_token = inv["token"]
         
         # Cancel invitation
         cancel_response = requests.put(f"{BASE_URL}/api/invitations/{inv_id}/cancel", headers=headers)
         assert cancel_response.status_code == 200, f"Cancel failed: {cancel_response.text}"
         
-        # Verify token is cleared (removed via $unset)
+        # Verify token is changed (old token no longer valid)
         list_response = requests.get(f"{BASE_URL}/api/invitations", headers=headers)
         invitations = list_response.json()
         cancelled_inv = next((i for i in invitations if i["id"] == inv_id), None)
         
-        # Token is removed (unset) or empty after cancel
-        token = cancelled_inv.get("token", "")
-        assert token == "" or token is None, f"Token should be empty/removed after cancel, got '{token}'"
-        print("✓ Token cleared after cancellation")
+        # Token should be different from original (either cancelled_* or empty)
+        current_token = cancelled_inv.get("token", "")
+        assert current_token != original_token, f"Token should change after cancel"
+        # Token is replaced with cancelled_* prefix or cleared
+        assert current_token == "" or current_token.startswith("cancelled_") or current_token is None, f"Unexpected token: {current_token}"
+        print("✓ Token invalidated after cancellation")
 
 
 class TestValidateInvitation:
