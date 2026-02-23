@@ -776,6 +776,7 @@ export default function Bookings() {
             propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
             statusFilter={statusFilter === "all" ? "" : statusFilter}
             sourceFilter={sourceFilter === "all" ? "" : sourceFilter}
+            incompleteFilter={incompleteFilter}
           />
         )}
 
