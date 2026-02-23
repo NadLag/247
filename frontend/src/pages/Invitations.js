@@ -273,10 +273,11 @@ export default function Invitations() {
                         <TableCell>
                           <div className="flex flex-col gap-1">
                             <Badge variant="outline" className={sc.className}>{sc.label}</Badge>
-                            {inv.email_delivery_status && (
-                              <span className={`text-[10px] ${inv.email_delivery_status === 'sent' ? 'text-emerald-500' : 'text-red-400'}`}>
-                                {inv.email_delivery_status === 'sent' ? 'Email delivered' : 'Email failed'}
-                              </span>
+                            {inv.email_delivery_status === 'sent' && (
+                              <span className="text-[10px] text-emerald-500">Email delivered</span>
+                            )}
+                            {inv.email_delivery_status === 'failed' && (
+                              <span className="text-[10px] text-red-400">Email failed — use copy link</span>
                             )}
                             {!inv.email_delivery_status && inv.email_sent && (
                               <span className="text-[10px] text-emerald-500">Email sent</span>
