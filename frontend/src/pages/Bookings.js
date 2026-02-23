@@ -522,6 +522,7 @@ export default function Bookings() {
   const [propertyFilter, setPropertyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
+  const [incompleteFilter, setIncompleteFilter] = useState(searchParams.get("filter") === "incomplete");
   const [sources, setSources] = useState([]);
   const [sortBy, setSortBy] = useState("check_in");
   const [selectedBooking, setSelectedBooking] = useState(null);
