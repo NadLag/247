@@ -66,6 +66,11 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Separate API endpoint** - `GET /api/bookings/blocked-dates` for calendar
 - [x] **Database migration** - Auto-converts `guest_name: "Blocked"` to proper blocked type
 
+### Production Email, Staff Payouts & Owner Reports (Feb 23, 2026)
+- [x] **Production Resend API** - Configured with production API key and verified sender email (nadir.lagnadi@gmail.com). Invitation emails now deliver for real.
+- [x] **Staff Payouts** - Full CRUD: create/read/update/delete payouts. Staff page now has "Staff Members" and "Payouts" tabs. Payout fields: staff, property, period, task, amount, payment method, status (pending/paid). Summary cards show total/pending/paid amounts. Mark as Paid auto-sets payment_date.
+- [x] **Owner Financial Reports** - New `/reports` page accessible to admins and owners. Per-property breakdown: bookings, occupancy, gross revenue (by channel), expenses, net profit, owner share %, payout amount & status. Revenue vs Expenses bar chart, Revenue by Channel pie chart. CSV export. Filters by property, month, year.
+
 ### Unified Invite Page & Collapsible Sidebar (Feb 23, 2026)
 - [x] **Unified Invite page** - Centralized page for all invitation management (owners & staff). Renamed sidebar item from "Invitations" to "Invite"
 - [x] **Enhanced invite form** - Role selection, person picker (from existing staff/owners), name, email, property multi-select, staff permissions (view financials, manage bookings, manage tasks)
@@ -147,9 +152,8 @@ SENDER_EMAIL=onboarding@resend.dev
 
 ### P1 (Next)
 - Real OTA API integrations (Airbnb, Booking.com)
-- Production Resend API key for real emails
-- Staff payout tracking and history
-- Owner financial reports (PDF/CSV export)
+- Role-based property access enforcement at query level for owners/staff
+- PDF export for owner reports
 
 ### P2
 - JWT authentication migration
