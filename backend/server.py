@@ -2165,17 +2165,35 @@ async def send_invitation_email(email: str, role: str, token: str, company_name:
     """
     
     try:
+        # Resend requires 'from' to be a verified domain. Use Resend sandbox as from, user's email as reply-to.
+        from_addr = sender_email
+        if '@gmail.com' in sender_email or '@yahoo.com' in sender_email or '@hotmail.com' in sender_email:
+            from_addr = f"PropStack <onboarding@resend.dev>"
+        
         params = {
-            "from": sender_email,
+            "from": from_addr,
             "to": [email],
+            "reply_to": sender_email,
             "subject": f"You're invited to join {company_name} on PropStack",
             "html": html_content
         }
         result = await asyncio.to_thread(resend.Emails.send, params)
-        logger.info(f"Invitation email sent to {email}, ID: {result.get('id')}")
+        logger.info(f"Invitation email sent to {email}, result: {result}")
+        
+        # Store delivery status
+        delivery_status = "sent" if result and (isinstance(result, dict) and result.get("id")) else "failed"
+        await db.invitations.update_one(
+            {"token": token},
+            {"$set": {"email_delivery_status": delivery_status, "email_provider_response": str(result)}}
+        )
+        
         return True
     except Exception as e:
         logger.error(f"Failed to send invitation email to {email}: {str(e)}")
+        await db.invitations.update_one(
+            {"token": token},
+            {"$set": {"email_delivery_status": "failed", "email_error": str(e)}}
+        )
         return False
 
 @api_router.post("/invitations", status_code=201)
