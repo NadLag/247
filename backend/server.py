@@ -1204,6 +1204,28 @@ async def list_bookings(
     )
     
     query = {"company_id": company_id}
+    
+    # Role-based property filtering for owners and staff
+    role = user.get("role")
+    user_assigned_properties = user.get("assigned_properties", [])
+    
+    if role in ["owner", "staff"] and user_assigned_properties:
+        query["property_id"] = {"$in": user_assigned_properties}
+    elif role == "staff" and not user_assigned_properties:
+        # Fallback to staff record
+        staff_doc = await db.staff.find_one({"company_id": company_id, "email": user.get("email")}, {"_id": 0})
+        assigned = staff_doc.get("assigned_properties", []) if staff_doc else []
+        if assigned:
+            query["property_id"] = {"$in": assigned}
+    elif role == "owner" and not user_assigned_properties:
+        # Fallback to properties where owner_email matches
+        props = await db.properties.find({"company_id": company_id, "owner_email": user.get("email")}, {"id": 1, "_id": 0}).to_list(1000)
+        prop_ids = [p["id"] for p in props]
+        if prop_ids:
+            query["property_id"] = {"$in": prop_ids}
+        else:
+            return []  # Owner has no properties assigned
+    
     if not include_blocked:
         query["$or"] = [
             {"booking_type": {"$ne": "blocked"}},
