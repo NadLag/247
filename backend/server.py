@@ -823,14 +823,27 @@ async def get_dashboard_kpis(user=Depends(get_current_user)):
     today_str = now.isoformat()[:10]
 
     # Role-based property filtering
+    user_assigned_properties = user.get("assigned_properties", [])
+    
     if role == "owner":
-        properties = await db.properties.find({"company_id": company_id, "owner_email": user_email}, {"_id": 0}).to_list(1000)
+        # Owners see properties assigned to them via invitation OR properties where they are the owner_email
+        if user_assigned_properties:
+            # Use assigned_properties from user document (set during invitation acceptance)
+            properties = await db.properties.find({"company_id": company_id, "id": {"$in": user_assigned_properties}}, {"_id": 0}).to_list(1000)
+        else:
+            # Fallback: match by owner_email
+            properties = await db.properties.find({"company_id": company_id, "owner_email": user_email}, {"_id": 0}).to_list(1000)
         property_ids = [p["id"] for p in properties]
     elif role == "staff":
-        staff_doc = await db.staff.find_one({"company_id": company_id, "email": user_email}, {"_id": 0})
-        property_ids = staff_doc.get("assigned_properties", []) if staff_doc else []
+        # Staff uses assigned_properties from user doc OR staff record
+        if user_assigned_properties:
+            property_ids = user_assigned_properties
+        else:
+            staff_doc = await db.staff.find_one({"company_id": company_id, "email": user_email}, {"_id": 0})
+            property_ids = staff_doc.get("assigned_properties", []) if staff_doc else []
         properties = await db.properties.find({"company_id": company_id, "id": {"$in": property_ids}}, {"_id": 0}).to_list(1000)
     else:
+        # Admins see all properties
         properties = await db.properties.find({"company_id": company_id}, {"_id": 0}).to_list(1000)
         property_ids = [p["id"] for p in properties]
 
