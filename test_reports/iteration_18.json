@@ -1,0 +1,98 @@
+{
+  "summary": "Tested Unified Invite Page and Collapsible Sidebar features. All 8 backend tests PASSED. All frontend UI components verified working. Both features fully implemented and working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_invite_page.py",
+    "/app/test_reports/pytest/pytest_invite_page.xml"
+  ],
+  "passed_tests": [
+    "Backend: test_01_invitations_list_empty - GET /api/invitations returns empty list initially",
+    "Backend: test_02_create_invitation_with_name_properties_permissions - POST accepts name, assigned_properties, permissions",
+    "Backend: test_03_invitations_list_after_create - GET returns invitations with dynamically computed status",
+    "Backend: test_04_resend_invitation_generates_new_token - POST /api/invitations/{id}/resend generates new token",
+    "Backend: test_05_cancel_invitation - PUT /api/invitations/{id}/cancel sets status to cancelled",
+    "Backend: test_06_cannot_resend_cancelled_invitation - Resend fails for cancelled invitations",
+    "Backend: test_07_create_owner_invitation - POST creates owner invitation correctly",
+    "Backend: test_08_status_columns_in_response - GET returns all required table columns",
+    "Frontend: Sidebar shows 'Invite' nav item (not 'Invitations')",
+    "Frontend: Sidebar toggle button (data-testid='sidebar-toggle-btn') present",
+    "Frontend: Sidebar collapses from 240px to 64px when toggle clicked",
+    "Frontend: Collapsed sidebar shows only icons (no text labels)",
+    "Frontend: Collapsed state saved to localStorage ('sidebar_collapsed': 'true')",
+    "Frontend: Collapsed state persists after page navigation",
+    "Frontend: Sidebar starts expanded by default when no localStorage value",
+    "Frontend: Invite page loads correctly (data-testid='invite-page')",
+    "Frontend: Status filter tabs present (All, Pending, Accepted, Expired, Cancelled) with badges",
+    "Frontend: Table shows all required columns (Name, Email, Role, Properties, Status, Sent, Expires, Actions)",
+    "Frontend: Send Invitation button present (data-testid='send-invitation-btn')",
+    "Frontend: Send dialog has Role select (data-testid='invite-role-select')",
+    "Frontend: Send dialog has Person picker (data-testid='invite-person-select')",
+    "Frontend: Send dialog has Name input (data-testid='invite-name-input')",
+    "Frontend: Send dialog has Email input (data-testid='invite-email-input')",
+    "Frontend: Send dialog has Properties multi-select (data-testid='invite-properties-list')",
+    "Frontend: Send dialog has Staff permissions section (data-testid='invite-permissions')",
+    "Frontend: Send dialog has confirm button (data-testid='confirm-send-invitation-btn')",
+    "Frontend: Resend button works and shows toast 'New invitation sent! Previous link invalidated.'",
+    "Frontend: Cancel button works and shows toast 'Invitation cancelled'"
+  ],
+  "features_verified": {
+    "collapsible_sidebar": {
+      "status": "WORKING",
+      "details": "Toggle button collapses sidebar from 240px to 64px, nav items show only icons when collapsed, state persists in localStorage under 'sidebar_collapsed' key, persists across page navigation"
+    },
+    "invite_nav_item": {
+      "status": "WORKING",
+      "details": "Sidebar shows 'Invite' nav item (not 'Invitations'), correct data-testid='nav-invite'"
+    },
+    "invite_page_status_tabs": {
+      "status": "WORKING",
+      "details": "All 5 status tabs present: All, Pending, Accepted, Expired, Cancelled with count badges"
+    },
+    "invite_page_table_columns": {
+      "status": "WORKING",
+      "details": "All 8 required columns: Name, Email, Role, Properties, Status, Sent, Expires, Actions"
+    },
+    "send_invitation_dialog": {
+      "status": "WORKING",
+      "details": "Dialog has Role select, Person picker, Name input, Email input, Properties multi-select, Staff permissions checkboxes, confirm button"
+    },
+    "resend_invitation": {
+      "status": "WORKING",
+      "details": "POST /api/invitations/{id}/resend generates new token, invalidates old link, shows success toast"
+    },
+    "cancel_invitation": {
+      "status": "WORKING",
+      "details": "PUT /api/invitations/{id}/cancel sets status to 'cancelled', shows success toast"
+    },
+    "backend_invitation_apis": {
+      "status": "WORKING",
+      "details": "POST /api/invitations accepts name, assigned_properties, permissions. GET returns dynamically computed status (pending/accepted/expired/cancelled)"
+    }
+  },
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_invite_page.py (new test file)"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "100% (All 18 UI verifications passed)"
+  },
+  "test_credentials": {
+    "session_token": "test_invite_session_1771871003728",
+    "company_id": "comp_invite_1771871003728",
+    "note": "Test session created with timestamp for isolation"
+  },
+  "seed_data_creation": "Test creates test user, company, 2 properties, 1 staff member for testing - auto-cleanup in backend tests",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Unified Invite Page and Collapsible Sidebar features fully verified. Backend APIs: POST /api/invitations (with name, assigned_properties, permissions), GET /api/invitations (with dynamic status computation), POST /api/invitations/{id}/resend (new token), PUT /api/invitations/{id}/cancel. Frontend: Sidebar toggle button (sidebar-toggle-btn testid), collapsed state in localStorage ('sidebar_collapsed'), Invite page with status tabs and table showing Name/Email/Role/Properties/Status/Sent/Expires/Actions columns. Send dialog with Role/Person picker/Name/Email/Properties/Permissions inputs."
+}
