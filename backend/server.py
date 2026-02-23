@@ -2099,7 +2099,10 @@ async def send_invitation_email(email: str, role: str, token: str, company_name:
         logger.warning("Resend API key not configured, skipping email send")
         return False
     
-    invite_link = f"{base_url}/invite/{token}"
+    # Use the external frontend URL for invite links
+    frontend_url = os.environ.get('FRONTEND_URL', base_url)
+    invite_link = f"{frontend_url}/invite/{token}"
+    logger.info(f"Generated invite link: {invite_link}")
     role_display = "Property Owner" if role == "owner" else "Staff Member"
     
     html_content = f"""
