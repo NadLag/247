@@ -1809,7 +1809,32 @@ async def get_source_breakdown(
 
 @api_router.get("/invitations")
 async def list_invitations(user=Depends(require_admin)):
-    return await db.invitations.find({"company_id": user["company_id"]}, {"_id": 0}).to_list(1000)
+    invitations = await db.invitations.find({"company_id": user["company_id"]}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    now = datetime.now(timezone.utc)
+    
+    # Compute status dynamically
+    for inv in invitations:
+        if inv.get("used"):
+            inv["status"] = "accepted"
+        elif inv.get("status") == "cancelled":
+            pass  # keep cancelled
+        else:
+            expires_at = inv.get("expires_at", "")
+            if expires_at:
+                try:
+                    exp = datetime.fromisoformat(expires_at) if isinstance(expires_at, str) else expires_at
+                    if exp.tzinfo is None:
+                        exp = exp.replace(tzinfo=timezone.utc)
+                    if exp < now:
+                        inv["status"] = "expired"
+                    else:
+                        inv["status"] = "pending"
+                except Exception:
+                    inv["status"] = "pending"
+            else:
+                inv["status"] = "pending"
+    
+    return invitations
 
 async def send_invitation_email(email: str, role: str, token: str, company_name: str, inviter_name: str, base_url: str):
     """Send invitation email using Resend"""
