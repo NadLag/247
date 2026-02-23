@@ -549,12 +549,13 @@ class TestResendCannotResendCancelled:
         inv_id = inv["id"]
         
         # Cancel the invitation
-        requests.put(f"{BASE_URL}/api/invitations/{inv_id}/cancel", headers=headers)
+        cancel_response = requests.put(f"{BASE_URL}/api/invitations/{inv_id}/cancel", headers=headers)
+        assert cancel_response.status_code == 200, f"Cancel failed: {cancel_response.text}"
         
-        # Try to resend
+        # Try to resend - should fail because invitation is cancelled
         resend_response = requests.post(f"{BASE_URL}/api/invitations/{inv_id}/resend", headers=headers)
         
-        assert resend_response.status_code == 400, f"Expected 400 for cancelled invitation resend, got {resend_response.status_code}"
+        assert resend_response.status_code == 400, f"Expected 400 for cancelled invitation resend, got {resend_response.status_code}: {resend_response.text}"
         assert "cancelled" in resend_response.json()["detail"].lower()
         print("✓ Cannot resend cancelled invitation")
 
