@@ -66,6 +66,11 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Separate API endpoint** - `GET /api/bookings/blocked-dates` for calendar
 - [x] **Database migration** - Auto-converts `guest_name: "Blocked"` to proper blocked type
 
+### Registration "User Already Exists" Fix (Feb 23, 2026)
+- [x] **Existing user registration** - When invited user already exists (registered via Google OAuth), registration now updates their role, assigned_properties, and permissions from invitation instead of failing with "User already exists"
+- [x] **Subscription middleware** - Added `/api/invitations/` and `/api/notifications/` to exempt paths so invitation management works without active subscription
+- [x] **Resend free tier limitation** - Documented: Resend testing mode only allows sending to account owner email (nadir.lagnadi@gmail.com). Need to verify a domain at resend.com/domains for production. Copy-link fallback works in the meantime.
+
 ### Email Delivery & Invitation Registration Fix (Feb 23, 2026)
 - [x] **Email from address** - Fixed: uses `onboarding@resend.dev` for Gmail/Yahoo/Hotmail senders (Resend free-tier requirement). User's email set as reply-to.
 - [x] **Invite link URL** - Fixed: uses `FRONTEND_URL` env var instead of internal `request.base_url` which was generating broken links
