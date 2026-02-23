@@ -728,9 +728,9 @@ async def get_dashboard_kpis(user=Depends(get_current_user)):
         {**booking_query, **reservation_filter, "check_in": {"$gte": last_month_start.isoformat()[:10], "$lt": current_month_start.isoformat()[:10]}}, {"_id": 0}
     ).to_list(1000)
 
-    # Only count non-cancelled bookings for revenue
-    current_revenue = sum(b.get("total_amount", 0) for b in current_bookings if b.get("status") != "cancelled")
-    last_revenue = sum(b.get("total_amount", 0) for b in last_bookings if b.get("status") != "cancelled")
+    # Only count non-cancelled bookings for revenue - exclude incomplete iCal bookings (amount=0)
+    current_revenue = sum(b.get("total_amount", 0) for b in current_bookings if b.get("status") != "cancelled" and b.get("is_data_complete", True))
+    last_revenue = sum(b.get("total_amount", 0) for b in last_bookings if b.get("status") != "cancelled" and b.get("is_data_complete", True))
 
     # Expenses query based on role
     expense_query = {"company_id": company_id, "date": {"$gte": current_month_start.isoformat()[:10]}}
