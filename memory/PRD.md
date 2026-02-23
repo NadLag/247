@@ -66,6 +66,16 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Separate API endpoint** - `GET /api/bookings/blocked-dates` for calendar
 - [x] **Database migration** - Auto-converts `guest_name: "Blocked"` to proper blocked type
 
+### Missing Booking Details Notification System (Feb 23, 2026)
+- [x] **is_data_complete flag** - Every booking has `is_data_complete` field. Auto-calculated on create/update. Migration sets it for all existing bookings
+- [x] **Notification system** - `notifications` collection with full CRUD: GET /api/notifications, GET /api/notifications/unread-count, PUT /api/notifications/{id}/read, PUT /api/notifications/read-all
+- [x] **Auto-detection** - After iCal sync (new property sync, manual sync, background sync), system detects incomplete bookings (missing guest name/amount) and creates notifications
+- [x] **Notification bell** - Header bell icon with unread badge counter, dropdown panel with "Review Bookings" action link
+- [x] **Incomplete filter** - Bookings page has "Incomplete" toggle button. URL param `?filter=incomplete` auto-activates it and switches to list view
+- [x] **Warning indicators** - Incomplete rows have yellow highlight, warning icons, and inline messages ("Guest name required", "Amount required")
+- [x] **Edit & auto-resolve** - Editing a booking to add missing data auto-recalculates `is_data_complete`. When all incomplete bookings are fixed, notification auto-resolves
+- [x] **Revenue protection** - Incomplete bookings (amount=0/missing) excluded from revenue KPIs and ADR calculations
+
 ### Booking Logic & UI Enhancements (Feb 22, 2026)
 - [x] **Auto-checkout status** - Expired bookings auto-update to `checked_out` on startup, hourly, and on every bookings list fetch
 - [x] **Past-date validation** - Backend rejects manual bookings with check-in OR check-out in the past (400 error). Frontend date inputs have `min` attribute set to today for new bookings
