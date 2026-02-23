@@ -521,8 +521,48 @@ async def register_with_invite(data: InviteRegistration, response: Response):
     # Check if user already exists
     existing_user = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
     if existing_user:
-        logger.warning(f"User already exists: {data.email}")
-        raise HTTPException(status_code=400, detail="User with this email already exists. Please sign in instead.")
+        logger.info(f"Existing user found for invitation: {data.email}, updating role and properties")
+        # User exists (e.g., registered via Google) — update their role, company, and properties from invitation
+        update_fields = {
+            "role": invitation["role"],
+            "assigned_properties": invitation.get("assigned_properties", []),
+            "permissions": invitation.get("permissions", {}),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        # Only update company_id if user doesn't have one or it matches
+        if not existing_user.get("company_id") or existing_user["company_id"] == invitation["company_id"]:
+            update_fields["company_id"] = invitation["company_id"]
+        
+        # If password provided and user doesn't have one, set it
+        if data.password and not existing_user.get("password_hash"):
+            update_fields["password_hash"] = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        await db.users.update_one({"email": data.email.lower()}, {"$set": update_fields})
+        
+        # Mark invitation as used
+        await db.invitations.update_one(
+            {"token": data.token},
+            {"$set": {"used": True, "status": "accepted", "used_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        user_id = existing_user["user_id"]
+        
+        # Create session for existing user
+        session_token = secrets.token_urlsafe(32)
+        await db.user_sessions.insert_one({
+            "user_id": user_id,
+            "session_token": session_token,
+            "expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        
+        response.set_cookie(
+            key="session_token", value=session_token,
+            httponly=True, secure=True, samesite="none", path="/", max_age=7 * 24 * 60 * 60,
+        )
+        
+        updated_user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+        return updated_user
     
     # Hash password
     password_hash = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
