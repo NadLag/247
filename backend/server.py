@@ -2054,6 +2054,10 @@ async def validate_invitation(token: str):
     if not token:
         raise HTTPException(status_code=404, detail="Invalid invitation link")
     
+    # Reject cancelled tokens directly
+    if token.startswith("cancelled_"):
+        raise HTTPException(status_code=400, detail="This invitation has been cancelled")
+    
     invitation = await db.invitations.find_one({"token": token}, {"_id": 0})
     if not invitation:
         raise HTTPException(status_code=404, detail="Invalid or expired invitation link")
