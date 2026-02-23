@@ -499,6 +499,11 @@ async def register_with_invite(data: InviteRegistration, response: Response):
         logger.warning(f"Invalid or expired invitation token for email: {data.email}")
         raise HTTPException(status_code=404, detail="Invalid or expired invitation token")
     
+    # Check if cancelled
+    if invitation.get("status") == "cancelled":
+        logger.warning(f"Cancelled invitation used for email: {data.email}")
+        raise HTTPException(status_code=400, detail="This invitation has been cancelled")
+    
     expires_at = invitation.get("expires_at", "")
     if isinstance(expires_at, str):
         expires_at = datetime.fromisoformat(expires_at)
