@@ -529,6 +529,14 @@ export default function Bookings() {
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
+  // Handle URL query param for incomplete filter
+  useEffect(() => {
+    if (searchParams.get("filter") === "incomplete") {
+      setIncompleteFilter(true);
+      setViewMode("list");
+    }
+  }, [searchParams]);
+
   const fetchData = async () => {
     try {
       const [bookRes, blockedRes, propRes, srcRes] = await Promise.all([
