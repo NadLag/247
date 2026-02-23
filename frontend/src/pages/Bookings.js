@@ -271,6 +271,7 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
         if (b.ota_source !== sourceFilter) return false;
       }
     }
+    if (incompleteFilter && b.is_data_complete !== false) return false;
     return true;
   });
   
