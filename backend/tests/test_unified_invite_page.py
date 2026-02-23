@@ -411,14 +411,17 @@ class TestCancelInvitation:
         inv_id = inv["id"]
         
         # Cancel invitation
-        requests.put(f"{BASE_URL}/api/invitations/{inv_id}/cancel", headers=headers)
+        cancel_response = requests.put(f"{BASE_URL}/api/invitations/{inv_id}/cancel", headers=headers)
+        assert cancel_response.status_code == 200, f"Cancel failed: {cancel_response.text}"
         
-        # Verify token is cleared
+        # Verify token is cleared (removed via $unset)
         list_response = requests.get(f"{BASE_URL}/api/invitations", headers=headers)
         invitations = list_response.json()
         cancelled_inv = next((i for i in invitations if i["id"] == inv_id), None)
         
-        assert cancelled_inv["token"] == "", f"Token should be empty after cancel, got '{cancelled_inv['token']}'"
+        # Token is removed (unset) or empty after cancel
+        token = cancelled_inv.get("token", "")
+        assert token == "" or token is None, f"Token should be empty/removed after cancel, got '{token}'"
         print("✓ Token cleared after cancellation")
 
 
