@@ -1954,10 +1954,28 @@ async def send_invitation_email_and_update(inv_id: str, email: str, role: str, t
 
 @api_router.post("/invitations/{inv_id}/resend")
 async def resend_invitation_email(inv_id: str, request: Request, background_tasks: BackgroundTasks, user=Depends(require_admin)):
-    """Resend invitation email"""
+    """Resend invitation email - invalidates old token and generates new one"""
     invitation = await db.invitations.find_one({"id": inv_id, "company_id": user["company_id"], "used": False}, {"_id": 0})
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found or already used")
+    
+    if invitation.get("status") == "cancelled":
+        raise HTTPException(status_code=400, detail="Cannot resend a cancelled invitation")
+    
+    # Generate new token and expiry, invalidating old one
+    new_token = secrets.token_urlsafe(32)
+    new_expires = (datetime.now(timezone.utc) + timedelta(hours=48)).isoformat()
+    
+    await db.invitations.update_one(
+        {"id": inv_id},
+        {"$set": {
+            "token": new_token,
+            "expires_at": new_expires,
+            "status": "pending",
+            "email_sent": False,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }}
+    )
     
     company = await db.companies.find_one({"company_id": user["company_id"]}, {"_id": 0})
     company_name = company.get("name", "Your Company") if company else "Your Company"
@@ -1969,13 +1987,13 @@ async def resend_invitation_email(inv_id: str, request: Request, background_task
         inv_id,
         invitation["email"],
         invitation["role"],
-        invitation["token"],
+        new_token,
         company_name,
         inviter_name,
         base_url
     )
     
-    return {"message": "Invitation email queued for resend"}
+    return {"message": "New invitation email queued. Previous link has been invalidated."}
 
 @api_router.delete("/invitations/{inv_id}")
 async def delete_invitation(inv_id: str, user=Depends(require_admin)):
