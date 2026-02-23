@@ -179,10 +179,21 @@ export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem("sidebar_collapsed") === "true"; } catch { return false; }
+  });
   const [companyName, setCompanyName] = useState("");
   const [settingUp, setSettingUp] = useState(false);
 
   const navItems = navConfig[user?.role] || navConfig.staff;
+
+  const toggleSidebar = () => {
+    setCollapsed(prev => {
+      const next = !prev;
+      try { localStorage.setItem("sidebar_collapsed", String(next)); } catch {}
+      return next;
+    });
+  };
 
   const handleNavigate = (path) => {
     navigate(path);
