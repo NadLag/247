@@ -1995,6 +1995,21 @@ async def resend_invitation_email(inv_id: str, request: Request, background_task
     
     return {"message": "New invitation email queued. Previous link has been invalidated."}
 
+@api_router.put("/invitations/{inv_id}/cancel")
+async def cancel_invitation(inv_id: str, user=Depends(require_admin)):
+    """Cancel an invitation - marks it as cancelled, token becomes invalid"""
+    invitation = await db.invitations.find_one({"id": inv_id, "company_id": user["company_id"]}, {"_id": 0})
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+    if invitation.get("used"):
+        raise HTTPException(status_code=400, detail="Cannot cancel an accepted invitation")
+    
+    await db.invitations.update_one(
+        {"id": inv_id},
+        {"$set": {"status": "cancelled", "token": "", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "Invitation cancelled"}
+
 @api_router.delete("/invitations/{inv_id}")
 async def delete_invitation(inv_id: str, user=Depends(require_admin)):
     result = await db.invitations.delete_one({"id": inv_id, "company_id": user["company_id"]})
