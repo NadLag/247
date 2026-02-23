@@ -2794,6 +2794,9 @@ async def import_property_from_ota(data: OTAImportRequest, user=Depends(require_
         
         logger.info(f"Imported {bookings_created} bookings for property {property_id}")
         
+        # Check for incomplete bookings and create notification
+        await check_and_create_incomplete_notification(company_id)
+        
         # Create sync log
         sync_log_id = f"ota_sync_{uuid.uuid4().hex[:12]}"
         sync_log = {
