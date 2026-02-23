@@ -1,14 +1,388 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="17" time="10.891" timestamp="2026-02-23T17:52:53.397012+00:00" hostname="agent-env-bd5fad4e-e903-4983-adfc-3f0fb43cad07"><testcase classname="backend.tests.test_unified_invite_page.TestInvitationCreation" name="test_01_create_invitation_with_name" time="1.898" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationCreation" name="test_02_create_invitation_with_assigned_properties" time="0.177" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationCreation" name="test_03_create_invitation_with_permissions" time="0.129" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationCreation" name="test_04_create_owner_invitation" time="0.214" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationListWithStatus" name="test_05_list_invitations_returns_status" time="0.161" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationListWithStatus" name="test_06_list_invitations_shows_name_and_properties" time="0.184" /><testcase classname="backend.tests.test_unified_invite_page.TestResendInvitation" name="test_07_resend_generates_new_token" time="1.932" /><testcase classname="backend.tests.test_unified_invite_page.TestResendInvitation" name="test_08_old_token_invalid_after_resend" time="0.465" /><testcase classname="backend.tests.test_unified_invite_page.TestCancelInvitation" name="test_09_cancel_invitation_sets_status" time="0.374" /><testcase classname="backend.tests.test_unified_invite_page.TestCancelInvitation" name="test_10_cancelled_token_cleared" time="0.485"><failure message="AssertionError: Token should be empty after cancel, got 'dm7QLZdDe010kmHb1slZrcOopobVgmrOR2TRl3uRnLE'&#10;assert 'dm7QLZdDe010...rOR2TRl3uRnLE' == ''&#10;  &#10;  + dm7QLZdDe010kmHb1slZrcOopobVgmrOR2TRl3uRnLE">backend/tests/test_unified_invite_page.py:421: in test_10_cancelled_token_cleared
-    assert cancelled_inv["token"] == "", f"Token should be empty after cancel, got '{cancelled_inv['token']}'"
-E   AssertionError: Token should be empty after cancel, got 'dm7QLZdDe010kmHb1slZrcOopobVgmrOR2TRl3uRnLE'
-E   assert 'dm7QLZdDe010...rOR2TRl3uRnLE' == ''
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="17" time="8.549" timestamp="2026-02-23T17:56:12.168726+00:00" hostname="agent-env-bd5fad4e-e903-4983-adfc-3f0fb43cad07"><testcase classname="backend.tests.test_unified_invite_page.TestInvitationCreation" name="test_01_create_invitation_with_name" time="0.638" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationCreation" name="test_02_create_invitation_with_assigned_properties" time="0.155" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationCreation" name="test_03_create_invitation_with_permissions" time="0.267" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationCreation" name="test_04_create_owner_invitation" time="0.253" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationListWithStatus" name="test_05_list_invitations_returns_status" time="0.165" /><testcase classname="backend.tests.test_unified_invite_page.TestInvitationListWithStatus" name="test_06_list_invitations_shows_name_and_properties" time="0.189" /><testcase classname="backend.tests.test_unified_invite_page.TestResendInvitation" name="test_07_resend_generates_new_token" time="1.569" /><testcase classname="backend.tests.test_unified_invite_page.TestResendInvitation" name="test_08_old_token_invalid_after_resend" time="0.395" /><testcase classname="backend.tests.test_unified_invite_page.TestCancelInvitation" name="test_09_cancel_invitation_sets_status" time="0.438" /><testcase classname="backend.tests.test_unified_invite_page.TestCancelInvitation" name="test_10_cancelled_token_cleared" time="0.363"><failure message="AssertionError: Cancel failed: &lt;!DOCTYPE html&gt;&#10;  &lt;!--[if lt IE 7]&gt; &lt;html class=&quot;no-js ie6 oldie&quot; lang=&quot;en-US&quot;&gt; &lt;![endif]--&gt;&#10;  &lt;!--[if IE 7]&gt;    &lt;html class=&quot;no-js ie7 oldie&quot; lang=&quot;en-US&quot;&gt; &lt;![endif]--&gt;&#10;  &lt;!--[if IE 8]&gt;    &lt;html class=&quot;no-js ie8 oldie&quot; lang=&quot;en-US&quot;&gt; &lt;![endif]--&gt;&#10;  &lt;!--[if gt IE 8]&gt;&lt;!--&gt; &lt;html class=&quot;no-js&quot; lang=&quot;en-US&quot;&gt; &lt;!--&lt;![endif]--&gt;&#10;  &lt;head&gt;&#10;  &#10;  &#10;  &lt;title&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud | 520: Web server is returning an unknown error&lt;/title&gt;&#10;  &lt;meta charset=&quot;UTF-8&quot; /&gt;&#10;  &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;&#10;  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=Edge&quot; /&gt;&#10;  &lt;meta name=&quot;robots&quot; content=&quot;noindex, nofollow&quot; /&gt;&#10;  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot; /&gt;&#10;  &lt;link rel=&quot;stylesheet&quot; id=&quot;cf_styles-css&quot; href=&quot;/cdn-cgi/styles/main.css&quot; /&gt;&#10;  &#10;  &#10;  &lt;/head&gt;&#10;  &lt;body&gt;&#10;  &lt;div id=&quot;cf-wrapper&quot;&gt;&#10;      &lt;div id=&quot;cf-error-details&quot; class=&quot;p-0&quot;&gt;&#10;          &lt;header class=&quot;mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8&quot;&gt;&#10;              &lt;h1 class=&quot;inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2&quot;&gt;&#10;                &lt;span class=&quot;inline-block&quot;&gt;Web server is returning an unknown error&lt;/span&gt;&#10;                &lt;span class=&quot;code-label&quot;&gt;Error code 520&lt;/span&gt;&#10;              &lt;/h1&gt;&#10;              &lt;div&gt;&#10;                 Visit &lt;a href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;cloudflare.com&lt;/a&gt; for more information.&#10;              &lt;/div&gt;&#10;              &lt;div class=&quot;mt-3&quot;&gt;2026-02-23 17:56:16 UTC&lt;/div&gt;&#10;          &lt;/header&gt;&#10;          &lt;div class=&quot;my-8 bg-gradient-gray&quot;&gt;&#10;              &lt;div class=&quot;w-240 lg:w-full mx-auto&quot;&gt;&#10;                  &lt;div class=&quot;clearfix md:px-8&quot;&gt;&#10;                    &#10;  &lt;div id=&quot;cf-browser-status&quot; class=&quot; relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center&quot;&gt;&#10;    &lt;div class=&quot;relative mb-10 md:m-0&quot;&gt;&#10;      &#10;      &lt;span class=&quot;cf-icon-browser block md:hidden h-20 bg-center bg-no-repeat&quot;&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4&quot;&gt;&lt;/span&gt;&#10;      &#10;    &lt;/div&gt;&#10;    &lt;span class=&quot;md:block w-full truncate&quot;&gt;You&lt;/span&gt;&#10;    &lt;h3 class=&quot;md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3&quot;&gt;&#10;      &#10;      Browser&#10;      &#10;    &lt;/h3&gt;&#10;    &lt;span class=&quot;leading-1.3 text-2xl text-green-success&quot;&gt;Working&lt;/span&gt;&#10;  &lt;/div&gt;&#10;  &#10;  &lt;div id=&quot;cf-cloudflare-status&quot; class=&quot; relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center&quot;&gt;&#10;    &lt;div class=&quot;relative mb-10 md:m-0&quot;&gt;&#10;      &lt;a href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;&#10;      &lt;span class=&quot;cf-icon-cloud block md:hidden h-20 bg-center bg-no-repeat&quot;&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4&quot;&gt;&lt;/span&gt;&#10;      &lt;/a&gt;&#10;    &lt;/div&gt;&#10;    &lt;span class=&quot;md:block w-full truncate&quot;&gt;Chicago&lt;/span&gt;&#10;    &lt;h3 class=&quot;md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3&quot;&gt;&#10;      &lt;a href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;&#10;      Cloudflare&#10;      &lt;/a&gt;&#10;    &lt;/h3&gt;&#10;    &lt;span class=&quot;leading-1.3 text-2xl text-green-success&quot;&gt;Working&lt;/span&gt;&#10;  &lt;/div&gt;&#10;  &#10;  &lt;div id=&quot;cf-host-status&quot; class=&quot;cf-error-source relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center&quot;&gt;&#10;    &lt;div class=&quot;relative mb-10 md:m-0&quot;&gt;&#10;      &#10;      &lt;span class=&quot;cf-icon-server block md:hidden h-20 bg-center bg-no-repeat&quot;&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-icon-error w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4&quot;&gt;&lt;/span&gt;&#10;      &#10;    &lt;/div&gt;&#10;    &lt;span class=&quot;md:block w-full truncate&quot;&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud&lt;/span&gt;&#10;    &lt;h3 class=&quot;md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3&quot;&gt;&#10;      &#10;      Host&#10;      &#10;    &lt;/h3&gt;&#10;    &lt;span class=&quot;leading-1.3 text-2xl text-red-error&quot;&gt;Error&lt;/span&gt;&#10;  &lt;/div&gt;&#10;  &#10;                  &lt;/div&gt;&#10;              &lt;/div&gt;&#10;          &lt;/div&gt;&#10;  &#10;          &lt;div class=&quot;w-240 lg:w-full mx-auto mb-8 lg:px-8&quot;&gt;&#10;              &lt;div class=&quot;clearfix&quot;&gt;&#10;                  &lt;div class=&quot;w-1/2 md:w-full float-left pr-6 md:pb-10 md:pr-0 leading-relaxed&quot;&gt;&#10;                      &lt;h2 class=&quot;text-3xl font-normal leading-1.3 mb-4&quot;&gt;What happened?&lt;/h2&gt;&#10;                      &lt;p&gt;There is an unknown connection issue between Cloudflare and the origin web server. As a result, the web page can not be displayed.&lt;/p&gt;&#10;                  &lt;/div&gt;&#10;                  &lt;div class=&quot;w-1/2 md:w-full float-left leading-relaxed&quot;&gt;&#10;                      &lt;h2 class=&quot;text-3xl font-normal leading-1.3 mb-4&quot;&gt;What can I do?&lt;/h2&gt;&#10;                            &lt;h3 class=&quot;text-15 font-semibold mb-2&quot;&gt;If you are a visitor of this website:&lt;/h3&gt;&#10;        &lt;p class=&quot;mb-6&quot;&gt;Please try again in a few minutes.&lt;/p&gt;&#10;  &#10;        &lt;h3 class=&quot;text-15 font-semibold mb-2&quot;&gt;If you are the owner of this website:&lt;/h3&gt;&#10;        &lt;p&gt;&lt;span&gt;There is an issue between Cloudflare's cache and your origin web server. Cloudflare monitors for these errors and automatically investigates the cause. To help support the investigation, you can pull the corresponding error log from your web server and submit it our support team.  Please include the Ray ID (which is at the bottom of this error page).&lt;/span&gt; &lt;a rel=&quot;noopener noreferrer&quot; href=&quot;https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-520/&quot;&gt;Additional troubleshooting resources&lt;/a&gt;.&lt;/p&gt;&#10;                  &lt;/div&gt;&#10;              &lt;/div&gt;&#10;          &lt;/div&gt;&#10;  &#10;          &lt;div class=&quot;cf-error-footer cf-wrapper w-240 lg:w-full py-10 sm:py-4 sm:px-8 mx-auto text-center sm:text-left border-solid border-0 border-t border-gray-300&quot;&gt;&#10;    &lt;p class=&quot;text-13&quot;&gt;&#10;      &lt;span class=&quot;cf-footer-item sm:block sm:mb-1&quot;&gt;Cloudflare Ray ID: &lt;strong class=&quot;font-semibold&quot;&gt;9d289953d45be8fb&lt;/strong&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-footer-separator sm:hidden&quot;&gt;&amp;bull;&lt;/span&gt;&#10;      &lt;span id=&quot;cf-footer-item-ip&quot; class=&quot;cf-footer-item hidden sm:block sm:mb-1&quot;&gt;&#10;        Your IP:&#10;        &lt;button type=&quot;button&quot; id=&quot;cf-footer-ip-reveal&quot; class=&quot;cf-footer-ip-reveal-btn&quot;&gt;Click to reveal&lt;/button&gt;&#10;        &lt;span class=&quot;hidden&quot; id=&quot;cf-footer-ip&quot;&gt;34.16.56.64&lt;/span&gt;&#10;        &lt;span class=&quot;cf-footer-separator sm:hidden&quot;&gt;&amp;bull;&lt;/span&gt;&#10;      &lt;/span&gt;&#10;      &lt;span class=&quot;cf-footer-item sm:block sm:mb-1&quot;&gt;&lt;span&gt;Performance &amp;amp; security by&lt;/span&gt; &lt;a rel=&quot;noopener noreferrer&quot; href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; id=&quot;brand_link&quot; target=&quot;_blank&quot;&gt;Cloudflare&lt;/a&gt;&lt;/span&gt;&#10;      &#10;    &lt;/p&gt;&#10;    &lt;script&gt;(function(){function d(){var b=a.getElementById(&quot;cf-footer-item-ip&quot;),c=a.getElementById(&quot;cf-footer-ip-reveal&quot;);b&amp;&amp;&quot;classList&quot;in b&amp;&amp;(b.classList.remove(&quot;hidden&quot;),c.addEventListener(&quot;click&quot;,function(){c.classList.add(&quot;hidden&quot;);a.getElementById(&quot;cf-footer-ip&quot;).classList.remove(&quot;hidden&quot;)}))}var a=document;document.addEventListener&amp;&amp;a.addEventListener(&quot;DOMContentLoaded&quot;,d)})();&lt;/script&gt;&#10;  &lt;/div&gt;&lt;!-- /.error-footer --&gt;&#10;  &#10;  &#10;      &lt;/div&gt;&#10;  &lt;/div&gt;&#10;  &lt;/body&gt;&#10;  &lt;/html&gt;&#10;  &#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_unified_invite_page.py:415: in test_10_cancelled_token_cleared
+    assert cancel_response.status_code == 200, f"Cancel failed: {cancel_response.text}"
+E   AssertionError: Cancel failed: &lt;!DOCTYPE html&gt;
+E     &lt;!--[if lt IE 7]&gt; &lt;html class="no-js ie6 oldie" lang="en-US"&gt; &lt;![endif]--&gt;
+E     &lt;!--[if IE 7]&gt;    &lt;html class="no-js ie7 oldie" lang="en-US"&gt; &lt;![endif]--&gt;
+E     &lt;!--[if IE 8]&gt;    &lt;html class="no-js ie8 oldie" lang="en-US"&gt; &lt;![endif]--&gt;
+E     &lt;!--[if gt IE 8]&gt;&lt;!--&gt; &lt;html class="no-js" lang="en-US"&gt; &lt;!--&lt;![endif]--&gt;
+E     &lt;head&gt;
 E     
-E     + dm7QLZdDe010kmHb1slZrcOopobVgmrOR2TRl3uRnLE</failure></testcase><testcase classname="backend.tests.test_unified_invite_page.TestValidateInvitation" name="test_11_validate_cancelled_token_rejected" time="0.409"><failure message="AssertionError: Expected 400/404 for cancelled invitation, got 200&#10;assert 200 in [400, 404]&#10; +  where 200 = &lt;Response [200]&gt;.status_code">backend/tests/test_unified_invite_page.py:453: in test_11_validate_cancelled_token_rejected
-    assert validate_response.status_code in [400, 404], f"Expected 400/404 for cancelled invitation, got {validate_response.status_code}"
-E   AssertionError: Expected 400/404 for cancelled invitation, got 200
-E   assert 200 in [400, 404]
-E    +  where 200 = &lt;Response [200]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_unified_invite_page.TestValidateInvitation" name="test_12_validate_valid_token_works" time="0.274" /><testcase classname="backend.tests.test_unified_invite_page.TestDeleteInvitation" name="test_13_delete_invitation" time="0.475" /><testcase classname="backend.tests.test_unified_invite_page.TestDeleteInvitation" name="test_14_delete_nonexistent_returns_404" time="0.576" /><testcase classname="backend.tests.test_unified_invite_page.TestResendCannotResendCancelled" name="test_15_resend_cancelled_fails" time="0.530"><failure message="AssertionError: Expected 400 for cancelled invitation resend, got 200&#10;assert 200 == 400&#10; +  where 200 = &lt;Response [200]&gt;.status_code">backend/tests/test_unified_invite_page.py:554: in test_15_resend_cancelled_fails
-    assert resend_response.status_code == 400, f"Expected 400 for cancelled invitation resend, got {resend_response.status_code}"
-E   AssertionError: Expected 400 for cancelled invitation resend, got 200
-E   assert 200 == 400
-E    +  where 200 = &lt;Response [200]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_unified_invite_page.TestInvitation48HourExpiry" name="test_16_invitation_expires_in_48_hours" time="0.258" /><testcase classname="backend.tests.test_unified_invite_page.TestCleanup" name="test_99_cleanup" time="2.237" /></testsuite></testsuites>
+E     
+E     &lt;title&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud | 520: Web server is returning an unknown error&lt;/title&gt;
+E     &lt;meta charset="UTF-8" /&gt;
+E     &lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
+E     &lt;meta http-equiv="X-UA-Compatible" content="IE=Edge" /&gt;
+E     &lt;meta name="robots" content="noindex, nofollow" /&gt;
+E     &lt;meta name="viewport" content="width=device-width,initial-scale=1" /&gt;
+E     &lt;link rel="stylesheet" id="cf_styles-css" href="/cdn-cgi/styles/main.css" /&gt;
+E     
+E     
+E     &lt;/head&gt;
+E     &lt;body&gt;
+E     &lt;div id="cf-wrapper"&gt;
+E         &lt;div id="cf-error-details" class="p-0"&gt;
+E             &lt;header class="mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8"&gt;
+E                 &lt;h1 class="inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2"&gt;
+E                   &lt;span class="inline-block"&gt;Web server is returning an unknown error&lt;/span&gt;
+E                   &lt;span class="code-label"&gt;Error code 520&lt;/span&gt;
+E                 &lt;/h1&gt;
+E                 &lt;div&gt;
+E                    Visit &lt;a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" target="_blank" rel="noopener noreferrer"&gt;cloudflare.com&lt;/a&gt; for more information.
+E                 &lt;/div&gt;
+E                 &lt;div class="mt-3"&gt;2026-02-23 17:56:16 UTC&lt;/div&gt;
+E             &lt;/header&gt;
+E             &lt;div class="my-8 bg-gradient-gray"&gt;
+E                 &lt;div class="w-240 lg:w-full mx-auto"&gt;
+E                     &lt;div class="clearfix md:px-8"&gt;
+E                       
+E     &lt;div id="cf-browser-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center"&gt;
+E       &lt;div class="relative mb-10 md:m-0"&gt;
+E         
+E         &lt;span class="cf-icon-browser block md:hidden h-20 bg-center bg-no-repeat"&gt;&lt;/span&gt;
+E         &lt;span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"&gt;&lt;/span&gt;
+E         
+E       &lt;/div&gt;
+E       &lt;span class="md:block w-full truncate"&gt;You&lt;/span&gt;
+E       &lt;h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3"&gt;
+E         
+E         Browser
+E         
+E       &lt;/h3&gt;
+E       &lt;span class="leading-1.3 text-2xl text-green-success"&gt;Working&lt;/span&gt;
+E     &lt;/div&gt;
+E     
+E     &lt;div id="cf-cloudflare-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center"&gt;
+E       &lt;div class="relative mb-10 md:m-0"&gt;
+E         &lt;a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" target="_blank" rel="noopener noreferrer"&gt;
+E         &lt;span class="cf-icon-cloud block md:hidden h-20 bg-center bg-no-repeat"&gt;&lt;/span&gt;
+E         &lt;span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"&gt;&lt;/span&gt;
+E         &lt;/a&gt;
+E       &lt;/div&gt;
+E       &lt;span class="md:block w-full truncate"&gt;Chicago&lt;/span&gt;
+E       &lt;h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3"&gt;
+E         &lt;a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" target="_blank" rel="noopener noreferrer"&gt;
+E         Cloudflare
+E         &lt;/a&gt;
+E       &lt;/h3&gt;
+E       &lt;span class="leading-1.3 text-2xl text-green-success"&gt;Working&lt;/span&gt;
+E     &lt;/div&gt;
+E     
+E     &lt;div id="cf-host-status" class="cf-error-source relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center"&gt;
+E       &lt;div class="relative mb-10 md:m-0"&gt;
+E         
+E         &lt;span class="cf-icon-server block md:hidden h-20 bg-center bg-no-repeat"&gt;&lt;/span&gt;
+E         &lt;span class="cf-icon-error w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"&gt;&lt;/span&gt;
+E         
+E       &lt;/div&gt;
+E       &lt;span class="md:block w-full truncate"&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud&lt;/span&gt;
+E       &lt;h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3"&gt;
+E         
+E         Host
+E         
+E       &lt;/h3&gt;
+E       &lt;span class="leading-1.3 text-2xl text-red-error"&gt;Error&lt;/span&gt;
+E     &lt;/div&gt;
+E     
+E                     &lt;/div&gt;
+E                 &lt;/div&gt;
+E             &lt;/div&gt;
+E     
+E             &lt;div class="w-240 lg:w-full mx-auto mb-8 lg:px-8"&gt;
+E                 &lt;div class="clearfix"&gt;
+E                     &lt;div class="w-1/2 md:w-full float-left pr-6 md:pb-10 md:pr-0 leading-relaxed"&gt;
+E                         &lt;h2 class="text-3xl font-normal leading-1.3 mb-4"&gt;What happened?&lt;/h2&gt;
+E                         &lt;p&gt;There is an unknown connection issue between Cloudflare and the origin web server. As a result, the web page can not be displayed.&lt;/p&gt;
+E                     &lt;/div&gt;
+E                     &lt;div class="w-1/2 md:w-full float-left leading-relaxed"&gt;
+E                         &lt;h2 class="text-3xl font-normal leading-1.3 mb-4"&gt;What can I do?&lt;/h2&gt;
+E                               &lt;h3 class="text-15 font-semibold mb-2"&gt;If you are a visitor of this website:&lt;/h3&gt;
+E           &lt;p class="mb-6"&gt;Please try again in a few minutes.&lt;/p&gt;
+E     
+E           &lt;h3 class="text-15 font-semibold mb-2"&gt;If you are the owner of this website:&lt;/h3&gt;
+E           &lt;p&gt;&lt;span&gt;There is an issue between Cloudflare's cache and your origin web server. Cloudflare monitors for these errors and automatically investigates the cause. To help support the investigation, you can pull the corresponding error log from your web server and submit it our support team.  Please include the Ray ID (which is at the bottom of this error page).&lt;/span&gt; &lt;a rel="noopener noreferrer" href="https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-520/"&gt;Additional troubleshooting resources&lt;/a&gt;.&lt;/p&gt;
+E                     &lt;/div&gt;
+E                 &lt;/div&gt;
+E             &lt;/div&gt;
+E     
+E             &lt;div class="cf-error-footer cf-wrapper w-240 lg:w-full py-10 sm:py-4 sm:px-8 mx-auto text-center sm:text-left border-solid border-0 border-t border-gray-300"&gt;
+E       &lt;p class="text-13"&gt;
+E         &lt;span class="cf-footer-item sm:block sm:mb-1"&gt;Cloudflare Ray ID: &lt;strong class="font-semibold"&gt;9d289953d45be8fb&lt;/strong&gt;&lt;/span&gt;
+E         &lt;span class="cf-footer-separator sm:hidden"&gt;&amp;bull;&lt;/span&gt;
+E         &lt;span id="cf-footer-item-ip" class="cf-footer-item hidden sm:block sm:mb-1"&gt;
+E           Your IP:
+E           &lt;button type="button" id="cf-footer-ip-reveal" class="cf-footer-ip-reveal-btn"&gt;Click to reveal&lt;/button&gt;
+E           &lt;span class="hidden" id="cf-footer-ip"&gt;34.16.56.64&lt;/span&gt;
+E           &lt;span class="cf-footer-separator sm:hidden"&gt;&amp;bull;&lt;/span&gt;
+E         &lt;/span&gt;
+E         &lt;span class="cf-footer-item sm:block sm:mb-1"&gt;&lt;span&gt;Performance &amp;amp; security by&lt;/span&gt; &lt;a rel="noopener noreferrer" href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" id="brand_link" target="_blank"&gt;Cloudflare&lt;/a&gt;&lt;/span&gt;
+E         
+E       &lt;/p&gt;
+E       &lt;script&gt;(function(){function d(){var b=a.getElementById("cf-footer-item-ip"),c=a.getElementById("cf-footer-ip-reveal");b&amp;&amp;"classList"in b&amp;&amp;(b.classList.remove("hidden"),c.addEventListener("click",function(){c.classList.add("hidden");a.getElementById("cf-footer-ip").classList.remove("hidden")}))}var a=document;document.addEventListener&amp;&amp;a.addEventListener("DOMContentLoaded",d)})();&lt;/script&gt;
+E     &lt;/div&gt;&lt;!-- /.error-footer --&gt;
+E     
+E     
+E         &lt;/div&gt;
+E     &lt;/div&gt;
+E     &lt;/body&gt;
+E     &lt;/html&gt;
+E     
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_unified_invite_page.TestValidateInvitation" name="test_11_validate_cancelled_token_rejected" time="0.273"><failure message="AssertionError: Cancel failed: &lt;!DOCTYPE html&gt;&#10;  &lt;!--[if lt IE 7]&gt; &lt;html class=&quot;no-js ie6 oldie&quot; lang=&quot;en-US&quot;&gt; &lt;![endif]--&gt;&#10;  &lt;!--[if IE 7]&gt;    &lt;html class=&quot;no-js ie7 oldie&quot; lang=&quot;en-US&quot;&gt; &lt;![endif]--&gt;&#10;  &lt;!--[if IE 8]&gt;    &lt;html class=&quot;no-js ie8 oldie&quot; lang=&quot;en-US&quot;&gt; &lt;![endif]--&gt;&#10;  &lt;!--[if gt IE 8]&gt;&lt;!--&gt; &lt;html class=&quot;no-js&quot; lang=&quot;en-US&quot;&gt; &lt;!--&lt;![endif]--&gt;&#10;  &lt;head&gt;&#10;  &#10;  &#10;  &lt;title&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud | 520: Web server is returning an unknown error&lt;/title&gt;&#10;  &lt;meta charset=&quot;UTF-8&quot; /&gt;&#10;  &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;&#10;  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=Edge&quot; /&gt;&#10;  &lt;meta name=&quot;robots&quot; content=&quot;noindex, nofollow&quot; /&gt;&#10;  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot; /&gt;&#10;  &lt;link rel=&quot;stylesheet&quot; id=&quot;cf_styles-css&quot; href=&quot;/cdn-cgi/styles/main.css&quot; /&gt;&#10;  &#10;  &#10;  &lt;/head&gt;&#10;  &lt;body&gt;&#10;  &lt;div id=&quot;cf-wrapper&quot;&gt;&#10;      &lt;div id=&quot;cf-error-details&quot; class=&quot;p-0&quot;&gt;&#10;          &lt;header class=&quot;mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8&quot;&gt;&#10;              &lt;h1 class=&quot;inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2&quot;&gt;&#10;                &lt;span class=&quot;inline-block&quot;&gt;Web server is returning an unknown error&lt;/span&gt;&#10;                &lt;span class=&quot;code-label&quot;&gt;Error code 520&lt;/span&gt;&#10;              &lt;/h1&gt;&#10;              &lt;div&gt;&#10;                 Visit &lt;a href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;cloudflare.com&lt;/a&gt; for more information.&#10;              &lt;/div&gt;&#10;              &lt;div class=&quot;mt-3&quot;&gt;2026-02-23 17:56:16 UTC&lt;/div&gt;&#10;          &lt;/header&gt;&#10;          &lt;div class=&quot;my-8 bg-gradient-gray&quot;&gt;&#10;              &lt;div class=&quot;w-240 lg:w-full mx-auto&quot;&gt;&#10;                  &lt;div class=&quot;clearfix md:px-8&quot;&gt;&#10;                    &#10;  &lt;div id=&quot;cf-browser-status&quot; class=&quot; relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center&quot;&gt;&#10;    &lt;div class=&quot;relative mb-10 md:m-0&quot;&gt;&#10;      &#10;      &lt;span class=&quot;cf-icon-browser block md:hidden h-20 bg-center bg-no-repeat&quot;&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4&quot;&gt;&lt;/span&gt;&#10;      &#10;    &lt;/div&gt;&#10;    &lt;span class=&quot;md:block w-full truncate&quot;&gt;You&lt;/span&gt;&#10;    &lt;h3 class=&quot;md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3&quot;&gt;&#10;      &#10;      Browser&#10;      &#10;    &lt;/h3&gt;&#10;    &lt;span class=&quot;leading-1.3 text-2xl text-green-success&quot;&gt;Working&lt;/span&gt;&#10;  &lt;/div&gt;&#10;  &#10;  &lt;div id=&quot;cf-cloudflare-status&quot; class=&quot; relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center&quot;&gt;&#10;    &lt;div class=&quot;relative mb-10 md:m-0&quot;&gt;&#10;      &lt;a href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;&#10;      &lt;span class=&quot;cf-icon-cloud block md:hidden h-20 bg-center bg-no-repeat&quot;&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4&quot;&gt;&lt;/span&gt;&#10;      &lt;/a&gt;&#10;    &lt;/div&gt;&#10;    &lt;span class=&quot;md:block w-full truncate&quot;&gt;Chicago&lt;/span&gt;&#10;    &lt;h3 class=&quot;md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3&quot;&gt;&#10;      &lt;a href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;&#10;      Cloudflare&#10;      &lt;/a&gt;&#10;    &lt;/h3&gt;&#10;    &lt;span class=&quot;leading-1.3 text-2xl text-green-success&quot;&gt;Working&lt;/span&gt;&#10;  &lt;/div&gt;&#10;  &#10;  &lt;div id=&quot;cf-host-status&quot; class=&quot;cf-error-source relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center&quot;&gt;&#10;    &lt;div class=&quot;relative mb-10 md:m-0&quot;&gt;&#10;      &#10;      &lt;span class=&quot;cf-icon-server block md:hidden h-20 bg-center bg-no-repeat&quot;&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-icon-error w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4&quot;&gt;&lt;/span&gt;&#10;      &#10;    &lt;/div&gt;&#10;    &lt;span class=&quot;md:block w-full truncate&quot;&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud&lt;/span&gt;&#10;    &lt;h3 class=&quot;md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3&quot;&gt;&#10;      &#10;      Host&#10;      &#10;    &lt;/h3&gt;&#10;    &lt;span class=&quot;leading-1.3 text-2xl text-red-error&quot;&gt;Error&lt;/span&gt;&#10;  &lt;/div&gt;&#10;  &#10;                  &lt;/div&gt;&#10;              &lt;/div&gt;&#10;          &lt;/div&gt;&#10;  &#10;          &lt;div class=&quot;w-240 lg:w-full mx-auto mb-8 lg:px-8&quot;&gt;&#10;              &lt;div class=&quot;clearfix&quot;&gt;&#10;                  &lt;div class=&quot;w-1/2 md:w-full float-left pr-6 md:pb-10 md:pr-0 leading-relaxed&quot;&gt;&#10;                      &lt;h2 class=&quot;text-3xl font-normal leading-1.3 mb-4&quot;&gt;What happened?&lt;/h2&gt;&#10;                      &lt;p&gt;There is an unknown connection issue between Cloudflare and the origin web server. As a result, the web page can not be displayed.&lt;/p&gt;&#10;                  &lt;/div&gt;&#10;                  &lt;div class=&quot;w-1/2 md:w-full float-left leading-relaxed&quot;&gt;&#10;                      &lt;h2 class=&quot;text-3xl font-normal leading-1.3 mb-4&quot;&gt;What can I do?&lt;/h2&gt;&#10;                            &lt;h3 class=&quot;text-15 font-semibold mb-2&quot;&gt;If you are a visitor of this website:&lt;/h3&gt;&#10;        &lt;p class=&quot;mb-6&quot;&gt;Please try again in a few minutes.&lt;/p&gt;&#10;  &#10;        &lt;h3 class=&quot;text-15 font-semibold mb-2&quot;&gt;If you are the owner of this website:&lt;/h3&gt;&#10;        &lt;p&gt;&lt;span&gt;There is an issue between Cloudflare's cache and your origin web server. Cloudflare monitors for these errors and automatically investigates the cause. To help support the investigation, you can pull the corresponding error log from your web server and submit it our support team.  Please include the Ray ID (which is at the bottom of this error page).&lt;/span&gt; &lt;a rel=&quot;noopener noreferrer&quot; href=&quot;https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-520/&quot;&gt;Additional troubleshooting resources&lt;/a&gt;.&lt;/p&gt;&#10;                  &lt;/div&gt;&#10;              &lt;/div&gt;&#10;          &lt;/div&gt;&#10;  &#10;          &lt;div class=&quot;cf-error-footer cf-wrapper w-240 lg:w-full py-10 sm:py-4 sm:px-8 mx-auto text-center sm:text-left border-solid border-0 border-t border-gray-300&quot;&gt;&#10;    &lt;p class=&quot;text-13&quot;&gt;&#10;      &lt;span class=&quot;cf-footer-item sm:block sm:mb-1&quot;&gt;Cloudflare Ray ID: &lt;strong class=&quot;font-semibold&quot;&gt;9d289955b7c0e7f5&lt;/strong&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-footer-separator sm:hidden&quot;&gt;&amp;bull;&lt;/span&gt;&#10;      &lt;span id=&quot;cf-footer-item-ip&quot; class=&quot;cf-footer-item hidden sm:block sm:mb-1&quot;&gt;&#10;        Your IP:&#10;        &lt;button type=&quot;button&quot; id=&quot;cf-footer-ip-reveal&quot; class=&quot;cf-footer-ip-reveal-btn&quot;&gt;Click to reveal&lt;/button&gt;&#10;        &lt;span class=&quot;hidden&quot; id=&quot;cf-footer-ip&quot;&gt;34.16.56.64&lt;/span&gt;&#10;        &lt;span class=&quot;cf-footer-separator sm:hidden&quot;&gt;&amp;bull;&lt;/span&gt;&#10;      &lt;/span&gt;&#10;      &lt;span class=&quot;cf-footer-item sm:block sm:mb-1&quot;&gt;&lt;span&gt;Performance &amp;amp; security by&lt;/span&gt; &lt;a rel=&quot;noopener noreferrer&quot; href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; id=&quot;brand_link&quot; target=&quot;_blank&quot;&gt;Cloudflare&lt;/a&gt;&lt;/span&gt;&#10;      &#10;    &lt;/p&gt;&#10;    &lt;script&gt;(function(){function d(){var b=a.getElementById(&quot;cf-footer-item-ip&quot;),c=a.getElementById(&quot;cf-footer-ip-reveal&quot;);b&amp;&amp;&quot;classList&quot;in b&amp;&amp;(b.classList.remove(&quot;hidden&quot;),c.addEventListener(&quot;click&quot;,function(){c.classList.add(&quot;hidden&quot;);a.getElementById(&quot;cf-footer-ip&quot;).classList.remove(&quot;hidden&quot;)}))}var a=document;document.addEventListener&amp;&amp;a.addEventListener(&quot;DOMContentLoaded&quot;,d)})();&lt;/script&gt;&#10;  &lt;/div&gt;&lt;!-- /.error-footer --&gt;&#10;  &#10;  &#10;      &lt;/div&gt;&#10;  &lt;/div&gt;&#10;  &lt;/body&gt;&#10;  &lt;/html&gt;&#10;  &#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_unified_invite_page.py:450: in test_11_validate_cancelled_token_rejected
+    assert cancel_response.status_code == 200, f"Cancel failed: {cancel_response.text}"
+E   AssertionError: Cancel failed: &lt;!DOCTYPE html&gt;
+E     &lt;!--[if lt IE 7]&gt; &lt;html class="no-js ie6 oldie" lang="en-US"&gt; &lt;![endif]--&gt;
+E     &lt;!--[if IE 7]&gt;    &lt;html class="no-js ie7 oldie" lang="en-US"&gt; &lt;![endif]--&gt;
+E     &lt;!--[if IE 8]&gt;    &lt;html class="no-js ie8 oldie" lang="en-US"&gt; &lt;![endif]--&gt;
+E     &lt;!--[if gt IE 8]&gt;&lt;!--&gt; &lt;html class="no-js" lang="en-US"&gt; &lt;!--&lt;![endif]--&gt;
+E     &lt;head&gt;
+E     
+E     
+E     &lt;title&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud | 520: Web server is returning an unknown error&lt;/title&gt;
+E     &lt;meta charset="UTF-8" /&gt;
+E     &lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
+E     &lt;meta http-equiv="X-UA-Compatible" content="IE=Edge" /&gt;
+E     &lt;meta name="robots" content="noindex, nofollow" /&gt;
+E     &lt;meta name="viewport" content="width=device-width,initial-scale=1" /&gt;
+E     &lt;link rel="stylesheet" id="cf_styles-css" href="/cdn-cgi/styles/main.css" /&gt;
+E     
+E     
+E     &lt;/head&gt;
+E     &lt;body&gt;
+E     &lt;div id="cf-wrapper"&gt;
+E         &lt;div id="cf-error-details" class="p-0"&gt;
+E             &lt;header class="mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8"&gt;
+E                 &lt;h1 class="inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2"&gt;
+E                   &lt;span class="inline-block"&gt;Web server is returning an unknown error&lt;/span&gt;
+E                   &lt;span class="code-label"&gt;Error code 520&lt;/span&gt;
+E                 &lt;/h1&gt;
+E                 &lt;div&gt;
+E                    Visit &lt;a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" target="_blank" rel="noopener noreferrer"&gt;cloudflare.com&lt;/a&gt; for more information.
+E                 &lt;/div&gt;
+E                 &lt;div class="mt-3"&gt;2026-02-23 17:56:16 UTC&lt;/div&gt;
+E             &lt;/header&gt;
+E             &lt;div class="my-8 bg-gradient-gray"&gt;
+E                 &lt;div class="w-240 lg:w-full mx-auto"&gt;
+E                     &lt;div class="clearfix md:px-8"&gt;
+E                       
+E     &lt;div id="cf-browser-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center"&gt;
+E       &lt;div class="relative mb-10 md:m-0"&gt;
+E         
+E         &lt;span class="cf-icon-browser block md:hidden h-20 bg-center bg-no-repeat"&gt;&lt;/span&gt;
+E         &lt;span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"&gt;&lt;/span&gt;
+E         
+E       &lt;/div&gt;
+E       &lt;span class="md:block w-full truncate"&gt;You&lt;/span&gt;
+E       &lt;h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3"&gt;
+E         
+E         Browser
+E         
+E       &lt;/h3&gt;
+E       &lt;span class="leading-1.3 text-2xl text-green-success"&gt;Working&lt;/span&gt;
+E     &lt;/div&gt;
+E     
+E     &lt;div id="cf-cloudflare-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center"&gt;
+E       &lt;div class="relative mb-10 md:m-0"&gt;
+E         &lt;a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" target="_blank" rel="noopener noreferrer"&gt;
+E         &lt;span class="cf-icon-cloud block md:hidden h-20 bg-center bg-no-repeat"&gt;&lt;/span&gt;
+E         &lt;span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"&gt;&lt;/span&gt;
+E         &lt;/a&gt;
+E       &lt;/div&gt;
+E       &lt;span class="md:block w-full truncate"&gt;Chicago&lt;/span&gt;
+E       &lt;h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3"&gt;
+E         &lt;a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" target="_blank" rel="noopener noreferrer"&gt;
+E         Cloudflare
+E         &lt;/a&gt;
+E       &lt;/h3&gt;
+E       &lt;span class="leading-1.3 text-2xl text-green-success"&gt;Working&lt;/span&gt;
+E     &lt;/div&gt;
+E     
+E     &lt;div id="cf-host-status" class="cf-error-source relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center"&gt;
+E       &lt;div class="relative mb-10 md:m-0"&gt;
+E         
+E         &lt;span class="cf-icon-server block md:hidden h-20 bg-center bg-no-repeat"&gt;&lt;/span&gt;
+E         &lt;span class="cf-icon-error w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"&gt;&lt;/span&gt;
+E         
+E       &lt;/div&gt;
+E       &lt;span class="md:block w-full truncate"&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud&lt;/span&gt;
+E       &lt;h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3"&gt;
+E         
+E         Host
+E         
+E       &lt;/h3&gt;
+E       &lt;span class="leading-1.3 text-2xl text-red-error"&gt;Error&lt;/span&gt;
+E     &lt;/div&gt;
+E     
+E                     &lt;/div&gt;
+E                 &lt;/div&gt;
+E             &lt;/div&gt;
+E     
+E             &lt;div class="w-240 lg:w-full mx-auto mb-8 lg:px-8"&gt;
+E                 &lt;div class="clearfix"&gt;
+E                     &lt;div class="w-1/2 md:w-full float-left pr-6 md:pb-10 md:pr-0 leading-relaxed"&gt;
+E                         &lt;h2 class="text-3xl font-normal leading-1.3 mb-4"&gt;What happened?&lt;/h2&gt;
+E                         &lt;p&gt;There is an unknown connection issue between Cloudflare and the origin web server. As a result, the web page can not be displayed.&lt;/p&gt;
+E                     &lt;/div&gt;
+E                     &lt;div class="w-1/2 md:w-full float-left leading-relaxed"&gt;
+E                         &lt;h2 class="text-3xl font-normal leading-1.3 mb-4"&gt;What can I do?&lt;/h2&gt;
+E                               &lt;h3 class="text-15 font-semibold mb-2"&gt;If you are a visitor of this website:&lt;/h3&gt;
+E           &lt;p class="mb-6"&gt;Please try again in a few minutes.&lt;/p&gt;
+E     
+E           &lt;h3 class="text-15 font-semibold mb-2"&gt;If you are the owner of this website:&lt;/h3&gt;
+E           &lt;p&gt;&lt;span&gt;There is an issue between Cloudflare's cache and your origin web server. Cloudflare monitors for these errors and automatically investigates the cause. To help support the investigation, you can pull the corresponding error log from your web server and submit it our support team.  Please include the Ray ID (which is at the bottom of this error page).&lt;/span&gt; &lt;a rel="noopener noreferrer" href="https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-520/"&gt;Additional troubleshooting resources&lt;/a&gt;.&lt;/p&gt;
+E                     &lt;/div&gt;
+E                 &lt;/div&gt;
+E             &lt;/div&gt;
+E     
+E             &lt;div class="cf-error-footer cf-wrapper w-240 lg:w-full py-10 sm:py-4 sm:px-8 mx-auto text-center sm:text-left border-solid border-0 border-t border-gray-300"&gt;
+E       &lt;p class="text-13"&gt;
+E         &lt;span class="cf-footer-item sm:block sm:mb-1"&gt;Cloudflare Ray ID: &lt;strong class="font-semibold"&gt;9d289955b7c0e7f5&lt;/strong&gt;&lt;/span&gt;
+E         &lt;span class="cf-footer-separator sm:hidden"&gt;&amp;bull;&lt;/span&gt;
+E         &lt;span id="cf-footer-item-ip" class="cf-footer-item hidden sm:block sm:mb-1"&gt;
+E           Your IP:
+E           &lt;button type="button" id="cf-footer-ip-reveal" class="cf-footer-ip-reveal-btn"&gt;Click to reveal&lt;/button&gt;
+E           &lt;span class="hidden" id="cf-footer-ip"&gt;34.16.56.64&lt;/span&gt;
+E           &lt;span class="cf-footer-separator sm:hidden"&gt;&amp;bull;&lt;/span&gt;
+E         &lt;/span&gt;
+E         &lt;span class="cf-footer-item sm:block sm:mb-1"&gt;&lt;span&gt;Performance &amp;amp; security by&lt;/span&gt; &lt;a rel="noopener noreferrer" href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" id="brand_link" target="_blank"&gt;Cloudflare&lt;/a&gt;&lt;/span&gt;
+E         
+E       &lt;/p&gt;
+E       &lt;script&gt;(function(){function d(){var b=a.getElementById("cf-footer-item-ip"),c=a.getElementById("cf-footer-ip-reveal");b&amp;&amp;"classList"in b&amp;&amp;(b.classList.remove("hidden"),c.addEventListener("click",function(){c.classList.add("hidden");a.getElementById("cf-footer-ip").classList.remove("hidden")}))}var a=document;document.addEventListener&amp;&amp;a.addEventListener("DOMContentLoaded",d)})();&lt;/script&gt;
+E     &lt;/div&gt;&lt;!-- /.error-footer --&gt;
+E     
+E     
+E         &lt;/div&gt;
+E     &lt;/div&gt;
+E     &lt;/body&gt;
+E     &lt;/html&gt;
+E     
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_unified_invite_page.TestValidateInvitation" name="test_12_validate_valid_token_works" time="0.293" /><testcase classname="backend.tests.test_unified_invite_page.TestDeleteInvitation" name="test_13_delete_invitation" time="0.436" /><testcase classname="backend.tests.test_unified_invite_page.TestDeleteInvitation" name="test_14_delete_nonexistent_returns_404" time="0.326" /><testcase classname="backend.tests.test_unified_invite_page.TestResendCannotResendCancelled" name="test_15_resend_cancelled_fails" time="0.332"><failure message="AssertionError: Cancel failed: &lt;!DOCTYPE html&gt;&#10;  &lt;!--[if lt IE 7]&gt; &lt;html class=&quot;no-js ie6 oldie&quot; lang=&quot;en-US&quot;&gt; &lt;![endif]--&gt;&#10;  &lt;!--[if IE 7]&gt;    &lt;html class=&quot;no-js ie7 oldie&quot; lang=&quot;en-US&quot;&gt; &lt;![endif]--&gt;&#10;  &lt;!--[if IE 8]&gt;    &lt;html class=&quot;no-js ie8 oldie&quot; lang=&quot;en-US&quot;&gt; &lt;![endif]--&gt;&#10;  &lt;!--[if gt IE 8]&gt;&lt;!--&gt; &lt;html class=&quot;no-js&quot; lang=&quot;en-US&quot;&gt; &lt;!--&lt;![endif]--&gt;&#10;  &lt;head&gt;&#10;  &#10;  &#10;  &lt;title&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud | 520: Web server is returning an unknown error&lt;/title&gt;&#10;  &lt;meta charset=&quot;UTF-8&quot; /&gt;&#10;  &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;&#10;  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=Edge&quot; /&gt;&#10;  &lt;meta name=&quot;robots&quot; content=&quot;noindex, nofollow&quot; /&gt;&#10;  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot; /&gt;&#10;  &lt;link rel=&quot;stylesheet&quot; id=&quot;cf_styles-css&quot; href=&quot;/cdn-cgi/styles/main.css&quot; /&gt;&#10;  &#10;  &#10;  &lt;/head&gt;&#10;  &lt;body&gt;&#10;  &lt;div id=&quot;cf-wrapper&quot;&gt;&#10;      &lt;div id=&quot;cf-error-details&quot; class=&quot;p-0&quot;&gt;&#10;          &lt;header class=&quot;mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8&quot;&gt;&#10;              &lt;h1 class=&quot;inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2&quot;&gt;&#10;                &lt;span class=&quot;inline-block&quot;&gt;Web server is returning an unknown error&lt;/span&gt;&#10;                &lt;span class=&quot;code-label&quot;&gt;Error code 520&lt;/span&gt;&#10;              &lt;/h1&gt;&#10;              &lt;div&gt;&#10;                 Visit &lt;a href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;cloudflare.com&lt;/a&gt; for more information.&#10;              &lt;/div&gt;&#10;              &lt;div class=&quot;mt-3&quot;&gt;2026-02-23 17:56:18 UTC&lt;/div&gt;&#10;          &lt;/header&gt;&#10;          &lt;div class=&quot;my-8 bg-gradient-gray&quot;&gt;&#10;              &lt;div class=&quot;w-240 lg:w-full mx-auto&quot;&gt;&#10;                  &lt;div class=&quot;clearfix md:px-8&quot;&gt;&#10;                    &#10;  &lt;div id=&quot;cf-browser-status&quot; class=&quot; relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center&quot;&gt;&#10;    &lt;div class=&quot;relative mb-10 md:m-0&quot;&gt;&#10;      &#10;      &lt;span class=&quot;cf-icon-browser block md:hidden h-20 bg-center bg-no-repeat&quot;&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4&quot;&gt;&lt;/span&gt;&#10;      &#10;    &lt;/div&gt;&#10;    &lt;span class=&quot;md:block w-full truncate&quot;&gt;You&lt;/span&gt;&#10;    &lt;h3 class=&quot;md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3&quot;&gt;&#10;      &#10;      Browser&#10;      &#10;    &lt;/h3&gt;&#10;    &lt;span class=&quot;leading-1.3 text-2xl text-green-success&quot;&gt;Working&lt;/span&gt;&#10;  &lt;/div&gt;&#10;  &#10;  &lt;div id=&quot;cf-cloudflare-status&quot; class=&quot; relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center&quot;&gt;&#10;    &lt;div class=&quot;relative mb-10 md:m-0&quot;&gt;&#10;      &lt;a href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;&#10;      &lt;span class=&quot;cf-icon-cloud block md:hidden h-20 bg-center bg-no-repeat&quot;&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4&quot;&gt;&lt;/span&gt;&#10;      &lt;/a&gt;&#10;    &lt;/div&gt;&#10;    &lt;span class=&quot;md:block w-full truncate&quot;&gt;Chicago&lt;/span&gt;&#10;    &lt;h3 class=&quot;md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3&quot;&gt;&#10;      &lt;a href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;&#10;      Cloudflare&#10;      &lt;/a&gt;&#10;    &lt;/h3&gt;&#10;    &lt;span class=&quot;leading-1.3 text-2xl text-green-success&quot;&gt;Working&lt;/span&gt;&#10;  &lt;/div&gt;&#10;  &#10;  &lt;div id=&quot;cf-host-status&quot; class=&quot;cf-error-source relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center&quot;&gt;&#10;    &lt;div class=&quot;relative mb-10 md:m-0&quot;&gt;&#10;      &#10;      &lt;span class=&quot;cf-icon-server block md:hidden h-20 bg-center bg-no-repeat&quot;&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-icon-error w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4&quot;&gt;&lt;/span&gt;&#10;      &#10;    &lt;/div&gt;&#10;    &lt;span class=&quot;md:block w-full truncate&quot;&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud&lt;/span&gt;&#10;    &lt;h3 class=&quot;md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3&quot;&gt;&#10;      &#10;      Host&#10;      &#10;    &lt;/h3&gt;&#10;    &lt;span class=&quot;leading-1.3 text-2xl text-red-error&quot;&gt;Error&lt;/span&gt;&#10;  &lt;/div&gt;&#10;  &#10;                  &lt;/div&gt;&#10;              &lt;/div&gt;&#10;          &lt;/div&gt;&#10;  &#10;          &lt;div class=&quot;w-240 lg:w-full mx-auto mb-8 lg:px-8&quot;&gt;&#10;              &lt;div class=&quot;clearfix&quot;&gt;&#10;                  &lt;div class=&quot;w-1/2 md:w-full float-left pr-6 md:pb-10 md:pr-0 leading-relaxed&quot;&gt;&#10;                      &lt;h2 class=&quot;text-3xl font-normal leading-1.3 mb-4&quot;&gt;What happened?&lt;/h2&gt;&#10;                      &lt;p&gt;There is an unknown connection issue between Cloudflare and the origin web server. As a result, the web page can not be displayed.&lt;/p&gt;&#10;                  &lt;/div&gt;&#10;                  &lt;div class=&quot;w-1/2 md:w-full float-left leading-relaxed&quot;&gt;&#10;                      &lt;h2 class=&quot;text-3xl font-normal leading-1.3 mb-4&quot;&gt;What can I do?&lt;/h2&gt;&#10;                            &lt;h3 class=&quot;text-15 font-semibold mb-2&quot;&gt;If you are a visitor of this website:&lt;/h3&gt;&#10;        &lt;p class=&quot;mb-6&quot;&gt;Please try again in a few minutes.&lt;/p&gt;&#10;  &#10;        &lt;h3 class=&quot;text-15 font-semibold mb-2&quot;&gt;If you are the owner of this website:&lt;/h3&gt;&#10;        &lt;p&gt;&lt;span&gt;There is an issue between Cloudflare's cache and your origin web server. Cloudflare monitors for these errors and automatically investigates the cause. To help support the investigation, you can pull the corresponding error log from your web server and submit it our support team.  Please include the Ray ID (which is at the bottom of this error page).&lt;/span&gt; &lt;a rel=&quot;noopener noreferrer&quot; href=&quot;https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-520/&quot;&gt;Additional troubleshooting resources&lt;/a&gt;.&lt;/p&gt;&#10;                  &lt;/div&gt;&#10;              &lt;/div&gt;&#10;          &lt;/div&gt;&#10;  &#10;          &lt;div class=&quot;cf-error-footer cf-wrapper w-240 lg:w-full py-10 sm:py-4 sm:px-8 mx-auto text-center sm:text-left border-solid border-0 border-t border-gray-300&quot;&gt;&#10;    &lt;p class=&quot;text-13&quot;&gt;&#10;      &lt;span class=&quot;cf-footer-item sm:block sm:mb-1&quot;&gt;Cloudflare Ray ID: &lt;strong class=&quot;font-semibold&quot;&gt;9d28995e720fe1eb&lt;/strong&gt;&lt;/span&gt;&#10;      &lt;span class=&quot;cf-footer-separator sm:hidden&quot;&gt;&amp;bull;&lt;/span&gt;&#10;      &lt;span id=&quot;cf-footer-item-ip&quot; class=&quot;cf-footer-item hidden sm:block sm:mb-1&quot;&gt;&#10;        Your IP:&#10;        &lt;button type=&quot;button&quot; id=&quot;cf-footer-ip-reveal&quot; class=&quot;cf-footer-ip-reveal-btn&quot;&gt;Click to reveal&lt;/button&gt;&#10;        &lt;span class=&quot;hidden&quot; id=&quot;cf-footer-ip&quot;&gt;34.16.56.64&lt;/span&gt;&#10;        &lt;span class=&quot;cf-footer-separator sm:hidden&quot;&gt;&amp;bull;&lt;/span&gt;&#10;      &lt;/span&gt;&#10;      &lt;span class=&quot;cf-footer-item sm:block sm:mb-1&quot;&gt;&lt;span&gt;Performance &amp;amp; security by&lt;/span&gt; &lt;a rel=&quot;noopener noreferrer&quot; href=&quot;https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud&quot; id=&quot;brand_link&quot; target=&quot;_blank&quot;&gt;Cloudflare&lt;/a&gt;&lt;/span&gt;&#10;      &#10;    &lt;/p&gt;&#10;    &lt;script&gt;(function(){function d(){var b=a.getElementById(&quot;cf-footer-item-ip&quot;),c=a.getElementById(&quot;cf-footer-ip-reveal&quot;);b&amp;&amp;&quot;classList&quot;in b&amp;&amp;(b.classList.remove(&quot;hidden&quot;),c.addEventListener(&quot;click&quot;,function(){c.classList.add(&quot;hidden&quot;);a.getElementById(&quot;cf-footer-ip&quot;).classList.remove(&quot;hidden&quot;)}))}var a=document;document.addEventListener&amp;&amp;a.addEventListener(&quot;DOMContentLoaded&quot;,d)})();&lt;/script&gt;&#10;  &lt;/div&gt;&lt;!-- /.error-footer --&gt;&#10;  &#10;  &#10;      &lt;/div&gt;&#10;  &lt;/div&gt;&#10;  &lt;/body&gt;&#10;  &lt;/html&gt;&#10;  &#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_unified_invite_page.py:553: in test_15_resend_cancelled_fails
+    assert cancel_response.status_code == 200, f"Cancel failed: {cancel_response.text}"
+E   AssertionError: Cancel failed: &lt;!DOCTYPE html&gt;
+E     &lt;!--[if lt IE 7]&gt; &lt;html class="no-js ie6 oldie" lang="en-US"&gt; &lt;![endif]--&gt;
+E     &lt;!--[if IE 7]&gt;    &lt;html class="no-js ie7 oldie" lang="en-US"&gt; &lt;![endif]--&gt;
+E     &lt;!--[if IE 8]&gt;    &lt;html class="no-js ie8 oldie" lang="en-US"&gt; &lt;![endif]--&gt;
+E     &lt;!--[if gt IE 8]&gt;&lt;!--&gt; &lt;html class="no-js" lang="en-US"&gt; &lt;!--&lt;![endif]--&gt;
+E     &lt;head&gt;
+E     
+E     
+E     &lt;title&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud | 520: Web server is returning an unknown error&lt;/title&gt;
+E     &lt;meta charset="UTF-8" /&gt;
+E     &lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
+E     &lt;meta http-equiv="X-UA-Compatible" content="IE=Edge" /&gt;
+E     &lt;meta name="robots" content="noindex, nofollow" /&gt;
+E     &lt;meta name="viewport" content="width=device-width,initial-scale=1" /&gt;
+E     &lt;link rel="stylesheet" id="cf_styles-css" href="/cdn-cgi/styles/main.css" /&gt;
+E     
+E     
+E     &lt;/head&gt;
+E     &lt;body&gt;
+E     &lt;div id="cf-wrapper"&gt;
+E         &lt;div id="cf-error-details" class="p-0"&gt;
+E             &lt;header class="mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8"&gt;
+E                 &lt;h1 class="inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2"&gt;
+E                   &lt;span class="inline-block"&gt;Web server is returning an unknown error&lt;/span&gt;
+E                   &lt;span class="code-label"&gt;Error code 520&lt;/span&gt;
+E                 &lt;/h1&gt;
+E                 &lt;div&gt;
+E                    Visit &lt;a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" target="_blank" rel="noopener noreferrer"&gt;cloudflare.com&lt;/a&gt; for more information.
+E                 &lt;/div&gt;
+E                 &lt;div class="mt-3"&gt;2026-02-23 17:56:18 UTC&lt;/div&gt;
+E             &lt;/header&gt;
+E             &lt;div class="my-8 bg-gradient-gray"&gt;
+E                 &lt;div class="w-240 lg:w-full mx-auto"&gt;
+E                     &lt;div class="clearfix md:px-8"&gt;
+E                       
+E     &lt;div id="cf-browser-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center"&gt;
+E       &lt;div class="relative mb-10 md:m-0"&gt;
+E         
+E         &lt;span class="cf-icon-browser block md:hidden h-20 bg-center bg-no-repeat"&gt;&lt;/span&gt;
+E         &lt;span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"&gt;&lt;/span&gt;
+E         
+E       &lt;/div&gt;
+E       &lt;span class="md:block w-full truncate"&gt;You&lt;/span&gt;
+E       &lt;h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3"&gt;
+E         
+E         Browser
+E         
+E       &lt;/h3&gt;
+E       &lt;span class="leading-1.3 text-2xl text-green-success"&gt;Working&lt;/span&gt;
+E     &lt;/div&gt;
+E     
+E     &lt;div id="cf-cloudflare-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center"&gt;
+E       &lt;div class="relative mb-10 md:m-0"&gt;
+E         &lt;a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" target="_blank" rel="noopener noreferrer"&gt;
+E         &lt;span class="cf-icon-cloud block md:hidden h-20 bg-center bg-no-repeat"&gt;&lt;/span&gt;
+E         &lt;span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"&gt;&lt;/span&gt;
+E         &lt;/a&gt;
+E       &lt;/div&gt;
+E       &lt;span class="md:block w-full truncate"&gt;Chicago&lt;/span&gt;
+E       &lt;h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3"&gt;
+E         &lt;a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" target="_blank" rel="noopener noreferrer"&gt;
+E         Cloudflare
+E         &lt;/a&gt;
+E       &lt;/h3&gt;
+E       &lt;span class="leading-1.3 text-2xl text-green-success"&gt;Working&lt;/span&gt;
+E     &lt;/div&gt;
+E     
+E     &lt;div id="cf-host-status" class="cf-error-source relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center"&gt;
+E       &lt;div class="relative mb-10 md:m-0"&gt;
+E         
+E         &lt;span class="cf-icon-server block md:hidden h-20 bg-center bg-no-repeat"&gt;&lt;/span&gt;
+E         &lt;span class="cf-icon-error w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"&gt;&lt;/span&gt;
+E         
+E       &lt;/div&gt;
+E       &lt;span class="md:block w-full truncate"&gt;booking-hub-174.cluster-3.preview.emergentcf.cloud&lt;/span&gt;
+E       &lt;h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3"&gt;
+E         
+E         Host
+E         
+E       &lt;/h3&gt;
+E       &lt;span class="leading-1.3 text-2xl text-red-error"&gt;Error&lt;/span&gt;
+E     &lt;/div&gt;
+E     
+E                     &lt;/div&gt;
+E                 &lt;/div&gt;
+E             &lt;/div&gt;
+E     
+E             &lt;div class="w-240 lg:w-full mx-auto mb-8 lg:px-8"&gt;
+E                 &lt;div class="clearfix"&gt;
+E                     &lt;div class="w-1/2 md:w-full float-left pr-6 md:pb-10 md:pr-0 leading-relaxed"&gt;
+E                         &lt;h2 class="text-3xl font-normal leading-1.3 mb-4"&gt;What happened?&lt;/h2&gt;
+E                         &lt;p&gt;There is an unknown connection issue between Cloudflare and the origin web server. As a result, the web page can not be displayed.&lt;/p&gt;
+E                     &lt;/div&gt;
+E                     &lt;div class="w-1/2 md:w-full float-left leading-relaxed"&gt;
+E                         &lt;h2 class="text-3xl font-normal leading-1.3 mb-4"&gt;What can I do?&lt;/h2&gt;
+E                               &lt;h3 class="text-15 font-semibold mb-2"&gt;If you are a visitor of this website:&lt;/h3&gt;
+E           &lt;p class="mb-6"&gt;Please try again in a few minutes.&lt;/p&gt;
+E     
+E           &lt;h3 class="text-15 font-semibold mb-2"&gt;If you are the owner of this website:&lt;/h3&gt;
+E           &lt;p&gt;&lt;span&gt;There is an issue between Cloudflare's cache and your origin web server. Cloudflare monitors for these errors and automatically investigates the cause. To help support the investigation, you can pull the corresponding error log from your web server and submit it our support team.  Please include the Ray ID (which is at the bottom of this error page).&lt;/span&gt; &lt;a rel="noopener noreferrer" href="https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-520/"&gt;Additional troubleshooting resources&lt;/a&gt;.&lt;/p&gt;
+E                     &lt;/div&gt;
+E                 &lt;/div&gt;
+E             &lt;/div&gt;
+E     
+E             &lt;div class="cf-error-footer cf-wrapper w-240 lg:w-full py-10 sm:py-4 sm:px-8 mx-auto text-center sm:text-left border-solid border-0 border-t border-gray-300"&gt;
+E       &lt;p class="text-13"&gt;
+E         &lt;span class="cf-footer-item sm:block sm:mb-1"&gt;Cloudflare Ray ID: &lt;strong class="font-semibold"&gt;9d28995e720fe1eb&lt;/strong&gt;&lt;/span&gt;
+E         &lt;span class="cf-footer-separator sm:hidden"&gt;&amp;bull;&lt;/span&gt;
+E         &lt;span id="cf-footer-item-ip" class="cf-footer-item hidden sm:block sm:mb-1"&gt;
+E           Your IP:
+E           &lt;button type="button" id="cf-footer-ip-reveal" class="cf-footer-ip-reveal-btn"&gt;Click to reveal&lt;/button&gt;
+E           &lt;span class="hidden" id="cf-footer-ip"&gt;34.16.56.64&lt;/span&gt;
+E           &lt;span class="cf-footer-separator sm:hidden"&gt;&amp;bull;&lt;/span&gt;
+E         &lt;/span&gt;
+E         &lt;span class="cf-footer-item sm:block sm:mb-1"&gt;&lt;span&gt;Performance &amp;amp; security by&lt;/span&gt; &lt;a rel="noopener noreferrer" href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_520&amp;utm_campaign=booking-hub-174.cluster-3.preview.emergentcf.cloud" id="brand_link" target="_blank"&gt;Cloudflare&lt;/a&gt;&lt;/span&gt;
+E         
+E       &lt;/p&gt;
+E       &lt;script&gt;(function(){function d(){var b=a.getElementById("cf-footer-item-ip"),c=a.getElementById("cf-footer-ip-reveal");b&amp;&amp;"classList"in b&amp;&amp;(b.classList.remove("hidden"),c.addEventListener("click",function(){c.classList.add("hidden");a.getElementById("cf-footer-ip").classList.remove("hidden")}))}var a=document;document.addEventListener&amp;&amp;a.addEventListener("DOMContentLoaded",d)})();&lt;/script&gt;
+E     &lt;/div&gt;&lt;!-- /.error-footer --&gt;
+E     
+E     
+E         &lt;/div&gt;
+E     &lt;/div&gt;
+E     &lt;/body&gt;
+E     &lt;/html&gt;
+E     
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_unified_invite_page.TestInvitation48HourExpiry" name="test_16_invitation_expires_in_48_hours" time="0.134" /><testcase classname="backend.tests.test_unified_invite_page.TestCleanup" name="test_99_cleanup" time="2.199" /></testsuite></testsuites>
