@@ -2769,19 +2769,22 @@ async def import_property_from_ota(data: OTAImportRequest, user=Depends(require_
             
             if not existing and booking_data["status"] != "cancelled":
                 booking_id = f"book_{uuid.uuid4().hex[:12]}"
+                guest_name = booking_data["guest_name"]
                 new_booking = {
                     "id": booking_id,
                     "company_id": company_id,
                     "property_id": property_id,
-                    "guest_name": booking_data["guest_name"],
+                    "guest_name": guest_name,
                     "check_in": booking_data["check_in"],
                     "check_out": booking_data["check_out"],
                     "total_amount": 0,
                     "guests_count": 1,
                     "status": "confirmed",
+                    "booking_type": booking_data.get("booking_type", "reservation"),
                     "ota_source": data.source,
                     "ota_external_id": booking_data["uid"],
                     "ota_feed_id": feed_id,
+                    "is_data_complete": booking_is_data_complete({"guest_name": guest_name, "total_amount": 0}),
                     "imported_at": now_str,
                     "created_at": now_str,
                     "updated_at": now_str,
