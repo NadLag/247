@@ -1,0 +1,111 @@
+{
+  "summary": "RBAC (Role-Based Access Control) enforcement testing completed. All 23 backend tests PASSED. Verified Admin full access, Owner restricted access (403 on staff/payouts, filtered properties/bookings/expenses), Staff restricted access (403 on financials without permission), and Staff with view_financials permission can access analytics.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_rbac_enforcement.py",
+    "/app/test_reports/pytest/pytest_rbac.xml"
+  ],
+  "passed_tests": [
+    "TestAdminAccess::test_admin_can_access_staff_endpoint - Admin GET /api/staff returns 200, sees all staff",
+    "TestAdminAccess::test_admin_can_access_payouts_endpoint - Admin GET /api/payouts returns 200, sees all payouts",
+    "TestAdminAccess::test_admin_can_access_analytics_endpoint - Admin GET /api/analytics returns 200",
+    "TestAdminAccess::test_admin_can_access_expenses_endpoint - Admin GET /api/expenses returns 200, sees all expenses",
+    "TestAdminAccess::test_admin_sees_all_properties - Admin sees all 3 properties",
+    "TestAdminAccess::test_admin_sees_all_bookings - Admin sees bookings from all properties",
+    "TestOwnerAccess::test_owner_gets_403_on_staff_endpoint - Owner GET /api/staff returns 403 Forbidden",
+    "TestOwnerAccess::test_owner_gets_403_on_payouts_endpoint - Owner GET /api/payouts returns 403 Forbidden",
+    "TestOwnerAccess::test_owner_can_only_see_assigned_properties - Owner sees only 2 assigned properties (not prop_3)",
+    "TestOwnerAccess::test_owner_can_only_see_bookings_for_assigned_properties - Owner sees bookings only for assigned properties",
+    "TestOwnerAccess::test_owner_can_only_see_expenses_for_assigned_properties - Owner sees expenses only for assigned properties",
+    "TestOwnerAccess::test_owner_dashboard_kpis_filtered_by_assigned_properties - Owner KPIs show total_properties: 2 (filtered)",
+    "TestOwnerAccess::test_owner_can_access_analytics - Owner CAN access /api/analytics (filtered by their properties)",
+    "TestStaffAccess::test_staff_gets_403_on_staff_endpoint_for_others - Staff sees only their own record on /api/staff",
+    "TestStaffAccess::test_staff_gets_403_on_payouts_endpoint - Staff GET /api/payouts returns 403 Forbidden",
+    "TestStaffAccess::test_staff_without_permission_gets_403_on_analytics - Staff without view_financials GET /api/analytics returns 403",
+    "TestStaffAccess::test_staff_without_permission_gets_403_on_expenses - Staff without view_financials GET /api/expenses returns 403",
+    "TestStaffAccess::test_staff_without_permission_gets_403_on_source_breakdown - Staff without permission GET /api/analytics/source-breakdown returns 403",
+    "TestStaffWithPermission::test_staff_with_permission_can_access_analytics - Staff WITH view_financials CAN access /api/analytics (200)",
+    "TestStaffWithPermission::test_staff_with_permission_can_access_source_breakdown - Staff WITH view_financials CAN access /api/analytics/source-breakdown (200)",
+    "TestStaffWithPermission::test_staff_with_permission_can_access_expenses - Staff WITH view_financials CAN access /api/expenses (200)",
+    "TestStaffWithPermission::test_staff_with_permission_still_denied_payouts - Staff WITH view_financials still gets 403 on /api/payouts (admin-only)",
+    "TestCrossRoleComparison::test_admin_sees_more_properties_than_owner - Admin sees 3 properties, Owner sees 2"
+  ],
+  "features_verified": {
+    "admin_full_access": {
+      "status": "WORKING",
+      "details": "Admin role has unrestricted access to all endpoints: /api/staff, /api/payouts, /api/analytics, /api/expenses, /api/properties, /api/bookings"
+    },
+    "owner_restricted_staff_access": {
+      "status": "WORKING",
+      "details": "Owner gets 403 Forbidden on /api/staff endpoint (server.py line 1117-1119)"
+    },
+    "owner_restricted_payouts_access": {
+      "status": "WORKING",
+      "details": "Owner gets 403 Forbidden on /api/payouts endpoint (server.py line 2105-2107)"
+    },
+    "owner_filtered_properties": {
+      "status": "WORKING",
+      "details": "Owner sees only properties in user.assigned_properties array (server.py line 1044-1049)"
+    },
+    "owner_filtered_bookings": {
+      "status": "WORKING",
+      "details": "Owner sees only bookings for assigned properties (server.py line 1274-1292)"
+    },
+    "owner_filtered_expenses": {
+      "status": "WORKING",
+      "details": "Owner sees only expenses for assigned properties (server.py line 1189-1202)"
+    },
+    "owner_filtered_dashboard_kpis": {
+      "status": "WORKING",
+      "details": "Owner KPIs filter by assigned_properties (server.py line 824-849)"
+    },
+    "staff_can_see_own_record": {
+      "status": "WORKING",
+      "details": "Staff GET /api/staff returns only their own record (server.py line 1121-1123)"
+    },
+    "staff_restricted_payouts": {
+      "status": "WORKING",
+      "details": "Staff gets 403 on /api/payouts (server.py line 2109-2111)"
+    },
+    "staff_restricted_analytics_without_permission": {
+      "status": "WORKING",
+      "details": "Staff without permissions.view_financials gets 403 on /api/analytics (server.py line 1859-1863)"
+    },
+    "staff_with_permission_can_access_analytics": {
+      "status": "WORKING",
+      "details": "Staff WITH permissions.view_financials=true CAN access /api/analytics (200 OK)"
+    }
+  },
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✅ RBAC enforcement correctly implemented in /api/staff (line 1107-1126) - owners get 403, staff sees only own record",
+    "✅ RBAC enforcement correctly implemented in /api/payouts (line 2096-2112) - owners AND staff get 403",
+    "✅ RBAC enforcement correctly implemented in /api/analytics (line 1846-1863) - staff without permission gets 403",
+    "✅ RBAC enforcement correctly implemented in /api/analytics/source-breakdown (line 2011-2028) - same RBAC as analytics",
+    "✅ RBAC enforcement correctly implemented in /api/expenses (line 1165-1216) - staff without permission gets 403, owners filtered",
+    "✅ Property filtering correctly implemented for owners based on user.assigned_properties",
+    "✅ All RBAC rules tested and working as documented in the requirements"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_rbac_enforcement.py"
+  ],
+  "success_rate": {
+    "backend": "100% (23/23 tests passed)",
+    "frontend": "N/A (backend-only testing requested)"
+  },
+  "test_credentials": {
+    "note": "Tests create dynamic test data with unique timestamps, cleanup runs after each test class"
+  },
+  "seed_data_creation": "Tests create: company, 4 users (admin, owner, staff, staff_with_permission), 3 properties, staff records, bookings, expenses, payouts",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 22 verified RBAC enforcement at backend level. All 23 tests passed confirming: (1) Admin has full unrestricted access, (2) Owner gets 403 on /api/staff and /api/payouts, sees only assigned properties/bookings/expenses, (3) Staff sees only own record on /api/staff, gets 403 on payouts, gets 403 on analytics/expenses WITHOUT view_financials permission, (4) Staff WITH view_financials permission CAN access analytics and expenses. The RBAC implementation is complete and working correctly."
+}
