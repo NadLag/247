@@ -1851,8 +1851,16 @@ async def get_analytics(
 ):
     """Get comprehensive analytics with comparison to previous period"""
     company_id = user.get("company_id")
+    role = user.get("role")
+    
     if not company_id:
         return {"current": {}, "previous": {}, "trends": []}
+    
+    # RBAC: Staff cannot see financial analytics by default
+    if role == "staff":
+        permissions = user.get("permissions", {})
+        if not permissions.get("view_financials"):
+            raise HTTPException(status_code=403, detail="Access denied")
     
     now = datetime.now(timezone.utc)
     
@@ -1875,15 +1883,27 @@ async def get_analytics(
         prev_month_start = datetime(target_year, target_month - 1, 1, tzinfo=timezone.utc)
         prev_month_end = current_month_start
     
-    # Build query filters
+    # Build query filters with role-based property filtering
     base_query = {"company_id": company_id}
+    
+    # Get properties for the query with role-based filtering
+    prop_query = {"company_id": company_id}
+    user_assigned_properties = user.get("assigned_properties", [])
+    
+    # RBAC: Owners can only see their assigned properties
+    if role == "owner":
+        if user_assigned_properties:
+            prop_query["id"] = {"$in": user_assigned_properties}
+        else:
+            return {"current": {}, "previous": {}, "trends": [], "properties": []}
+    
     if property_id:
+        # Verify access to requested property
+        if role == "owner" and user_assigned_properties and property_id not in user_assigned_properties:
+            raise HTTPException(status_code=403, detail="Access denied to this property")
+        prop_query["id"] = property_id
         base_query["property_id"] = property_id
     
-    # Get properties for the query
-    prop_query = {"company_id": company_id}
-    if property_id:
-        prop_query["id"] = property_id
     properties = await db.properties.find(prop_query, {"_id": 0}).to_list(1000)
     property_ids = [p["id"] for p in properties]
     total_units = sum(p.get("units", 0) for p in properties)
