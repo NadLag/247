@@ -1170,12 +1170,39 @@ async def list_expenses(
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
 ):
+    """List expenses with role-based filtering"""
     company_id = user.get("company_id")
+    role = user.get("role")
+    
     if not company_id:
         return []
+    
+    # RBAC: Staff cannot see expenses by default
+    if role == "staff":
+        # Check if staff has permission to view financials
+        permissions = user.get("permissions", {})
+        if not permissions.get("view_financials"):
+            raise HTTPException(status_code=403, detail="Access denied")
+    
     query = {"company_id": company_id}
-    if property_id:
+    
+    # Role-based property filtering for owners
+    if role == "owner":
+        user_assigned_properties = user.get("assigned_properties", [])
+        if user_assigned_properties:
+            # Owner can only see expenses for their assigned properties
+            if property_id:
+                # Verify the requested property is in their assigned list
+                if property_id not in user_assigned_properties:
+                    raise HTTPException(status_code=403, detail="Access denied to this property")
+                query["property_id"] = property_id
+            else:
+                query["property_id"] = {"$in": user_assigned_properties}
+        else:
+            return []  # Owner has no assigned properties
+    elif property_id:
         query["property_id"] = property_id
+    
     if expense_type:
         query["type"] = expense_type
     if date_from or date_to:
@@ -1185,6 +1212,7 @@ async def list_expenses(
         if date_to:
             date_q["$lte"] = date_to
         query["date"] = date_q
+    
     return await db.expenses.find(query, {"_id": 0}).to_list(1000)
 
 @api_router.post("/expenses", status_code=201)
