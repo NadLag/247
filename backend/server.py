@@ -2016,8 +2016,16 @@ async def get_source_breakdown(
 ):
     """Get booking analytics broken down by source (Airbnb, Booking.com, Direct, etc.)"""
     company_id = user.get("company_id")
+    role = user.get("role")
+    
     if not company_id:
         return {"sources": [], "total_bookings": 0, "total_revenue": 0}
+    
+    # RBAC: Staff cannot see financial analytics by default
+    if role == "staff":
+        permissions = user.get("permissions", {})
+        if not permissions.get("view_financials"):
+            raise HTTPException(status_code=403, detail="Access denied")
     
     now = datetime.now(timezone.utc)
     target_year = year or now.year
@@ -2035,7 +2043,20 @@ async def get_source_breakdown(
         "booking_type": {"$ne": "blocked"},
         "status": {"$nin": ["blocked", "cancelled"]},
     }
-    if property_id:
+    
+    # RBAC: Owner can only see their assigned properties
+    user_assigned_properties = user.get("assigned_properties", [])
+    if role == "owner":
+        if user_assigned_properties:
+            if property_id:
+                if property_id not in user_assigned_properties:
+                    raise HTTPException(status_code=403, detail="Access denied to this property")
+                query["property_id"] = property_id
+            else:
+                query["property_id"] = {"$in": user_assigned_properties}
+        else:
+            return {"sources": [], "total_bookings": 0, "total_revenue": 0}
+    elif property_id:
         query["property_id"] = property_id
     
     bookings = await db.bookings.find(query, {"_id": 0, "ota_source": 1, "total_amount": 1, "check_in": 1, "check_out": 1}).to_list(5000)
