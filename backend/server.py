@@ -2053,9 +2053,22 @@ async def get_source_breakdown(
 # ===== PAYOUT ROUTES =====
 @api_router.get("/payouts")
 async def list_payouts(user=Depends(get_current_user), staff_id: Optional[str] = None):
+    """List payouts - ADMIN ONLY. Owners and staff cannot see staff payouts."""
     company_id = user.get("company_id")
+    role = user.get("role")
+    
     if not company_id:
         return []
+    
+    # RBAC: Only admins can see payouts
+    if role == "owner":
+        # Owners cannot see staff payouts
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if role == "staff":
+        # Staff cannot see other staff's payouts (or any payouts)
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     query = {"company_id": company_id}
     if staff_id:
         query["staff_id"] = staff_id
