@@ -16,7 +16,19 @@ import time
 import uuid
 from datetime import datetime, timezone, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+# Load BASE_URL from frontend .env file
+import subprocess
+try:
+    result = subprocess.run(
+        ['bash', '-c', 'source /app/frontend/.env && echo $REACT_APP_BACKEND_URL'],
+        capture_output=True, text=True
+    )
+    BASE_URL = result.stdout.strip().rstrip('/')
+except Exception:
+    BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+
+if not BASE_URL:
+    BASE_URL = "https://property-hub-dev-1.preview.emergentagent.com"
 
 # Generate unique test prefix to avoid conflicts
 TEST_PREFIX = f"TEST_RBAC_{int(time.time())}"
