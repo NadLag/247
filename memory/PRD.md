@@ -22,6 +22,39 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 2. **Owner** - View-only access to their properties' revenue, expenses, bookings, analytics
 3. **Staff** - Tasks management, assigned properties, earnings tracking, payout status
 
+## Role-Based Access Control (RBAC) - Enforced at Backend (Feb 24, 2026)
+
+### Admin Access (Unrestricted)
+- Full access to all endpoints: staff, payouts, analytics, expenses, properties, bookings
+- Can create/edit/delete all resources
+- Can invite owners and staff
+- Can configure management fees and approve payouts
+
+### Owner Access (Restricted to Assigned Properties)
+- ✅ Can see ONLY properties in `user.assigned_properties`
+- ✅ Can see bookings/expenses/analytics ONLY for assigned properties
+- ❌ CANNOT access `/api/staff` (returns 403)
+- ❌ CANNOT access `/api/payouts` (returns 403)
+- ❌ CANNOT see other owners' data
+- Read-only access unless explicitly configured
+
+### Staff Access (Operational Only)
+- ✅ Can see ONLY their own staff record on `/api/staff`
+- ✅ Can see properties/bookings assigned to them
+- ❌ CANNOT access `/api/payouts` (returns 403)
+- ❌ CANNOT access `/api/analytics` or `/api/expenses` by default
+- ✅ WITH `permissions.view_financials=true`: CAN access analytics and expenses
+
+### Backend Enforcement Points
+- `/api/staff` - Line 1107-1126
+- `/api/payouts` - Line 2074-2112  
+- `/api/expenses` - Line 1151-1216
+- `/api/analytics` - Line 1844-1910
+- `/api/analytics/source-breakdown` - Line 2010-2080
+- `/api/properties` - Line 1036-1065
+- `/api/bookings` - Line 1208-1292
+- `/api/dashboard/kpis` - Line 810-980
+
 ## What's Been Implemented (Feb 22, 2026)
 
 ### Core Features
