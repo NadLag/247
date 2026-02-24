@@ -1104,12 +1104,25 @@ async def delete_property(prop_id: str, user=Depends(require_admin)):
 
 # ===== STAFF ROUTES =====
 @api_router.get("/staff")
+@api_router.get("/staff")
 async def list_staff(user=Depends(get_current_user)):
+    """List staff - ADMIN ONLY. Owners cannot see staff."""
     company_id = user.get("company_id")
+    role = user.get("role")
+    
     if not company_id:
         return []
-    if user.get("role") == "staff":
+    
+    # RBAC: Only admins can see staff list
+    if role == "owner":
+        # Owners cannot see staff at all
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if role == "staff":
+        # Staff can only see their own record
         return await db.staff.find({"company_id": company_id, "email": user["email"]}, {"_id": 0}).to_list(10)
+    
+    # Admin sees all staff
     return await db.staff.find({"company_id": company_id}, {"_id": 0}).to_list(1000)
 
 @api_router.post("/staff", status_code=201)
