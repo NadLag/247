@@ -1626,8 +1626,8 @@ async def generate_booking_tasks(company_id: str, booking_id: str, property_id: 
             tasks_to_create.append({
                 "id": f"task_{uuid.uuid4().hex[:12]}",
                 "company_id": company_id,
-                "title": f"Housekeeping - Checkout",
-                "description": f"Clean and prepare property after guest checkout",
+                "title": "Housekeeping - Checkout",
+                "description": "Clean and prepare property after guest checkout",
                 "task_type": "housekeeping",
                 "property_id": property_id,
                 "booking_id": booking_id,
@@ -1646,8 +1646,8 @@ async def generate_booking_tasks(company_id: str, booking_id: str, property_id: 
             tasks_to_create.append({
                 "id": f"task_{uuid.uuid4().hex[:12]}",
                 "company_id": company_id,
-                "title": f"Guest Check-in",
-                "description": f"Welcome guest and complete check-in procedures",
+                "title": "Guest Check-in",
+                "description": "Welcome guest and complete check-in procedures",
                 "task_type": "check_in",
                 "property_id": property_id,
                 "booking_id": booking_id,
@@ -1663,8 +1663,8 @@ async def generate_booking_tasks(company_id: str, booking_id: str, property_id: 
             tasks_to_create.append({
                 "id": f"task_{uuid.uuid4().hex[:12]}",
                 "company_id": company_id,
-                "title": f"Guest Check-out",
-                "description": f"Handle guest checkout and property inspection",
+                "title": "Guest Check-out",
+                "description": "Handle guest checkout and property inspection",
                 "task_type": "check_out",
                 "property_id": property_id,
                 "booking_id": booking_id,
