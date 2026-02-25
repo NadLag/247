@@ -1515,6 +1515,32 @@ async def update_booking(booking_id: str, data: BookingUpdate, user=Depends(requ
     
     await db.bookings.update_one({"id": booking_id, "company_id": user["company_id"]}, {"$set": update_data})
     
+    # Update auto-generated tasks if booking dates changed or booking cancelled
+    if data.status == "cancelled":
+        # Delete auto-generated pending tasks for this booking
+        await db.tasks.delete_many({
+            "booking_id": booking_id, 
+            "auto_generated": True, 
+            "status": "pending"
+        })
+    elif data.check_in or data.check_out:
+        # Update due dates on auto-generated tasks
+        new_check_in = data.check_in or existing.get("check_in")
+        new_check_out = data.check_out or existing.get("check_out")
+        
+        # Update check-in tasks
+        if data.check_in:
+            await db.tasks.update_many(
+                {"booking_id": booking_id, "auto_generated": True, "task_type": "check_in", "status": "pending"},
+                {"$set": {"due_date": new_check_in, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        # Update check-out/housekeeping tasks
+        if data.check_out:
+            await db.tasks.update_many(
+                {"booking_id": booking_id, "auto_generated": True, "task_type": {"$in": ["check_out", "housekeeping"]}, "status": "pending"},
+                {"$set": {"due_date": new_check_out, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+    
     # Re-check incomplete notifications for this company
     await check_and_create_incomplete_notification(user["company_id"])
     
