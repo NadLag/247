@@ -1128,13 +1128,21 @@ async def update_property(prop_id: str, data: PropertyUpdate, user=Depends(requi
 
 @api_router.delete("/properties/{prop_id}")
 async def delete_property(prop_id: str, user=Depends(require_admin)):
-    result = await db.properties.delete_one({"id": prop_id, "company_id": user["company_id"]})
+    company_id = user["company_id"]
+    result = await db.properties.delete_one({"id": prop_id, "company_id": company_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Cascade delete: Remove all related data for this property
+    await db.bookings.delete_many({"property_id": prop_id, "company_id": company_id})
+    await db.expenses.delete_many({"property_id": prop_id, "company_id": company_id})
+    await db.tasks.delete_many({"property_id": prop_id, "company_id": company_id})
+    await db.ota_feeds.delete_many({"property_id": prop_id, "company_id": company_id})
+    
+    logger.info(f"Deleted property {prop_id} and all related data")
     return {"message": "Property deleted"}
 
 # ===== STAFF ROUTES =====
-@api_router.get("/staff")
 @api_router.get("/staff")
 async def list_staff(user=Depends(get_current_user)):
     """List staff - ADMIN ONLY. Owners cannot see staff."""
