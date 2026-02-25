@@ -18,10 +18,33 @@ import { Plus, Pencil, Trash2, Receipt, Filter } from "lucide-react";
 const API = process.env.REACT_APP_BACKEND_URL;
 const fmt = (v) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
 
-const FIXED_CATEGORIES = ["Salaries", "Rent", "Insurance", "Software"];
-const VARIABLE_CATEGORIES = ["Utilities", "Cleaning", "Maintenance", "OTA Fees"];
+// Expanded expense categories for Airbnb/Villa management
+const EXPENSE_CATEGORIES = [
+  { value: "airbnb_commission", label: "Airbnb Commission", type: "variable" },
+  { value: "ota_fees", label: "OTA Fees", type: "variable" },
+  { value: "cleaning", label: "Cleaning", type: "variable" },
+  { value: "maintenance", label: "Maintenance", type: "variable" },
+  { value: "utilities", label: "Utilities", type: "variable" },
+  { value: "staff_payment", label: "Staff Payment", type: "fixed" },
+  { value: "supplies", label: "Supplies", type: "variable" },
+  { value: "linen", label: "Linen", type: "variable" },
+  { value: "guest_amenities", label: "Guest Amenities", type: "variable" },
+  { value: "repairs", label: "Repairs", type: "variable" },
+  { value: "insurance", label: "Insurance", type: "fixed" },
+  { value: "property_tax", label: "Property Tax", type: "fixed" },
+  { value: "internet", label: "Internet", type: "fixed" },
+  { value: "gardening", label: "Gardening", type: "variable" },
+  { value: "pool_maintenance", label: "Pool Maintenance", type: "variable" },
+  { value: "rent", label: "Rent", type: "fixed" },
+  { value: "software", label: "Software", type: "fixed" },
+  { value: "salaries", label: "Salaries", type: "fixed" },
+  { value: "other", label: "Other", type: "variable" },
+];
 
-const empty = { property_id: "", type: "fixed", category: "", amount: "", description: "", date: new Date().toISOString().slice(0, 10), recurring: false, recurring_frequency: "" };
+const FIXED_CATEGORIES = EXPENSE_CATEGORIES.filter(c => c.type === "fixed");
+const VARIABLE_CATEGORIES = EXPENSE_CATEGORIES.filter(c => c.type === "variable");
+
+const empty = { property_id: "", type: "variable", category: "", amount: "", description: "", date: new Date().toISOString().slice(0, 10), recurring: false, recurring_frequency: "" };
 
 export default function Expenses() {
   const { user, loading: authLoading } = useAuth();
