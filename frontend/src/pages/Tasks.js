@@ -152,6 +152,7 @@ export default function Tasks() {
   const [tasks, setTasks] = useState([]);
   const [staff, setStaff] = useState([]);
   const [properties, setProperties] = useState([]);
+  const [services, setServices] = useState([]);
   const [summary, setSummary] = useState({ pending: 0, in_progress: 0, completed_this_month: 0 });
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -164,20 +165,32 @@ export default function Tasks() {
 
   const fetchData = async () => {
     try {
-      const [taskRes, summaryRes, staffRes, propRes] = await Promise.all([
+      const [taskRes, summaryRes, staffRes, propRes, svcRes] = await Promise.all([
         fetch(`${API}/api/tasks`, { credentials: "include" }),
         fetch(`${API}/api/tasks/my-summary`, { credentials: "include" }),
-        fetch(`${API}/api/staff`, { credentials: "include" }),
+        fetch(`${API}/api/staff`, { credentials: "include" }).catch(() => ({ ok: false })),
         fetch(`${API}/api/properties`, { credentials: "include" }),
+        fetch(`${API}/api/services`, { credentials: "include" }).catch(() => ({ ok: false })),
       ]);
       if (taskRes.ok) setTasks(await taskRes.json());
       if (summaryRes.ok) setSummary(await summaryRes.json());
       if (staffRes.ok) setStaff(await staffRes.json());
       if (propRes.ok) setProperties(await propRes.json());
+      if (svcRes.ok) setServices(await svcRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
   useEffect(() => { if (user?.company_id) fetchData(); }, [user]); // eslint-disable-line
+
+  // Build task types from defaults + services
+  const taskTypes = [
+    ...DEFAULT_TASK_TYPES,
+    ...services.filter(s => s.active && !DEFAULT_TASK_TYPES.find(t => t.label.toLowerCase() === s.name.toLowerCase())).map(s => ({
+      value: s.name.toLowerCase().replace(/\s+/g, '_'),
+      label: s.name,
+      color: "bg-primary/10 text-primary"
+    }))
+  ];
 
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error("Task title is required"); return; }
