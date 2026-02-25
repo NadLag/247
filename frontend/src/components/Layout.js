@@ -22,11 +22,12 @@ const navConfig = {
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Properties", path: "/properties", icon: Building2 },
     { name: "Bookings", path: "/bookings", icon: CalendarDays },
+    { name: "Staff", path: "/staff", icon: Users },
     { name: "Tasks", path: "/tasks", icon: ClipboardList },
     { name: "Services", path: "/services", icon: Package },
     { name: "Expenses", path: "/expenses", icon: Receipt },
     { name: "Analytics", path: "/analytics", icon: BarChart3 },
-    { name: "Team", path: "/invitations", icon: Users },
+    { name: "Invite", path: "/invitations", icon: Mail },
     { name: "Settings", path: "/settings", icon: Settings },
   ],
   owner: [
