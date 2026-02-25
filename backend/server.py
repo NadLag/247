@@ -971,6 +971,16 @@ async def get_dashboard_kpis(user=Depends(get_current_user)):
         "total_expenses": round(total_expenses, 2),
     }
     
+    # Add incomplete bookings count for admins (missing amount from iCal imports)
+    if role == "company_admin":
+        incomplete_count = await db.bookings.count_documents({
+            "company_id": company_id,
+            "is_data_complete": False,
+            "booking_type": "reservation",
+            "status": {"$nin": ["cancelled", "blocked"]}
+        })
+        base_response["incomplete_bookings"] = incomplete_count
+    
     # Add role-specific fields
     if role == "staff":
         base_response["staff_earnings"] = round(staff_earnings, 2)
