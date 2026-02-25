@@ -1494,6 +1494,10 @@ async def create_booking(data: BookingCreate, user=Depends(require_admin)):
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.bookings.insert_one(booking)
+    
+    # Auto-generate tasks for staff based on their roles
+    await generate_booking_tasks(company_id, booking["id"], data.property_id, data.check_in, data.check_out)
+    
     return await db.bookings.find_one({"id": booking["id"]}, {"_id": 0})
 
 @api_router.put("/bookings/{booking_id}")
