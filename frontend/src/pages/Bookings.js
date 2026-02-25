@@ -439,12 +439,22 @@ export default function Bookings() {
   const [conflictDetails, setConflictDetails] = useState(null);
   
   // View state
-  const [viewMode, setViewMode] = useState("calendar");
+  const [viewMode, setViewMode] = useState("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [propertyFilter, setPropertyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
+  const [incompleteFilter, setIncompleteFilter] = useState(false);
   const [sources, setSources] = useState([]);
+
+  // Check URL params for incomplete filter
+  useEffect(() => {
+    const filter = searchParams.get("filter");
+    if (filter === "incomplete") {
+      setIncompleteFilter(true);
+      setViewMode("list"); // Switch to list view to see incomplete bookings
+    }
+  }, [searchParams]);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
@@ -454,6 +464,7 @@ export default function Bookings() {
       let url = `${API}/api/bookings`;
       const params = new URLSearchParams();
       if (sourceFilter && sourceFilter !== "all") params.append("source", sourceFilter);
+      if (incompleteFilter) params.append("incomplete_only", "true");
       if (params.toString()) url += `?${params}`;
       
       const [bookingsRes, blockedRes, propsRes] = await Promise.all([
@@ -474,7 +485,7 @@ export default function Bookings() {
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (user?.company_id) fetchData(); }, [user, sourceFilter]); // eslint-disable-line
+  useEffect(() => { if (user?.company_id) fetchData(); }, [user, sourceFilter, incompleteFilter]); // eslint-disable-line
 
   const handleSave = async (forceOverride = false) => {
     if (!form.property_id) { toast.error("Property is required"); return; }
