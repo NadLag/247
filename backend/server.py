@@ -1342,6 +1342,8 @@ async def list_booking_sources(user=Depends(get_current_user)):
 async def list_blocked_dates(user=Depends(get_current_user), property_id: Optional[str] = None):
     """Get blocked dates only - for calendar display"""
     company_id = user.get("company_id")
+    role = user.get("role")
+    
     if not company_id:
         return []
     
@@ -1352,7 +1354,31 @@ async def list_blocked_dates(user=Depends(get_current_user), property_id: Option
             {"status": "blocked", "booking_type": {"$exists": False}}  # Backwards compat
         ]
     }
-    if property_id:
+    
+    # RBAC: Filter by assigned_properties for owners and staff
+    user_assigned_properties = user.get("assigned_properties", [])
+    
+    if role == "owner":
+        if user_assigned_properties:
+            if property_id:
+                if property_id not in user_assigned_properties:
+                    return []  # Owner doesn't have access to this property
+                query["property_id"] = property_id
+            else:
+                query["property_id"] = {"$in": user_assigned_properties}
+        else:
+            return []  # Owner has no assigned properties
+    elif role == "staff":
+        if user_assigned_properties:
+            if property_id:
+                if property_id not in user_assigned_properties:
+                    return []
+                query["property_id"] = property_id
+            else:
+                query["property_id"] = {"$in": user_assigned_properties}
+        else:
+            return []
+    elif property_id:
         query["property_id"] = property_id
     
     return await db.bookings.find(query, {"_id": 0}).sort("check_in", 1).to_list(1000)
