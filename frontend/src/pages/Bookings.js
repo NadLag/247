@@ -663,7 +663,41 @@ export default function Bookings() {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
+          
+          {/* Incomplete Filter Toggle */}
+          <Button 
+            variant={incompleteFilter ? "default" : "outline"} 
+            size="sm"
+            className={`h-9 ${incompleteFilter ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
+            onClick={() => {
+              setIncompleteFilter(!incompleteFilter);
+              // Update URL
+              if (!incompleteFilter) {
+                setSearchParams({ filter: "incomplete" });
+              } else {
+                setSearchParams({});
+              }
+            }}
+            data-testid="filter-incomplete"
+          >
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            Missing Details
+          </Button>
         </div>
+
+        {/* Incomplete Alert Banner */}
+        {incompleteFilter && (
+          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-amber-800 dark:text-amber-200">Showing bookings with missing details</p>
+              <p className="text-sm text-amber-700 dark:text-amber-300">Click the edit icon to add guest name and amount</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => { setIncompleteFilter(false); setSearchParams({}); }}>
+              <X className="h-4 w-4 mr-1" /> Clear Filter
+            </Button>
+          </div>
+        )}
 
         {/* Main Content */}
         {loading ? (
