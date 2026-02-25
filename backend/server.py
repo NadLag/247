@@ -1061,6 +1061,28 @@ async def list_properties(user=Depends(get_current_user)):
         query = {"company_id": company_id}
     
     properties = await db.properties.find(query, {"_id": 0}).to_list(1000)
+    
+    # Enrich properties with OTA feed info
+    if properties:
+        property_ids = [p["id"] for p in properties]
+        ota_feeds = await db.ota_feeds.find(
+            {"company_id": company_id, "property_id": {"$in": property_ids}, "active": True},
+            {"_id": 0, "property_id": 1, "source": 1}
+        ).to_list(1000)
+        
+        # Group feeds by property
+        feeds_by_property = {}
+        for feed in ota_feeds:
+            pid = feed["property_id"]
+            if pid not in feeds_by_property:
+                feeds_by_property[pid] = []
+            feeds_by_property[pid].append(feed["source"])
+        
+        # Add ota_feeds info to each property
+        for prop in properties:
+            prop["ota_feeds"] = feeds_by_property.get(prop["id"], [])
+            prop["has_ota_sync"] = len(prop["ota_feeds"]) > 0
+    
     return properties
 
 @api_router.post("/properties", status_code=201)
