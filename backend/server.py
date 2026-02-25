@@ -1106,6 +1106,15 @@ async def get_property(prop_id: str, user=Depends(get_current_user)):
     prop = await db.properties.find_one({"id": prop_id, "company_id": company_id}, {"_id": 0})
     if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Add OTA feed info
+    ota_feeds = await db.ota_feeds.find(
+        {"company_id": company_id, "property_id": prop_id, "active": True},
+        {"_id": 0, "source": 1}
+    ).to_list(100)
+    prop["ota_feeds"] = [f["source"] for f in ota_feeds]
+    prop["has_ota_sync"] = len(prop["ota_feeds"]) > 0
+    
     return prop
 
 @api_router.put("/properties/{prop_id}")
