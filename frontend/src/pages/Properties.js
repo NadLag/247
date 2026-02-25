@@ -36,6 +36,7 @@ const empty = {
 function PropertyCard({ prop, isAdmin, onEdit, onDelete, onQuickView, index = 0 }) {
   const ownerName = [prop.owner_first_name, prop.owner_last_name].filter(Boolean).join(" ") || "No owner";
   const location = prop.city && prop.country ? `${prop.city}, ${prop.country}` : prop.address || "No address";
+  const isOtaSynced = prop.ota_feeds && prop.ota_feeds.length > 0;
   
   return (
     <Card 
@@ -47,12 +48,28 @@ function PropertyCard({ prop, isAdmin, onEdit, onDelete, onQuickView, index = 0 
         {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-3">
           <h3 className="font-semibold text-sm leading-tight line-clamp-2 text-foreground">{prop.name}</h3>
-          <Badge 
-            variant={prop.active ? "default" : "secondary"} 
-            className={`shrink-0 text-[10px] px-1.5 py-0 ${prop.active ? 'bg-primary/10 text-primary border-primary/20' : ''}`}
-          >
-            {prop.active ? "Active" : "Inactive"}
-          </Badge>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* OTA vs Manual Badge */}
+            <Badge 
+              variant="outline" 
+              className={`text-[10px] px-1.5 py-0 ${isOtaSynced 
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200' 
+                : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200'}`}
+              data-testid={`property-source-${prop.id}`}
+            >
+              {isOtaSynced ? (
+                <><Globe className="h-3 w-3 mr-1" />OTA Synced</>
+              ) : (
+                <>Manual</>
+              )}
+            </Badge>
+            <Badge 
+              variant={prop.active ? "default" : "secondary"} 
+              className={`text-[10px] px-1.5 py-0 ${prop.active ? 'bg-primary/10 text-primary border-primary/20' : ''}`}
+            >
+              {prop.active ? "Active" : "Inactive"}
+            </Badge>
+          </div>
         </div>
 
         {/* Details */}
