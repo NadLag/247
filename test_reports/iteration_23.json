@@ -1,0 +1,89 @@
+{
+  "summary": "Frontend UI testing completed for system-wide updates. All 9 features tested and verified working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_23.json"
+  ],
+  "passed_tests": [
+    "BOOKINGS PAGE - Guest Name column NOT shown in list view",
+    "BOOKINGS PAGE - Columns shown: Property, Check-in, Check-out, Source, Amount, Status, Actions",
+    "BOOKINGS PAGE - Detail modal DOES show guest name (for direct bookings)",
+    "BOOKINGS PAGE - Detail modal hides guest name for OTA bookings (empty value)",
+    "BOOKINGS PAGE - Edit button (pencil icon) visible for admin on bookings",
+    "PROPERTIES PAGE - 'OTA Synced' badge shown for properties with ota_feeds",
+    "PROPERTIES PAGE - 'Manual' badge shown for properties without ota_feeds",
+    "TASKS PAGE - Task types dropdown includes all defaults (Housekeeping, Maintenance, Check-in, Check-out, Transport, Breakfast, Meal, Excursion)",
+    "TASKS PAGE - Services merged into task types dropdown (Deep Cleaning from services shown)",
+    "SERVICES PAGE - Predefined service list available (Airport Transfer, Breakfast, Check-in, Check-out, Concierge, Housekeeping, Laundry, Maintenance, Meal, Spa, Transport, Excursion)",
+    "SERVICES PAGE - 'Other (Custom)' option available for custom service names",
+    "EXPENSES PAGE - Fixed categories: Staff Payment, Insurance, Property Tax, Internet, Rent, Software, Salaries",
+    "EXPENSES PAGE - Variable categories include Airbnb-specific: Airbnb Commission, OTA Fees, Cleaning, Pool Maintenance, Gardening, Guest Amenities, Linen, Supplies, Repairs, Utilities, Maintenance, Other",
+    "INVITE PAGE - Owner dropdown shows property owners from existing properties",
+    "INVITE PAGE - Auto-select properties when owner is picked from dropdown"
+  ],
+  "features_verified": {
+    "bookings_guest_name_hidden_list": {
+      "status": "WORKING",
+      "details": "Guest Name column removed from list view. Table headers: Property, Check-in, Check-out, Source, Amount, Status, Actions"
+    },
+    "bookings_guest_name_visible_detail": {
+      "status": "WORKING",
+      "details": "Guest name visible in booking detail modal for direct bookings (e.g., Alice Johnson). OTA bookings don't show guest name field since it's empty."
+    },
+    "bookings_edit_button": {
+      "status": "WORKING",
+      "details": "Pencil icon (Edit button) visible in Actions column for admin users, both in list and detail modal"
+    },
+    "properties_ota_manual_badges": {
+      "status": "WORKING",
+      "details": "PropertyCard shows 'OTA Synced' badge (blue with globe icon) for properties with ota_feeds array, 'Manual' badge (green) for properties without"
+    },
+    "tasks_service_types_merged": {
+      "status": "WORKING",
+      "details": "Task Type dropdown shows default types (Housekeeping, Maintenance, Check-in, Check-out, Transport, Breakfast, Meal, Excursion) + services from Services page (e.g., Deep Cleaning)"
+    },
+    "services_predefined_other": {
+      "status": "WORKING",
+      "details": "Service Type dropdown has predefined list + 'Other (Custom)' option for custom service names. No categories - simplified structure."
+    },
+    "expenses_expanded_categories": {
+      "status": "WORKING",
+      "details": "Variable expense categories include Airbnb/Villa management specific: Airbnb Commission, OTA Fees, Cleaning, Pool Maintenance, Gardening, Guest Amenities, etc."
+    },
+    "invite_auto_select_properties": {
+      "status": "WORKING",
+      "details": "When Owner role is selected and an owner is picked from dropdown, their associated properties are automatically selected in the Assign Properties section"
+    }
+  },
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✅ Bookings.js SectionedBookingList correctly excludes Guest Name from table headers",
+    "✅ Bookings.js detail modal shows guest_name conditionally only if present and not empty",
+    "✅ Properties.js PropertyCard correctly checks ota_feeds.length for OTA/Manual badge",
+    "✅ Tasks.js dynamically builds taskTypes from DEFAULT_TASK_TYPES + services",
+    "✅ Services.js uses predefined DEFAULT_SERVICE_TYPES + 'Other (Custom)' option",
+    "✅ Expenses.js EXPENSE_CATEGORIES properly split into Fixed and Variable types with Airbnb-specific categories",
+    "✅ Invitations.js useEffect auto-selects properties based on owner's email matching property owner_email"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend-only testing)",
+    "frontend": "100% (15/15 tests passed)"
+  },
+  "test_credentials": {
+    "session_token": "test_ui_session_1772048603483",
+    "company_id": "comp_ui_1772048603483"
+  },
+  "seed_data_creation": "Created 2 properties (Beach Villa OTA with ota_feeds, Downtown Apartment Manual without), 2 bookings (1 OTA, 1 direct), 1 staff (housekeeper), 1 service (Deep Cleaning), 1 expense (airbnb_commission)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 23 verified all frontend UI updates: (1) Bookings list hides Guest Name, detail modal shows it (2) Properties show OTA Synced/Manual badges (3) Tasks merge services into task types (4) Services have predefined list + Other option (5) Expenses have expanded Airbnb-specific categories (6) Invite auto-selects properties for owners. All features working correctly."
+}
