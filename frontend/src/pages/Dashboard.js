@@ -174,16 +174,6 @@ function AdminDashboard({ kpis, trends, bookings, properties, navigate }) {
   
   return (
     <>
-      {/* Alert for missing amounts */}
-      <AlertCard
-        title="Bookings Missing Amount"
-        count={kpis.incomplete_bookings || 0}
-        description="Some iCal imported bookings need financial data entered"
-        actionLabel="Review Bookings"
-        onAction={() => navigate('/bookings')}
-        delay={0.1}
-      />
-
       {/* Primary KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <KPICard label="Revenue MTD" value={fmt(kpis.revenue_mtd || 0)} subtitle={`Last month: ${fmt(kpis.revenue_last_month || 0)}`} icon={DollarSign} trend={revenueTrend} large delay={0.1} />
