@@ -507,12 +507,18 @@ export default function Bookings() {
         setForm(empty);
         setEditing(null);
         fetchData();
-      } else if (res.status === 409 && data.conflicts) {
-        // Show override dialog
-        setConflictDetails(data);
+      } else if (res.status === 409 && data.detail?.requires_override) {
+        // Show override dialog for blocked dates
+        setConflictDetails(data.detail);
         setOverrideDialogOpen(true);
+      } else if (res.status === 409 && data.detail?.conflicts) {
+        // Double booking error - show detailed message
+        const conflict = data.detail.conflicts[0];
+        toast.error(`Double booking! This property is already booked from ${conflict.check_in} to ${conflict.check_out}${conflict.guest_name ? ` by ${conflict.guest_name}` : ''}.`, {
+          duration: 6000,
+        });
       } else {
-        toast.error(data.detail || "Failed to save booking");
+        toast.error(data.detail?.message || data.detail || "Failed to save booking");
       }
     } catch (err) { toast.error("Error saving booking"); } finally { setSaving(false); }
   };
