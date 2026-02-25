@@ -55,6 +55,34 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - `/api/bookings` - Line 1208-1292
 - `/api/dashboard/kpis` - Line 810-980
 
+### System-Wide UI/UX Updates (Feb 25, 2026)
+
+#### Bookings Page
+- [x] **Guest Name hidden from list view** - Column removed completely
+- [x] **Guest Name visible in booking detail modal** - Only when clicking a booking
+- [x] **Edit icon replaces "Not in iCal"** - Clean pencil icon for editing bookings
+- [x] **OTA bookings don't show placeholders** - No "Unknown" or "Blocked" text
+
+#### Properties Page
+- [x] **OTA Synced badge** - Blue badge with globe icon for properties with iCal feeds
+- [x] **Manual badge** - Green badge for manually created properties
+
+#### Tasks Page
+- [x] **Dynamic task types** - Merged predefined types + Services from Services page
+- [x] **Auto-task generation** - Housekeepers get housekeeping task on checkout, Co-hosts get check-in/check-out tasks
+- [x] **Task-booking linking** - Tasks linked to booking_id, auto-update/delete when booking changes
+
+#### Services Page
+- [x] **Simplified structure** - Predefined service list (Housekeeping, Maintenance, Check-in, etc.)
+- [x] **"Other (Custom)" option** - For creating custom service types
+- [x] **No categories** - Flat list for simplicity
+
+#### Expenses Page
+- [x] **Expanded Airbnb/Villa categories** - Airbnb Commission, OTA Fees, Cleaning, Pool Maintenance, Guest Amenities, etc.
+
+#### Invite Page
+- [x] **Auto-select properties for owners** - When picking an owner, their properties auto-select
+
 ## What's Been Implemented (Feb 22, 2026)
 
 ### Core Features
