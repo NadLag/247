@@ -8,15 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Plus, Pencil, CalendarDays, List, ChevronLeft, ChevronRight, Filter, AlertTriangle, Clock, CalendarCheck, History, Ban, Globe } from "lucide-react";
+import { Plus, Pencil, CalendarDays, List, ChevronLeft, ChevronRight, Filter, AlertTriangle, Clock, CalendarCheck, History, Ban, Globe, X, Eye } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const fmt = (v) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
-const empty = { property_id: "", guest_name: "", check_in: "", check_out: "", total_amount: "", guests_count: 1, status: "confirmed" };
+const empty = { property_id: "", guest_name: "", check_in: "", check_out: "", total_amount: "", guests_count: 1, status: "confirmed", notes: "" };
 
 function calcNights(checkIn, checkOut) {
   if (!checkIn || !checkOut) return 0;
@@ -72,7 +73,7 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
 
   const getPropName = (id) => {
     const p = properties.find(pr => pr.id === id);
-    return p ? p.name : "Unknown Property";
+    return p ? p.name : "Property";
   };
   
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -102,141 +103,91 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
         </Button>
       </div>
       
-      {/* Calendar Grid */}
-      <div className="border rounded-lg overflow-hidden">
-        {/* Day Headers */}
-        <div className="grid grid-cols-7 bg-muted/50">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-            <div key={d} className="p-2 text-center text-xs font-medium text-muted-foreground border-b">
-              {d}
-            </div>
-          ))}
-        </div>
-        
-        {/* Days Grid */}
-        <div className="grid grid-cols-7">
-          {days.map((day, idx) => {
-            const dayBookings = getBookingsForDay(day);
-            const dayBlocked = getBlockedForDay(day);
-            const isToday = day && new Date().toDateString() === new Date(year, month, day).toDateString();
-            const hasBlocked = dayBlocked.length > 0;
-            const totalItems = dayBookings.length + dayBlocked.length;
-            const hasMore = totalItems > 3;
-            
-            return (
-              <div 
-                key={idx} 
-                onClick={() => handleDayClick(day)}
-                className={`min-h-[100px] border-b border-r p-1 transition-colors ${!day ? 'bg-muted/20' : 'cursor-pointer hover:bg-muted/30'} ${isToday ? 'bg-primary/5' : ''} ${hasBlocked ? 'bg-slate-100 dark:bg-slate-800/50' : ''}`}
-              >
-                {day && (
-                  <>
-                    <div className={`text-xs font-medium mb-1 ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
-                      {day}
-                    </div>
-                    <div className="space-y-0.5">
-                      {/* Show blocked dates first with special styling */}
-                      {dayBlocked.slice(0, 1).map((b, i) => (
-                        <div 
-                          key={`blocked-${i}`}
-                          className="text-[10px] px-1 py-0.5 rounded bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-300 border border-slate-400 dark:border-slate-500 line-through italic"
-                          title={`Unavailable - ${getPropName(b.property_id)}`}
-                        >
-                          Unavailable
-                        </div>
-                      ))}
-                      {/* Show real bookings */}
-                      {dayBookings.slice(0, hasBlocked ? 2 : 3).map((b, i) => (
-                        <div 
-                          key={i}
-                          className={`text-[10px] px-1 py-0.5 rounded truncate ${statusColors[b.status] || 'bg-primary/80 text-white'}`}
-                          title={`${b.guest_name} - ${getPropName(b.property_id)}`}
-                        >
-                          {b.guest_name?.split(' ')[0] || 'Guest'}
-                        </div>
-                      ))}
-                      {hasMore && (
-                        <div className="text-[10px] text-primary font-medium text-center hover:underline">
-                          +{totalItems - (hasBlocked ? 3 : 3)} more
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {/* Days of Week */}
+      <div className="grid grid-cols-7 gap-1">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+          <div key={d} className="text-center text-xs font-medium text-muted-foreground py-2">{d}</div>
+        ))}
       </div>
       
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-xs">
-        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-primary/80" /> Confirmed</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-blue-500" /> Checked In</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-slate-400" /> Checked Out</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-red-400" /> Cancelled</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-slate-300 border border-slate-400 line-through" /> <span className="italic">Blocked/Unavailable</span></div>
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day, idx) => {
+          const dayBookings = getBookingsForDay(day);
+          const dayBlocked = getBlockedForDay(day);
+          const hasContent = dayBookings.length > 0 || dayBlocked.length > 0;
+          const isToday = day && new Date().getDate() === day && new Date().getMonth() === month && new Date().getFullYear() === year;
+          
+          return (
+            <div
+              key={idx}
+              onClick={() => handleDayClick(day)}
+              className={`min-h-[80px] border rounded-lg p-1 ${day ? 'bg-card cursor-pointer hover:border-primary/50' : 'bg-muted/20'} ${isToday ? 'ring-2 ring-primary/50' : ''}`}
+            >
+              {day && (
+                <>
+                  <div className={`text-xs font-medium mb-1 ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>{day}</div>
+                  <div className="space-y-0.5">
+                    {dayBookings.slice(0, 2).map(b => (
+                      <div 
+                        key={b.id} 
+                        className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary truncate"
+                        onClick={(e) => { e.stopPropagation(); onBookingClick(b); }}
+                      >
+                        {getPropName(b.property_id)}
+                      </div>
+                    ))}
+                    {dayBlocked.slice(0, dayBookings.length > 1 ? 0 : 1).map(b => (
+                      <div key={b.id} className="text-[10px] px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-500 truncate">
+                        Blocked
+                      </div>
+                    ))}
+                    {hasContent && (dayBookings.length + dayBlocked.length) > 2 && (
+                      <div className="text-[10px] text-muted-foreground">+{(dayBookings.length + dayBlocked.length) - 2} more</div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
       
       {/* Day Detail Modal */}
       <Dialog open={dayModalOpen} onOpenChange={setDayModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              {selectedDateStr}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedDay?.bookings.length || 0} bookings, {selectedDay?.blocked.length || 0} blocked
-            </DialogDescription>
+            <DialogTitle className="font-heading">{selectedDateStr}</DialogTitle>
+            <DialogDescription>{selectedDay?.bookings.length || 0} bookings, {selectedDay?.blocked.length || 0} blocked</DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[400px] pr-4">
-            <div className="space-y-3">
-              {/* Blocked Dates */}
-              {selectedDay?.blocked.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                    <Ban className="h-4 w-4" /> Unavailable
-                  </h4>
-                  {selectedDay.blocked.map((b, i) => (
-                    <div key={`b-${i}`} className="flex items-center justify-between p-2 bg-slate-100 dark:bg-slate-800 rounded-lg mb-2">
+          <ScrollArea className="max-h-[400px]">
+            <div className="space-y-3 py-2">
+              {selectedDay?.bookings.map(b => (
+                <Card key={b.id} className="cursor-pointer hover:border-primary/50" onClick={() => { setDayModalOpen(false); onBookingClick(b); }}>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium line-through text-muted-foreground">{getPropName(b.property_id)}</p>
+                        <p className="font-medium text-sm">{getPropName(b.property_id)}</p>
                         <p className="text-xs text-muted-foreground">{b.check_in} → {b.check_out}</p>
                       </div>
-                      <Badge variant="secondary" className="text-xs">Blocked</Badge>
+                      <Badge className={`${statusColors[b.status]} text-xs`}>{b.status}</Badge>
                     </div>
-                  ))}
-                </div>
-              )}
-              
-              {/* Bookings */}
-              {selectedDay?.bookings.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                    <CalendarCheck className="h-4 w-4" /> Bookings
-                  </h4>
-                  {selectedDay.bookings.map((b, i) => (
-                    <div 
-                      key={`r-${i}`} 
-                      className="flex items-center justify-between p-2 border rounded-lg mb-2 hover:bg-muted/50 cursor-pointer transition-colors"
-                      onClick={() => { setDayModalOpen(false); onBookingClick(b); }}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{b.guest_name || 'Guest'}</p>
-                        <p className="text-xs text-muted-foreground truncate">{getPropName(b.property_id)}</p>
+                  </CardContent>
+                </Card>
+              ))}
+              {selectedDay?.blocked.map(b => (
+                <Card key={b.id} className="bg-slate-50 dark:bg-slate-800/30">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm text-muted-foreground">{getPropName(b.property_id)}</p>
                         <p className="text-xs text-muted-foreground">{b.check_in} → {b.check_out}</p>
                       </div>
-                      <div className="text-right ml-3">
-                        <Badge className={`text-xs ${statusColors[b.status] || ''}`}>
-                          {b.status?.replace('_', ' ')}
-                        </Badge>
-                        <p className="text-sm font-medium mt-1">{b.total_amount > 0 ? fmt(b.total_amount) : '-'}</p>
-                      </div>
+                      <Badge variant="secondary">Blocked</Badge>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </ScrollArea>
         </DialogContent>
@@ -245,11 +196,11 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
   );
 }
 
-// List View Component - Sectioned by Status
-function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, propertyFilter, statusFilter, sourceFilter, incompleteFilter }) {
+// Sectioned List View
+function SectionedBookingList({ bookings, blockedDates, properties, onEdit, onView, isAdmin }) {
   const getPropName = (id) => {
     const prop = properties.find(p => p.id === id);
-    return prop?.name || "Unknown Property";
+    return prop?.name || "Property";
   };
   
   const today = new Date().toISOString().slice(0, 10);
@@ -260,32 +211,11 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
     return src.charAt(0).toUpperCase() + src.slice(1);
   };
 
-  // Filter bookings
-  const filteredBookings = bookings.filter(b => {
-    if (propertyFilter && propertyFilter !== "all" && b.property_id !== propertyFilter) return false;
-    if (statusFilter && statusFilter !== "all" && b.status !== statusFilter) return false;
-    if (sourceFilter && sourceFilter !== "all") {
-      if (sourceFilter === "direct") {
-        if (b.ota_source && b.ota_source !== "manual") return false;
-      } else {
-        if (b.ota_source !== sourceFilter) return false;
-      }
-    }
-    if (incompleteFilter && b.is_data_complete !== false) return false;
-    return true;
-  });
-  
-  // Filter blocked dates
-  const filteredBlocked = blockedDates.filter(b => {
-    if (propertyFilter && propertyFilter !== "all" && b.property_id !== propertyFilter) return false;
-    return true;
-  });
-  
   // Categorize bookings
-  const checkingToday = filteredBookings.filter(b => b.check_in === today || b.check_out === today);
-  const upcoming = filteredBookings.filter(b => b.check_in > today && b.status !== 'cancelled');
-  const past = filteredBookings.filter(b => b.check_out < today || b.status === 'checked_out');
-  const activeNow = filteredBookings.filter(b => b.check_in <= today && b.check_out > today && b.check_in !== today);
+  const checkingToday = bookings.filter(b => b.check_in === today || b.check_out === today);
+  const upcoming = bookings.filter(b => b.check_in > today && b.status !== 'cancelled');
+  const past = bookings.filter(b => b.check_out < today || b.status === 'checked_out');
+  const activeNow = bookings.filter(b => b.check_in <= today && b.check_out > today && b.check_in !== today);
   
   // Sort each section
   const sortByCheckIn = (a, b) => new Date(a.check_in) - new Date(b.check_in);
@@ -293,110 +223,77 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
   
   const BookingRow = ({ b }) => {
     const isIcalImport = b.ota_source && b.ota_source !== 'manual';
-    const isIncomplete = b.is_data_complete === false;
-    const missingGuest = !b.guest_name || !b.guest_name.trim();
-    const missingAmount = !b.total_amount || b.total_amount <= 0;
-    const guestDisplay = b.guest_name || (isIcalImport ? `${b.ota_source} Guest` : 'Guest');
-    const amountDisplay = b.total_amount > 0 ? fmt(b.total_amount) : (isIcalImport ? <span className="text-muted-foreground text-xs italic">Not in iCal</span> : '$0.00');
     const sourceLabel = getSourceLabel(b);
     const sourceStyle = isIcalImport
       ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-700"
       : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700";
     
+    // Amount display - no "Not in iCal" text, just show amount or dash
+    const amountDisplay = b.total_amount > 0 ? fmt(b.total_amount) : "-";
+    
     return (
-      <TableRow key={b.id} data-testid={`booking-row-${b.id}`} className={`hover:bg-muted/30 ${isIncomplete ? 'bg-amber-50/50 dark:bg-amber-950/10' : ''}`}>
-        <TableCell className="font-medium">
-          <div className="flex items-center gap-2">
-            {isIncomplete && <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" data-testid={`incomplete-warning-${b.id}`} />}
-            <div>
-              {guestDisplay}
-              {isIncomplete && missingGuest && (
-                <span className="block text-[10px] text-amber-600 dark:text-amber-400 font-medium">Guest name required</span>
-              )}
-              {!isIncomplete && isIcalImport && b.guest_name?.includes('Guest') && (
-                <span className="block text-[10px] text-muted-foreground">via iCal</span>
-              )}
-            </div>
-          </div>
-        </TableCell>
-        <TableCell className="text-sm">{getPropName(b.property_id)}</TableCell>
+      <TableRow key={b.id} data-testid={`booking-row-${b.id}`} className="hover:bg-muted/30">
+        <TableCell className="font-medium text-sm">{getPropName(b.property_id)}</TableCell>
         <TableCell className="text-sm">{b.check_in}</TableCell>
         <TableCell className="text-sm">{b.check_out}</TableCell>
-        <TableCell className="text-sm">{calcNights(b.check_in, b.check_out)}</TableCell>
-        <TableCell>
-          <Badge className={`text-xs capitalize ${statusColors[b.status] || ''}`}>
-            {b.status?.replace('_', ' ')}
-          </Badge>
-        </TableCell>
         <TableCell>
           <Badge variant="outline" className={`text-[10px] capitalize ${sourceStyle}`} data-testid={`booking-source-${b.id}`}>
             {sourceLabel}
           </Badge>
         </TableCell>
-        <TableCell className="text-sm">
-          {amountDisplay}
-          {isIncomplete && missingAmount && (
-            <span className="block text-[10px] text-amber-600 dark:text-amber-400 font-medium">Amount required</span>
-          )}
+        <TableCell className="text-sm font-data">{amountDisplay}</TableCell>
+        <TableCell>
+          <Badge className={`text-xs capitalize ${statusColors[b.status] || ''}`}>
+            {b.status?.replace('_', ' ')}
+          </Badge>
         </TableCell>
-        {isAdmin && (
-          <TableCell className="text-right">
-            <Button variant={isIncomplete ? "outline" : "ghost"} size="sm" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`} className={isIncomplete ? "border-amber-300 hover:bg-amber-50" : ""}>
-              <Pencil className="h-4 w-4" />
+        <TableCell className="text-right">
+          <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="sm" onClick={() => onView(b)} data-testid={`view-booking-${b.id}`}>
+              <Eye className="h-4 w-4" />
             </Button>
-          </TableCell>
-        )}
+            {isAdmin && (
+              <Button variant="ghost" size="sm" onClick={() => onEdit(b)} data-testid={`edit-booking-${b.id}`}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </TableCell>
       </TableRow>
     );
   };
   
   const BlockedRow = ({ b }) => (
     <TableRow key={b.id} className="bg-slate-50 dark:bg-slate-800/30">
-      <TableCell className="font-medium text-muted-foreground line-through italic">Unavailable</TableCell>
-      <TableCell className="text-sm text-muted-foreground">{getPropName(b.property_id)}</TableCell>
+      <TableCell className="font-medium text-sm text-muted-foreground">{getPropName(b.property_id)}</TableCell>
       <TableCell className="text-sm text-muted-foreground">{b.check_in}</TableCell>
       <TableCell className="text-sm text-muted-foreground">{b.check_out}</TableCell>
-      <TableCell className="text-sm text-muted-foreground">{calcNights(b.check_in, b.check_out)}</TableCell>
       <TableCell>
-        <Badge variant="secondary" className="text-xs">Blocked</Badge>
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
         <Badge variant="outline" className="text-[10px] capitalize">{getSourceLabel(b)}</Badge>
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">-</TableCell>
-      {isAdmin && <TableCell />}
-    </TableRow>
-  );
-  
-  const SectionHeader = ({ icon: Icon, title, count, color = "text-foreground" }) => (
-    <TableRow className="bg-muted/50 hover:bg-muted/50">
-      <TableCell colSpan={isAdmin ? 9 : 8} className="py-2">
-        <div className={`flex items-center gap-2 font-semibold text-sm ${color}`}>
-          <Icon className="h-4 w-4" />
-          {title}
-          <Badge variant="outline" className="ml-2 text-xs">{count}</Badge>
-        </div>
+      <TableCell>
+        <Badge variant="secondary" className="text-xs">Blocked</Badge>
       </TableCell>
+      <TableCell />
     </TableRow>
   );
   
   const TableHeaders = () => (
     <TableHeader>
       <TableRow>
-        <TableHead>Guest</TableHead>
         <TableHead>Property</TableHead>
         <TableHead>Check-in</TableHead>
         <TableHead>Check-out</TableHead>
-        <TableHead>Nights</TableHead>
-        <TableHead>Status</TableHead>
         <TableHead>Source</TableHead>
         <TableHead>Amount</TableHead>
-        {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+        <TableHead>Status</TableHead>
+        <TableHead className="text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );
   
-  const totalCount = filteredBookings.length + filteredBlocked.length;
+  const totalCount = bookings.length + blockedDates.length;
   
   if (totalCount === 0) {
     return (
@@ -473,20 +370,20 @@ function BookingList({ bookings, blockedDates, properties, isAdmin, onEdit, prop
       )}
       
       {/* Unavailable/Blocked Section */}
-      {filteredBlocked.length > 0 && (
+      {blockedDates.length > 0 && (
         <Card>
           <CardHeader className="py-3 px-4 bg-slate-100 dark:bg-slate-800/50 border-b">
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-600 dark:text-slate-400">
               <Ban className="h-4 w-4" />
               Unavailable / Blocked
-              <Badge variant="secondary" className="ml-2">{filteredBlocked.length}</Badge>
+              <Badge variant="secondary" className="ml-2">{blockedDates.length}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeaders />
               <TableBody>
-                {filteredBlocked.sort(sortByCheckIn).map(b => <BlockedRow key={b.id} b={b} />)}
+                {blockedDates.sort(sortByCheckIn).map(b => <BlockedRow key={b.id} b={b} />)}
               </TableBody>
             </Table>
           </CardContent>
@@ -530,6 +427,10 @@ export default function Bookings() {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   
+  // Detail view state
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  
   // Override conflict state
   const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
   const [conflictDetails, setConflictDetails] = useState(null);
@@ -540,41 +441,49 @@ export default function Bookings() {
   const [propertyFilter, setPropertyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
-  const [incompleteFilter, setIncompleteFilter] = useState(searchParams.get("filter") === "incomplete");
   const [sources, setSources] = useState([]);
-  const [sortBy, setSortBy] = useState("check_in");
-  const [selectedBooking, setSelectedBooking] = useState(null);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
-  // Handle URL query param for incomplete filter
-  useEffect(() => {
-    if (searchParams.get("filter") === "incomplete") {
-      setIncompleteFilter(true);
-      setViewMode("list");
-    }
-  }, [searchParams]);
-
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const [bookRes, blockedRes, propRes, srcRes] = await Promise.all([
-        fetch(`${API}/api/bookings`, { credentials: "include" }),
+      let url = `${API}/api/bookings`;
+      const params = new URLSearchParams();
+      if (sourceFilter && sourceFilter !== "all") params.append("source", sourceFilter);
+      if (params.toString()) url += `?${params}`;
+      
+      const [bookingsRes, blockedRes, propsRes] = await Promise.all([
+        fetch(url, { credentials: "include" }),
         fetch(`${API}/api/bookings/blocked-dates`, { credentials: "include" }),
         fetch(`${API}/api/properties`, { credentials: "include" }),
-        fetch(`${API}/api/bookings/sources`, { credentials: "include" }),
       ]);
-      if (bookRes.ok) setBookings(await bookRes.json());
+      
+      if (bookingsRes.ok) {
+        const data = await bookingsRes.json();
+        setBookings(data);
+        // Extract unique sources
+        const srcSet = new Set(data.map(b => b.ota_source || "manual"));
+        setSources(Array.from(srcSet));
+      }
       if (blockedRes.ok) setBlockedDates(await blockedRes.json());
-      if (propRes.ok) setProperties(await propRes.json());
-      if (srcRes.ok) setSources(await srcRes.json());
+      if (propsRes.ok) setProperties(await propsRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (user?.company_id) fetchData(); }, [user]); // eslint-disable-line
-
-  const nights = useMemo(() => calcNights(form.check_in, form.check_out), [form.check_in, form.check_out]);
+  useEffect(() => { if (user?.company_id) fetchData(); }, [user, sourceFilter]); // eslint-disable-line
 
   const handleSave = async (forceOverride = false) => {
+    if (!form.property_id) { toast.error("Property is required"); return; }
+    if (!form.check_in || !form.check_out) { toast.error("Check-in and check-out dates are required"); return; }
+    
+    // Validate check-in not in past for new bookings
+    const today = new Date().toISOString().slice(0, 10);
+    if (!editing && form.check_in < today) {
+      toast.error("Check-in date cannot be in the past");
+      return;
+    }
+    
     setSaving(true);
     try {
       const method = editing ? "PUT" : "POST";
@@ -585,287 +494,316 @@ export default function Bookings() {
         guests_count: parseInt(form.guests_count) || 1,
         force_override: forceOverride,
       };
+      
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) });
+      const data = await res.json();
       
       if (res.ok) {
         toast.success(editing ? "Booking updated" : "Booking created");
-        setDialogOpen(false); setForm(empty); setEditing(null); 
-        setOverrideDialogOpen(false); setConflictDetails(null);
-        fetchData();
-      } else if (res.status === 409) {
-        // Conflict with blocked dates - show override dialog
-        try {
-          const err = await res.json();
-          setConflictDetails(err.detail);
-          setDialogOpen(false);
-          setOverrideDialogOpen(true);
-        } catch (parseError) {
-          // If JSON parsing fails, still show conflict dialog with default message
-          setConflictDetails({ message: "Date conflict with blocked dates", requires_override: true });
-          setDialogOpen(false);
-          setOverrideDialogOpen(true);
-        }
-      } else { 
-        const err = await res.json(); 
-        toast.error(typeof err.detail === 'string' ? err.detail : "Failed to save booking"); 
-      }
-    } catch (err) { 
-      // Check if the error message contains 409 - some proxies throw on non-2xx
-      const errMsg = err?.message || err?.toString() || '';
-      if (errMsg.includes('409') || errMsg.includes('conflict')) {
-        setConflictDetails({ message: "Date conflict with blocked dates", requires_override: true });
         setDialogOpen(false);
+        setForm(empty);
+        setEditing(null);
+        fetchData();
+      } else if (res.status === 409 && data.conflicts) {
+        // Show override dialog
+        setConflictDetails(data);
         setOverrideDialogOpen(true);
       } else {
-        console.error('Booking save error:', err);
-        toast.error("Error saving booking"); 
+        toast.error(data.detail || "Failed to save booking");
       }
-    } finally { setSaving(false); }
+    } catch (err) { toast.error("Error saving booking"); } finally { setSaving(false); }
   };
-  
-  const handleForceOverride = () => {
-    handleSave(true);
-  };
-  
-  const cancelOverride = () => {
-    setOverrideDialogOpen(false);
-    setConflictDetails(null);
-    setDialogOpen(true); // Reopen booking dialog
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this booking?")) return;
+    try {
+      const res = await fetch(`${API}/api/bookings/${id}`, { method: "DELETE", credentials: "include" });
+      if (res.ok) { toast.success("Booking deleted"); setDetailOpen(false); fetchData(); }
+    } catch (err) { toast.error("Error deleting booking"); }
   };
 
   const openEdit = (b) => {
     setForm({
       property_id: b.property_id,
-      guest_name: b.guest_name,
+      guest_name: b.guest_name || "",
       check_in: b.check_in,
       check_out: b.check_out,
-      total_amount: b.total_amount?.toString() || "",
+      total_amount: b.total_amount || "",
       guests_count: b.guests_count || 1,
-      status: b.status || "confirmed",
+      status: b.status,
+      notes: b.notes || "",
     });
     setEditing(b.id);
     setDialogOpen(true);
-    setSelectedBooking(null);
+  };
+
+  const openView = (b) => {
+    setSelectedBooking(b);
+    setDetailOpen(true);
   };
 
   const handleMonthChange = (delta) => {
-    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+    const newDate = new Date(currentMonth);
+    newDate.setMonth(newDate.getMonth() + delta);
+    setCurrentMonth(newDate);
   };
 
-  const handleBookingClick = (b) => {
-    setSelectedBooking(b);
+  const getPropName = (id) => properties.find(p => p.id === id)?.name || "Property";
+  const getSourceLabel = (b) => {
+    const src = b?.ota_source;
+    if (!src || src === "manual") return "Direct";
+    return src.charAt(0).toUpperCase() + src.slice(1);
   };
 
   if (authLoading || !user) return <div className="h-screen flex items-center justify-center bg-background"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
+  
   const isAdmin = user?.role === "company_admin";
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+  // Apply filters
+  const filteredBookings = bookings.filter(b => {
+    if (propertyFilter && propertyFilter !== "all" && b.property_id !== propertyFilter) return false;
+    if (statusFilter && statusFilter !== "all" && b.status !== statusFilter) return false;
+    return true;
+  });
+  
+  const filteredBlocked = blockedDates.filter(b => {
+    if (propertyFilter && propertyFilter !== "all" && b.property_id !== propertyFilter) return false;
+    return true;
+  });
+
   return (
     <Layout>
-      <div className="space-y-6" data-testid="bookings-page">
+      <div className="space-y-6 max-w-[1400px] mx-auto" data-testid="bookings-page">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
           <div>
-            <h1 className="text-xl font-semibold font-heading text-foreground">Bookings</h1>
-            <p className="text-sm text-muted-foreground">{bookings.length} total bookings</p>
+            <h1 className="font-heading text-2xl font-bold text-foreground">Bookings</h1>
+            <p className="text-sm text-muted-foreground mt-1">{bookings.length} total bookings</p>
           </div>
           <div className="flex items-center gap-2">
             {/* View Toggle */}
-            <div className="flex border rounded-lg p-0.5 bg-muted/50">
-              <Button 
-                variant={viewMode === "calendar" ? "default" : "ghost"} 
-                size="sm" 
-                className="h-8 transition-all"
-                onClick={() => setViewMode("calendar")}
-                data-testid="calendar-view-btn"
-              >
-                <CalendarDays className="h-4 w-4 mr-1" /> Calendar
+            <div className="flex items-center rounded-lg border bg-muted/30 p-0.5">
+              <Button variant={viewMode === "calendar" ? "default" : "ghost"} size="sm" className="h-8" onClick={() => setViewMode("calendar")} data-testid="view-calendar-btn">
+                <CalendarDays className="h-4 w-4" />
               </Button>
-              <Button 
-                variant={viewMode === "list" ? "default" : "ghost"} 
-                size="sm"
-                className="h-8 transition-all"
-                onClick={() => setViewMode("list")}
-                data-testid="list-view-btn"
-              >
-                <List className="h-4 w-4 mr-1" /> List
+              <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" className="h-8" onClick={() => setViewMode("list")} data-testid="view-list-btn">
+                <List className="h-4 w-4" />
               </Button>
             </div>
             {isAdmin && (
-              <Button size="sm" onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-booking-btn" className="shadow-sm">
-                <Plus className="mr-2 h-4 w-4" /> Add Booking
+              <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-booking-btn" className="shadow-sm">
+                <Plus className="mr-2 h-4 w-4" />Add Booking
               </Button>
             )}
           </div>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3">
-          <Select value={propertyFilter} onValueChange={setPropertyFilter}>
-            <SelectTrigger className="w-[200px] h-9" data-testid="property-filter">
+        <div className="flex flex-wrap gap-2 items-center">
+          <Select value={propertyFilter || "all"} onValueChange={setPropertyFilter}>
+            <SelectTrigger className="w-[180px] h-9" data-testid="filter-property">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="All Properties" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Properties</SelectItem>
-              {properties.map(p => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          
+          <Select value={sourceFilter || "all"} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-[140px] h-9" data-testid="filter-source">
+              <Globe className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="All Sources" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sources</SelectItem>
+              <SelectItem value="direct">Direct</SelectItem>
+              {sources.filter(s => s !== "manual").map(s => (
+                <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           
-          {viewMode === "list" && (
-            <>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px] h-9" data-testid="status-filter">
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="checked_in">Checked In</SelectItem>
-                  <SelectItem value="checked_out">Checked Out</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                <SelectTrigger className="w-[170px] h-9" data-testid="source-filter">
-                  <Globe className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="All Sources" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sources</SelectItem>
-                  {sources.map(s => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Button 
-                variant={incompleteFilter ? "default" : "outline"} 
-                size="sm" 
-                className={`h-9 gap-2 ${incompleteFilter ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}`}
-                onClick={() => {
-                  setIncompleteFilter(f => !f);
-                  // Clean URL param
-                  if (incompleteFilter) {
-                    searchParams.delete("filter");
-                    setSearchParams(searchParams);
-                  }
-                }}
-                data-testid="incomplete-filter-btn"
-              >
-                <AlertTriangle className="h-4 w-4" />
-                Incomplete
-              </Button>
-            </>
-          )}
+          <Select value={statusFilter || "all"} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px] h-9" data-testid="filter-status">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="confirmed">Confirmed</SelectItem>
+              <SelectItem value="checked_in">Checked In</SelectItem>
+              <SelectItem value="checked_out">Checked Out</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Content */}
+        {/* Main Content */}
         {loading ? (
-          <Card>
-            <CardContent className="p-8">
-              <div className="h-64 animate-pulse bg-muted/50 rounded-lg" />
-            </CardContent>
-          </Card>
+          <Card><CardContent className="p-6 h-48 animate-pulse bg-muted" /></Card>
         ) : viewMode === "calendar" ? (
           <Card>
             <CardContent className="p-4">
-              <BookingCalendar 
-                bookings={bookings}
-                blockedDates={blockedDates}
+              <BookingCalendar
+                bookings={filteredBookings}
+                blockedDates={filteredBlocked}
                 properties={properties}
                 currentMonth={currentMonth}
                 onMonthChange={handleMonthChange}
-                onBookingClick={handleBookingClick}
-                propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
+                onBookingClick={openView}
+                propertyFilter={propertyFilter !== "all" ? propertyFilter : ""}
               />
             </CardContent>
           </Card>
         ) : (
-          <BookingList 
-            bookings={bookings}
-            blockedDates={blockedDates}
+          <SectionedBookingList
+            bookings={filteredBookings}
+            blockedDates={filteredBlocked}
             properties={properties}
-            isAdmin={isAdmin}
             onEdit={openEdit}
-            propertyFilter={propertyFilter === "all" ? "" : propertyFilter}
-            statusFilter={statusFilter === "all" ? "" : statusFilter}
-            sourceFilter={sourceFilter === "all" ? "" : sourceFilter}
-            incompleteFilter={incompleteFilter}
+            onView={openView}
+            isAdmin={isAdmin}
           />
         )}
 
-        {/* Booking Detail Popup (Calendar click) */}
-        <Dialog open={!!selectedBooking} onOpenChange={() => setSelectedBooking(null)}>
+        {/* Add/Edit Booking Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="font-heading">{editing ? "Edit Booking" : "Add Booking"}</DialogTitle>
+              <DialogDescription>
+                {editing ? "Update booking details" : "Create a new direct booking"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-2">
+              <div className="space-y-2">
+                <Label>Property *</Label>
+                <Select value={form.property_id} onValueChange={v => set("property_id", v)}>
+                  <SelectTrigger data-testid="booking-property-select"><SelectValue placeholder="Select property..." /></SelectTrigger>
+                  <SelectContent>
+                    {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Guest Name *</Label>
+                <Input data-testid="booking-guest-input" value={form.guest_name} onChange={e => set("guest_name", e.target.value)} placeholder="Guest's full name" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Check-in *</Label>
+                  <Input data-testid="booking-checkin-input" type="date" value={form.check_in} onChange={e => set("check_in", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Check-out *</Label>
+                  <Input data-testid="booking-checkout-input" type="date" value={form.check_out} onChange={e => set("check_out", e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Amount *</Label>
+                  <Input data-testid="booking-amount-input" type="number" step="0.01" value={form.total_amount} onChange={e => set("total_amount", e.target.value)} placeholder="0.00" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Guests</Label>
+                  <Input data-testid="booking-guests-input" type="number" min="1" value={form.guests_count} onChange={e => set("guests_count", e.target.value)} />
+                </div>
+              </div>
+              {editing && (
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={form.status} onValueChange={v => set("status", v)}>
+                    <SelectTrigger data-testid="booking-status-select"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="checked_in">Checked In</SelectItem>
+                      <SelectItem value="checked_out">Checked Out</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Internal Notes</Label>
+                <Textarea data-testid="booking-notes-input" value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Add any internal notes..." rows={2} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button onClick={() => handleSave(false)} disabled={saving} data-testid="save-booking-btn">
+                {saving ? "Saving..." : editing ? "Update" : "Create"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Booking Detail View Dialog */}
+        <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Booking Details</DialogTitle>
+              <DialogTitle className="font-heading">Booking Details</DialogTitle>
             </DialogHeader>
             {selectedBooking && (
               <div className="space-y-4 py-2">
-                {selectedBooking.is_data_complete === false && (
-                  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3 text-sm text-amber-700 dark:text-amber-300" data-testid="booking-detail-incomplete-warning">
-                    <AlertTriangle className="h-4 w-4 shrink-0" />
-                    <div>
-                      <p className="font-medium">Missing Booking Details</p>
-                      <p className="text-xs mt-0.5">
-                        {(!selectedBooking.guest_name || !selectedBooking.guest_name.trim()) && "Guest name required. "}
-                        {(!selectedBooking.total_amount || selectedBooking.total_amount <= 0) && "Amount required."}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Guest</p>
-                    <p className="font-medium">{selectedBooking.guest_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Property</p>
-                    <p>{properties.find(p => p.id === selectedBooking.property_id)?.name || "Unknown"}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Check-in</p>
-                    <p>{selectedBooking.check_in}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Check-out</p>
-                    <p>{selectedBooking.check_out}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Nights</p>
-                    <p>{calcNights(selectedBooking.check_in, selectedBooking.check_out)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Status</p>
-                    <Badge className={`capitalize ${statusColors[selectedBooking.status] || ''}`}>
-                      {selectedBooking.status?.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                  {selectedBooking.ota_source && (
-                    <div>
-                      <p className="text-muted-foreground text-xs mb-1">Source</p>
-                      <Badge variant="outline" className="capitalize">{selectedBooking.ota_source === "manual" ? "Direct" : selectedBooking.ota_source}</Badge>
-                    </div>
-                  )}
-                  {!selectedBooking.ota_source && (
-                    <div>
-                      <p className="text-muted-foreground text-xs mb-1">Source</p>
-                      <Badge variant="outline">Direct</Badge>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Amount</p>
-                    <p className="font-medium">{fmt(selectedBooking.total_amount || 0)}</p>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <Badge className={`${statusColors[selectedBooking.status]} text-sm`}>
+                    {selectedBooking.status?.replace('_', ' ')}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {getSourceLabel(selectedBooking)}
+                  </Badge>
                 </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Property</p>
+                    <p className="font-medium">{getPropName(selectedBooking.property_id)}</p>
+                  </div>
+                  
+                  {/* Guest name only visible in detail view for direct bookings */}
+                  {selectedBooking.guest_name && selectedBooking.guest_name.trim() && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Guest Name</p>
+                      <p className="font-medium">{selectedBooking.guest_name}</p>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Check-in</p>
+                      <p className="font-medium">{selectedBooking.check_in}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Check-out</p>
+                      <p className="font-medium">{selectedBooking.check_out}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Nights</p>
+                      <p className="font-medium">{calcNights(selectedBooking.check_in, selectedBooking.check_out)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Amount</p>
+                      <p className="font-medium font-data">{selectedBooking.total_amount > 0 ? fmt(selectedBooking.total_amount) : "-"}</p>
+                    </div>
+                  </div>
+                  
+                  {selectedBooking.notes && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Notes</p>
+                      <p className="text-sm">{selectedBooking.notes}</p>
+                    </div>
+                  )}
+                </div>
+                
                 {isAdmin && (
                   <div className="flex gap-2 pt-4 border-t">
-                    <Button className="flex-1" onClick={() => openEdit(selectedBooking)}>
-                      <Pencil className="mr-2 h-4 w-4" /> Edit Booking
+                    <Button variant="outline" className="flex-1" onClick={() => { setDetailOpen(false); openEdit(selectedBooking); }}>
+                      <Pencil className="h-4 w-4 mr-2" />Edit
                     </Button>
                   </div>
                 )}
@@ -874,113 +812,33 @@ export default function Bookings() {
           </DialogContent>
         </Dialog>
 
-        {/* Add/Edit Booking Dialog */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{editing ? "Edit Booking" : "New Booking"}</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label>Property *</Label>
-                <Select value={form.property_id} onValueChange={v => set("property_id", v)}>
-                  <SelectTrigger data-testid="booking-property-select">
-                    <SelectValue placeholder="Select property..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Guest Name *</Label>
-                <Input value={form.guest_name} onChange={e => set("guest_name", e.target.value)} placeholder="Guest name" data-testid="booking-guest-input" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Check-in *</Label>
-                  <Input type="date" value={form.check_in} onChange={e => set("check_in", e.target.value)} min={!editing ? new Date().toISOString().slice(0, 10) : undefined} data-testid="booking-checkin-input" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Check-out *</Label>
-                  <Input type="date" value={form.check_out} onChange={e => set("check_out", e.target.value)} min={!editing ? (form.check_in || new Date().toISOString().slice(0, 10)) : (form.check_in || undefined)} data-testid="booking-checkout-input" />
-                </div>
-              </div>
-              {nights > 0 && (
-                <div className="text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
-                  Duration: <span className="font-medium text-foreground">{nights} night{nights !== 1 ? 's' : ''}</span>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Total Amount</Label>
-                  <Input type="number" value={form.total_amount} onChange={e => set("total_amount", e.target.value)} placeholder="0.00" data-testid="booking-amount-input" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Guests</Label>
-                  <Input type="number" min="1" value={form.guests_count} onChange={e => set("guests_count", e.target.value)} data-testid="booking-guests-input" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={v => set("status", v)}>
-                  <SelectTrigger data-testid="booking-status-select">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="checked_in">Checked In</SelectItem>
-                    <SelectItem value="checked_out">Checked Out</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={() => handleSave(false)} disabled={!form.property_id || !form.guest_name || !form.check_in || !form.check_out || saving} data-testid="save-booking-btn">
-                {saving ? "Saving..." : editing ? "Update" : "Create"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
         {/* Override Conflict Dialog */}
         <Dialog open={overrideDialogOpen} onOpenChange={setOverrideDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
-                <AlertTriangle className="h-5 w-5" />
-                Date Conflict Detected
-              </DialogTitle>
+              <DialogTitle className="font-heading text-amber-600">Booking Conflict</DialogTitle>
               <DialogDescription>
-                This date range overlaps with blocked/unavailable dates.
+                This booking overlaps with blocked dates. Do you want to override?
               </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-              {conflictDetails?.blocked_period && (
-                <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-muted-foreground mb-1">Blocked Period:</p>
-                  <p className="font-medium">
-                    {conflictDetails.blocked_period.check_in} → {conflictDetails.blocked_period.check_out}
+            {conflictDetails && (
+              <div className="space-y-3 py-2">
+                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3">
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    {conflictDetails.conflicts?.length || 0} conflict(s) found
                   </p>
+                  {conflictDetails.conflicts?.map((c, i) => (
+                    <p key={i} className="text-xs text-amber-600 dark:text-amber-300 mt-1">
+                      {c.check_in} - {c.check_out}
+                    </p>
+                  ))}
                 </div>
-              )}
-              <p className="text-sm text-muted-foreground">
-                Do you want to override these blocked dates and create the booking anyway? 
-                This action will be logged for audit purposes.
-              </p>
-            </div>
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" onClick={cancelOverride}>Cancel</Button>
-              <Button 
-                variant="default" 
-                className="bg-amber-600 hover:bg-amber-700 text-white"
-                onClick={handleForceOverride} 
-                disabled={saving}
-                data-testid="force-override-btn"
-              >
-                {saving ? "Processing..." : "Force Manual Booking"}
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOverrideDialogOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => { setOverrideDialogOpen(false); handleSave(true); }}>
+                Override & Create
               </Button>
             </DialogFooter>
           </DialogContent>
