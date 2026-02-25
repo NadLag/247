@@ -52,8 +52,8 @@ const empty = {
   priority: "medium",
 };
 
-function TaskCard({ task, isAdmin, onEdit, onStatusChange, index = 0 }) {
-  const typeConfig = TASK_TYPES.find(t => t.value === task.task_type) || TASK_TYPES[5];
+function TaskCard({ task, isAdmin, onEdit, onStatusChange, taskTypes, index = 0 }) {
+  const typeConfig = taskTypes.find(t => t.value === task.task_type) || { label: task.task_type || "Task", color: "bg-primary/10 text-primary" };
   const priorityConfig = PRIORITIES.find(p => p.value === task.priority) || PRIORITIES[1];
   const statusConfig = STATUS_CONFIG[task.status] || STATUS_CONFIG.pending;
   const StatusIcon = statusConfig.icon;
