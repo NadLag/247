@@ -416,7 +416,7 @@ export default function Tasks() {
                   <Select value={form.task_type} onValueChange={v => set("task_type", v)}>
                     <SelectTrigger data-testid="task-type-select"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {TASK_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                      {taskTypes.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
