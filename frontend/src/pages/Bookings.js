@@ -199,8 +199,10 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
 // Sectioned List View
 function SectionedBookingList({ bookings, blockedDates, properties, onEdit, onView, isAdmin }) {
   const getPropName = (id) => {
+    if (!id) return "No Property";
+    if (!properties || properties.length === 0) return "Loading...";
     const prop = properties.find(p => p.id === id);
-    return prop?.name || "Property";
+    return prop?.name || `Unknown (${id})`;
   };
   
   const today = new Date().toISOString().slice(0, 10);
