@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { LayoutDashboard, Building2, Users, Receipt, CalendarDays, Mail, CreditCard, Settings, Sun, Moon, Menu, LogOut, ChevronRight, ChevronLeft, Package, BarChart3, ClipboardList, Bell, AlertTriangle, ExternalLink, PanelLeftClose, PanelLeft, FileText } from "lucide-react";
+import { LayoutDashboard, Building2, Users, Receipt, CalendarDays, Mail, CreditCard, Settings, Sun, Moon, Menu, LogOut, ChevronRight, ChevronLeft, Package, BarChart3, ClipboardList, Bell, AlertTriangle, ExternalLink, PanelLeftClose, PanelLeft } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
