@@ -10,21 +10,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Plane, Utensils, Map, Sparkles, Car, Package, User, Building2, Phone, Mail } from "lucide-react";
+import { Plus, Pencil, Trash2, Package, User, Building2, Phone, Mail } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const fmt = (v) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
 
-const categories = [
-  { value: "airport_transfer", label: "Airport Transfer", icon: Plane },
-  { value: "meals", label: "Meals & Dining", icon: Utensils },
-  { value: "excursions", label: "Excursions & Tours", icon: Map },
-  { value: "spa", label: "Spa & Wellness", icon: Sparkles },
-  { value: "transport", label: "Transportation", icon: Car },
-  { value: "other", label: "Other Services", icon: Package },
+// Default service types - simplified list
+const DEFAULT_SERVICE_TYPES = [
+  "Housekeeping",
+  "Maintenance",
+  "Check-in",
+  "Check-out",
+  "Transport",
+  "Breakfast",
+  "Meal",
+  "Excursion",
+  "Airport Transfer",
+  "Spa",
+  "Laundry",
+  "Concierge",
 ];
 
 const priceTypes = [
@@ -35,8 +41,8 @@ const priceTypes = [
 
 const empty = {
   name: "",
+  custom_name: "",
   description: "",
-  category: "other",
   price: "",
   price_type: "fixed",
   provider_type: "internal",
@@ -48,8 +54,6 @@ const empty = {
 };
 
 function ServiceCard({ service, staff, onEdit, onDelete, isAdmin, index = 0 }) {
-  const category = categories.find(c => c.value === service.category) || categories[5];
-  const IconComponent = category.icon;
   const assignedStaff = staff.find(s => s.id === service.assigned_staff_id);
 
   return (
@@ -62,21 +66,19 @@ function ServiceCard({ service, staff, onEdit, onDelete, isAdmin, index = 0 }) {
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
-              <IconComponent className="h-5 w-5 text-primary" />
+              <Package className="h-5 w-5 text-primary" />
             </div>
             <div className="min-w-0">
               <h3 className="font-medium text-sm truncate text-foreground">{service.name}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">{category.label}</p>
+              {service.description && (
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{service.description}</p>
+              )}
             </div>
           </div>
           <Badge variant={service.active ? "default" : "secondary"} className={`shrink-0 ${service.active ? 'bg-primary/10 text-primary border-0' : ''}`}>
             {service.active ? "Active" : "Inactive"}
           </Badge>
         </div>
-
-        {service.description && (
-          <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{service.description}</p>
-        )}
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t">
           <div>
@@ -123,7 +125,6 @@ export default function Services() {
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("all");
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
@@ -131,7 +132,7 @@ export default function Services() {
     try {
       const [svcRes, staffRes] = await Promise.all([
         fetch(`${API}/api/services?active_only=false`, { credentials: "include" }),
-        fetch(`${API}/api/staff`, { credentials: "include" }),
+        fetch(`${API}/api/staff`, { credentials: "include" }).catch(() => ({ ok: false })),
       ]);
       if (svcRes.ok) setServices(await svcRes.json());
       if (staffRes.ok) setStaff(await staffRes.json());
@@ -140,19 +141,31 @@ export default function Services() {
 
   useEffect(() => { if (user?.company_id) fetchData(); }, [user]); // eslint-disable-line
 
+  // Build service name options - defaults + custom from existing services
+  const serviceNameOptions = [...new Set([
+    ...DEFAULT_SERVICE_TYPES,
+    ...services.map(s => s.name).filter(n => !DEFAULT_SERVICE_TYPES.includes(n))
+  ])].sort();
+
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error("Service name is required"); return; }
+    const serviceName = form.name === "Other" ? form.custom_name : form.name;
+    if (!serviceName?.trim()) { toast.error("Service name is required"); return; }
     setSaving(true);
     try {
       const method = editing ? "PUT" : "POST";
       const url = editing ? `${API}/api/services/${editing}` : `${API}/api/services`;
       const body = {
-        ...form,
+        name: serviceName.trim(),
+        description: form.description,
+        category: "other", // Simplified - no categories
         price: parseFloat(form.price) || 0,
+        price_type: form.price_type,
+        provider_type: form.provider_type,
         assigned_staff_id: form.provider_type === "internal" ? form.assigned_staff_id || null : null,
         external_provider_name: form.provider_type === "external" ? form.external_provider_name : null,
         external_provider_phone: form.provider_type === "external" ? form.external_provider_phone : null,
         external_provider_email: form.provider_type === "external" ? form.external_provider_email : null,
+        active: form.active,
       };
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) });
       if (res.ok) {
@@ -171,10 +184,11 @@ export default function Services() {
   };
 
   const openEdit = (s) => {
+    const isDefault = DEFAULT_SERVICE_TYPES.includes(s.name);
     setForm({
-      name: s.name,
+      name: isDefault ? s.name : "Other",
+      custom_name: isDefault ? "" : s.name,
       description: s.description || "",
-      category: s.category,
       price: s.price,
       price_type: s.price_type,
       provider_type: s.provider_type,
@@ -190,16 +204,6 @@ export default function Services() {
   if (authLoading || !user) return <div className="h-screen flex items-center justify-center bg-background"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   const isAdmin = user?.role === "company_admin";
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-
-  const filteredServices = activeCategory === "all" 
-    ? services 
-    : services.filter(s => s.category === activeCategory);
-
-  // Group services by category for display
-  const categoryCounts = categories.reduce((acc, cat) => {
-    acc[cat.value] = services.filter(s => s.category === cat.value).length;
-    return acc;
-  }, {});
 
   return (
     <Layout>
@@ -233,73 +237,62 @@ export default function Services() {
             )}
           </CardContent></Card>
         ) : (
-          <>
-            <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-              <TabsList className="flex-wrap h-auto gap-1 p-1" data-testid="service-category-tabs">
-                <TabsTrigger value="all" className="gap-1.5">
-                  All <Badge variant="secondary" className="h-5 px-1.5">{services.length}</Badge>
-                </TabsTrigger>
-                {categories.map(cat => {
-                  const count = categoryCounts[cat.value] || 0;
-                  if (count === 0) return null;
-                  return (
-                    <TabsTrigger key={cat.value} value={cat.value} className="gap-1.5">
-                      <cat.icon className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">{cat.label}</span>
-                      <Badge variant="secondary" className="h-5 px-1.5">{count}</Badge>
-                    </TabsTrigger>
-                  );
-                })}
-              </TabsList>
-            </Tabs>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredServices.map((service, index) => (
-                <ServiceCard 
-                  key={service.id} 
-                  service={service} 
-                  staff={staff}
-                  onEdit={openEdit} 
-                  onDelete={handleDelete}
-                  isAdmin={isAdmin}
-                  index={index}
-                />
-              ))}
-            </div>
-          </>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {services.map((service, index) => (
+              <ServiceCard 
+                key={service.id} 
+                service={service} 
+                staff={staff}
+                onEdit={openEdit} 
+                onDelete={handleDelete}
+                isAdmin={isAdmin}
+                index={index}
+              />
+            ))}
+          </div>
         )}
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-heading">{editing ? "Edit Service" : "Add Service"}</DialogTitle>
-              <DialogDescription>Create services that can be offered to guests as add-ons.</DialogDescription>
+              <DialogDescription>Services will be available as task types.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-2">
               <div className="space-y-2">
-                <Label>Service Name *</Label>
-                <Input data-testid="service-name-input" value={form.name} onChange={e => set("name", e.target.value)} placeholder="e.g., Airport Pickup" />
+                <Label>Service Type *</Label>
+                <Select value={form.name} onValueChange={v => { set("name", v); if (v !== "Other") set("custom_name", ""); }}>
+                  <SelectTrigger data-testid="service-name-select"><SelectValue placeholder="Select service type..." /></SelectTrigger>
+                  <SelectContent>
+                    {serviceNameOptions.map(name => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
+                    <SelectItem value="Other">Other (Custom)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              
+              {form.name === "Other" && (
+                <div className="space-y-2">
+                  <Label>Custom Service Name *</Label>
+                  <Input 
+                    data-testid="service-custom-name-input" 
+                    value={form.custom_name} 
+                    onChange={e => set("custom_name", e.target.value)} 
+                    placeholder="Enter custom service name" 
+                  />
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label>Description</Label>
                 <Textarea data-testid="service-description-input" value={form.description} onChange={e => set("description", e.target.value)} placeholder="Describe this service..." rows={2} />
               </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Select value={form.category} onValueChange={v => set("category", v)}>
-                    <SelectTrigger data-testid="service-category-select"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          <div className="flex items-center gap-2">
-                            <cat.icon className="h-4 w-4" />
-                            {cat.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Price ($)</Label>
+                  <Input data-testid="service-price-input" type="number" step="0.01" value={form.price} onChange={e => set("price", e.target.value)} placeholder="0.00" />
                 </div>
                 <div className="space-y-2">
                   <Label>Price Type</Label>
@@ -312,10 +305,6 @@ export default function Services() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Price ($)</Label>
-                <Input data-testid="service-price-input" type="number" step="0.01" value={form.price} onChange={e => set("price", e.target.value)} placeholder="0.00" />
               </div>
 
               <div className="space-y-3 pt-2 border-t">
@@ -386,7 +375,7 @@ export default function Services() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave} disabled={!form.name.trim() || saving} data-testid="save-service-btn">
+              <Button onClick={handleSave} disabled={(!form.name || (form.name === "Other" && !form.custom_name?.trim())) || saving} data-testid="save-service-btn">
                 {saving ? "Saving..." : editing ? "Update" : "Create"}
               </Button>
             </DialogFooter>
