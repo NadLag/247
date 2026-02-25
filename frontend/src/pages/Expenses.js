@@ -218,7 +218,9 @@ export default function Expenses() {
                   <Label>Category</Label>
                   <Select value={form.category} onValueChange={v => setForm(p => ({ ...p, category: v }))}>
                     <SelectTrigger data-testid="expense-category-select"><SelectValue placeholder="Select..." /></SelectTrigger>
-                    <SelectContent>{categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    <SelectContent>
+                      {categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                    </SelectContent>
                   </Select>
                 </div>
               </div>
