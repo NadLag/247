@@ -23,6 +23,7 @@ const navConfig = {
     { name: "Properties", path: "/properties", icon: Building2 },
     { name: "Bookings", path: "/bookings", icon: CalendarDays },
     { name: "Tasks", path: "/tasks", icon: ClipboardList },
+    { name: "Services", path: "/services", icon: Package },
     { name: "Expenses", path: "/expenses", icon: Receipt },
     { name: "Analytics", path: "/analytics", icon: BarChart3 },
     { name: "Team", path: "/invitations", icon: Users },
