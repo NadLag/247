@@ -16,7 +16,6 @@ import Services from "@/pages/Services";
 import Analytics from "@/pages/Analytics";
 import Tasks from "@/pages/Tasks";
 import InviteAccept from "@/pages/InviteAccept";
-import Reports from "@/pages/Reports";
 import { Toaster } from "@/components/ui/sonner";
 
 function AppRouter() {
@@ -39,7 +38,7 @@ function AppRouter() {
       <Route path="/services" element={<Services />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/tasks" element={<Tasks />} />
-      <Route path="/reports" element={<Reports />} />
+      <Route path="/reports" element={<Navigate to="/analytics" replace />} />
       <Route path="/invitations" element={<Invitations />} />
       <Route path="/billing" element={<Billing />} />
       <Route path="/settings" element={<Settings />} />
