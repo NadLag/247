@@ -16,13 +16,16 @@ import { Plus, Clock, CheckCircle2, PlayCircle, XCircle, ClipboardList, Building
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const TASK_TYPES = [
-  { value: "cleaning", label: "Cleaning", color: "bg-blue-500/10 text-blue-600" },
+// Default task types - will be merged with services
+const DEFAULT_TASK_TYPES = [
+  { value: "housekeeping", label: "Housekeeping", color: "bg-blue-500/10 text-blue-600" },
   { value: "maintenance", label: "Maintenance", color: "bg-amber-500/10 text-amber-600" },
   { value: "check_in", label: "Check-in", color: "bg-emerald-500/10 text-emerald-600" },
   { value: "check_out", label: "Check-out", color: "bg-purple-500/10 text-purple-600" },
-  { value: "admin", label: "Admin", color: "bg-slate-500/10 text-slate-600" },
-  { value: "general", label: "General", color: "bg-primary/10 text-primary" },
+  { value: "transport", label: "Transport", color: "bg-cyan-500/10 text-cyan-600" },
+  { value: "breakfast", label: "Breakfast", color: "bg-orange-500/10 text-orange-600" },
+  { value: "meal", label: "Meal", color: "bg-rose-500/10 text-rose-600" },
+  { value: "excursion", label: "Excursion", color: "bg-indigo-500/10 text-indigo-600" },
 ];
 
 const PRIORITIES = [
