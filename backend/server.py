@@ -1476,6 +1476,33 @@ async def create_booking(data: BookingCreate, user=Depends(require_admin)):
                 }
             )
     
+    # Check for double bookings (overlapping confirmed/active reservations)
+    if data.property_id and data.check_in and data.check_out:
+        overlapping_booking = await db.bookings.find_one({
+            "company_id": company_id,
+            "property_id": data.property_id,
+            "booking_type": {"$ne": "blocked"},  # Exclude blocked dates
+            "status": {"$nin": ["cancelled", "blocked", "overridden"]},  # Only active bookings
+            "$and": [
+                {"check_in": {"$lt": data.check_out}},
+                {"check_out": {"$gt": data.check_in}}
+            ]
+        }, {"_id": 0, "id": 1, "guest_name": 1, "check_in": 1, "check_out": 1})
+        
+        if overlapping_booking:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "Double booking detected. This property already has a booking during these dates.",
+                    "conflicts": [{
+                        "booking_id": overlapping_booking.get("id"),
+                        "guest_name": overlapping_booking.get("guest_name", "Guest"),
+                        "check_in": overlapping_booking.get("check_in"),
+                        "check_out": overlapping_booking.get("check_out")
+                    }]
+                }
+            )
+    
     # If force_override, handle blocked date override
     if data.force_override and data.property_id and data.check_in and data.check_out:
         # Find and update overlapping blocked dates to "overridden"
