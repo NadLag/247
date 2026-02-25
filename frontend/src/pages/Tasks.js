@@ -367,6 +367,7 @@ export default function Tasks() {
                   isAdmin={isAdmin}
                   onEdit={openEdit}
                   onStatusChange={handleStatusChange}
+                  taskTypes={taskTypes}
                   index={index}
                 />
               ))}
