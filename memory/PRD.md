@@ -57,6 +57,26 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 
 ### System-Wide UI/UX Updates (Feb 25, 2026)
 
+#### Experience Design Overhaul (Feb 25, 2026)
+- [x] **Simplified Sidebar Navigation** - Max 8 items for admin, 5 for owner, 4 for staff
+- [x] **Onboarding Wizard** - 3-step setup for new admins (Add Properties → Invite Team → Financial Setup)
+- [x] **Role-Based Dashboards**:
+  - Admin: Full KPIs + missing amount alerts + check-ins/outs today
+  - Owner: Simple KPIs (properties, revenue, profit) + chart + properties list
+  - Staff: Tasks today, upcoming tasks, assigned properties (no financial data)
+- [x] **Missing Amount Alert** - Yellow alert card on admin dashboard for incomplete iCal bookings
+- [x] **Premium KPI Cards** - With trend indicators, animations, and role-specific styling
+- [x] **Backend: incomplete_bookings** - Added to KPIs response for admins
+- [x] **Company Settings Endpoint** - PUT /api/companies/me for fee settings
+
+#### Double Booking Prevention (Feb 25, 2026)
+- [x] **Validation on create** - Returns 409 Conflict with conflicting booking details
+- [x] **Validation on update** - Excludes current booking from conflict check
+- [x] **Clear error message** - Shows conflicting guest name and dates
+
+#### Cascade Delete for Properties (Feb 25, 2026)
+- [x] **Deleting a property** now automatically removes: bookings, expenses, tasks, OTA feeds
+
 #### Bookings Page
 - [x] **Guest Name hidden from list view** - Column removed completely
 - [x] **Guest Name visible in booking detail modal** - Only when clicking a booking
