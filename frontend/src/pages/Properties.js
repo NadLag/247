@@ -36,7 +36,7 @@ const empty = {
 function PropertyCard({ prop, isAdmin, onEdit, onDelete, onQuickView, index = 0 }) {
   const ownerName = [prop.owner_first_name, prop.owner_last_name].filter(Boolean).join(" ") || "No owner";
   const location = prop.city && prop.country ? `${prop.city}, ${prop.country}` : prop.address || "No address";
-  const isOtaSynced = prop.ota_feeds && prop.ota_feeds.length > 0;
+  const isOtaSynced = prop.has_ota_sync || (prop.ota_feeds && prop.ota_feeds.length > 0);
   
   return (
     <Card 
