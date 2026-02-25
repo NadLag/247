@@ -765,19 +765,20 @@ async def get_my_company(user=Depends(get_current_user)):
     return company
 
 
+class CompanyUpdate(BaseModel):
+    management_fee_type: Optional[str] = None
+    management_fee_percent: Optional[float] = None
+    onboarding_completed: Optional[bool] = None
+    settings: Optional[dict] = None
+
 @api_router.put("/companies/me")
-async def update_my_company(user=Depends(require_admin)):
+async def update_my_company(data: CompanyUpdate, user=Depends(require_admin)):
     """Update company settings (admin only)"""
-    from fastapi import Body
-    data = await request.json()
-    
     company_id = user.get("company_id")
     if not company_id:
         raise HTTPException(status_code=404, detail="No company found")
     
-    # Only allow certain fields to be updated
-    allowed_fields = ["management_fee_type", "management_fee_percent", "onboarding_completed", "settings"]
-    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.companies.update_one(
