@@ -550,7 +550,12 @@ export default function Bookings() {
     setCurrentMonth(newDate);
   };
 
-  const getPropName = (id) => properties.find(p => p.id === id)?.name || "Property";
+  const getPropName = (id) => {
+    if (!id) return "No Property";
+    if (!properties || properties.length === 0) return "Loading...";
+    const prop = properties.find(p => p.id === id);
+    return prop?.name || `Unknown (${id})`;
+  };
   const getSourceLabel = (b) => {
     const src = b?.ota_source;
     if (!src || src === "manual") return "Direct";
