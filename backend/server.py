@@ -1576,6 +1576,39 @@ async def update_booking(booking_id: str, data: BookingUpdate, user=Depends(requ
     if not existing:
         raise HTTPException(status_code=404, detail="Booking not found")
     
+    # Check for double booking if dates are being changed
+    new_check_in = data.check_in or existing.get("check_in")
+    new_check_out = data.check_out or existing.get("check_out")
+    property_id = existing.get("property_id")
+    
+    if (data.check_in or data.check_out) and property_id and data.status != "cancelled":
+        # Check for overlapping bookings (excluding this booking)
+        overlapping_booking = await db.bookings.find_one({
+            "company_id": user["company_id"],
+            "property_id": property_id,
+            "id": {"$ne": booking_id},  # Exclude current booking
+            "booking_type": {"$ne": "blocked"},
+            "status": {"$nin": ["cancelled", "blocked", "overridden"]},
+            "$and": [
+                {"check_in": {"$lt": new_check_out}},
+                {"check_out": {"$gt": new_check_in}}
+            ]
+        }, {"_id": 0, "id": 1, "guest_name": 1, "check_in": 1, "check_out": 1})
+        
+        if overlapping_booking:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "Double booking detected. This property already has a booking during these dates.",
+                    "conflicts": [{
+                        "booking_id": overlapping_booking.get("id"),
+                        "guest_name": overlapping_booking.get("guest_name", "Guest"),
+                        "check_in": overlapping_booking.get("check_in"),
+                        "check_out": overlapping_booking.get("check_out")
+                    }]
+                }
+            )
+    
     merged = {**existing, **update_data}
     update_data["is_data_complete"] = booking_is_data_complete(merged)
     
