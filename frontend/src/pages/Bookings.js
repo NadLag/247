@@ -72,6 +72,7 @@ function BookingCalendar({ bookings, blockedDates, properties, currentMonth, onM
   };
 
   const getPropName = (id) => {
+    if (!id) return "No Property";
     const p = properties.find(pr => pr.id === id);
     return p ? p.name : "Property";
   };
