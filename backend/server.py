@@ -1567,6 +1567,95 @@ async def list_bookings_by_status(user=Depends(get_current_user)):
     
     return result
 
+
+
+# Helper function to auto-generate tasks for bookings based on staff roles
+async def generate_booking_tasks(company_id: str, booking_id: str, property_id: str, check_in: str, check_out: str):
+    """
+    Auto-generate tasks based on staff role assignments:
+    - Housekeeper: Creates housekeeping task on check-out day
+    - Co-host: Creates check-in task on check-in day, check-out task on check-out day
+    """
+    if not property_id or not check_in or not check_out:
+        return
+    
+    # Find staff assigned to this property
+    staff_assigned = await db.staff.find({
+        "company_id": company_id,
+        "active": True,
+        "$or": [
+            {"assigned_properties": property_id},
+            {"assigned_properties": {"$size": 0}}  # Staff with no specific assignment = all properties
+        ]
+    }, {"_id": 0}).to_list(100)
+    
+    tasks_to_create = []
+    
+    for s in staff_assigned:
+        staff_role = s.get("staff_role", "").lower()
+        staff_id = s["id"]
+        
+        # Housekeepers get a housekeeping task on check-out day
+        if staff_role == "housekeeper":
+            tasks_to_create.append({
+                "id": f"task_{uuid.uuid4().hex[:12]}",
+                "company_id": company_id,
+                "title": f"Housekeeping - Checkout",
+                "description": f"Clean and prepare property after guest checkout",
+                "task_type": "housekeeping",
+                "property_id": property_id,
+                "booking_id": booking_id,
+                "assigned_staff_id": staff_id,
+                "due_date": check_out,
+                "priority": "high",
+                "status": "pending",
+                "auto_generated": True,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+        
+        # Co-hosts get check-in and check-out tasks
+        elif staff_role == "co_host" or staff_role == "cohost":
+            # Check-in task
+            tasks_to_create.append({
+                "id": f"task_{uuid.uuid4().hex[:12]}",
+                "company_id": company_id,
+                "title": f"Guest Check-in",
+                "description": f"Welcome guest and complete check-in procedures",
+                "task_type": "check_in",
+                "property_id": property_id,
+                "booking_id": booking_id,
+                "assigned_staff_id": staff_id,
+                "due_date": check_in,
+                "priority": "high",
+                "status": "pending",
+                "auto_generated": True,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+            # Check-out task
+            tasks_to_create.append({
+                "id": f"task_{uuid.uuid4().hex[:12]}",
+                "company_id": company_id,
+                "title": f"Guest Check-out",
+                "description": f"Handle guest checkout and property inspection",
+                "task_type": "check_out",
+                "property_id": property_id,
+                "booking_id": booking_id,
+                "assigned_staff_id": staff_id,
+                "due_date": check_out,
+                "priority": "high",
+                "status": "pending",
+                "auto_generated": True,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+    
+    if tasks_to_create:
+        await db.tasks.insert_many(tasks_to_create)
+        logger.info(f"Auto-generated {len(tasks_to_create)} tasks for booking {booking_id}")
+
+
 # ===== TASK ROUTES =====
 @api_router.get("/tasks")
 async def list_tasks(
