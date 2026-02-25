@@ -105,6 +105,21 @@ export default function Invitations() {
     return "";
   }, [form.name, form.selectedPerson, people]);
 
+  // Auto-select properties when owner is selected
+  useEffect(() => {
+    if (form.role === "owner" && form.selectedPerson && form.selectedPerson !== "manual" && form.selectedPerson.startsWith("owner_")) {
+      const ownerIndex = parseInt(form.selectedPerson.replace("owner_", ""), 10);
+      const owner = owners[ownerIndex];
+      if (owner) {
+        // Find all properties where owner_email matches
+        const ownerPropertyIds = properties.filter(p => p.owner_email === owner.email).map(p => p.id);
+        if (ownerPropertyIds.length > 0) {
+          setForm(prev => ({ ...prev, assignedProperties: ownerPropertyIds }));
+        }
+      }
+    }
+  }, [form.role, form.selectedPerson, owners, properties]);
+
   const resetForm = () => setForm({
     role: "staff", selectedPerson: "", manualEmail: "", name: "",
     assignedProperties: [], permissions: { view_financials: false, manage_bookings: true, manage_tasks: true },
