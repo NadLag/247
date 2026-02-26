@@ -1,0 +1,80 @@
+{
+  "summary": "Auto-task generation feature fully verified. Backend API and frontend UI both working correctly. Tasks auto-generated when bookings created. Sync Tasks button functional for admins.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_auto_task_generation.py",
+    "/app/test_reports/pytest/pytest_auto_task_generation.xml"
+  ],
+  "passed_tests": [
+    "BACKEND: POST /api/tasks/regenerate-for-bookings endpoint exists and requires authentication",
+    "BACKEND: Regenerate endpoint accessible by admin users only",
+    "BACKEND: Creating a booking auto-generates tasks for assigned staff",
+    "BACKEND: Auto-generated tasks have correct task_type: 'cleaning', 'check_in', 'check_out'",
+    "BACKEND: Housekeeper staff gets 'cleaning' task on checkout date",
+    "BACKEND: Co-host staff gets 'check_in' task on check-in date and 'check_out' task on checkout date",
+    "BACKEND: Sync Tasks regenerates tasks for existing bookings with future checkout dates",
+    "BACKEND: Tasks list API returns auto_generated flag",
+    "BACKEND: Tasks endpoint requires authentication",
+    "BACKEND: Full booking-to-task integration flow works end-to-end",
+    "FRONTEND: Operations page loads correctly with data-testid='operations-page'",
+    "FRONTEND: Sync Tasks button visible for admin users",
+    "FRONTEND: Sync Tasks button calls POST /api/tasks/regenerate-for-bookings",
+    "FRONTEND: Success toast shows 'Regenerated tasks for N bookings'",
+    "FRONTEND: Auto-generated tasks display with 'Auto' badge (Sparkles icon)",
+    "FRONTEND: Tasks grouped by type (Cleanings, Check-ins, Check-outs, Completed sections)",
+    "FRONTEND: Task cards show property name and assigned staff name",
+    "FRONTEND: Date filter tabs (Today, Tomorrow, Upcoming, All) work correctly"
+  ],
+  "features_verified": {
+    "auto_task_generation_on_booking_create": {
+      "status": "WORKING",
+      "details": "When a booking is created, system auto-generates tasks: cleaning task for housekeepers on checkout date, check_in/check_out tasks for co-hosts on check-in/checkout dates"
+    },
+    "sync_tasks_button": {
+      "status": "WORKING",
+      "details": "Admin-only button calls /api/tasks/regenerate-for-bookings, regenerates tasks for all bookings with future checkout dates, shows success toast"
+    },
+    "task_types": {
+      "status": "WORKING",
+      "details": "Task types correctly set: 'cleaning' (not 'housekeeping') for housekeepers, 'check_in'/'check_out' for co-hosts"
+    },
+    "auto_badge_display": {
+      "status": "WORKING",
+      "details": "Tasks with auto_generated=True show 'Auto' badge with Sparkles icon in frontend"
+    },
+    "task_grouping": {
+      "status": "WORKING",
+      "details": "Tasks displayed in sections: Cleanings, Check-ins, Check-outs, Completed with count badges"
+    }
+  },
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PASS: generate_booking_tasks function correctly maps staff_role 'housekeeper' -> task_type 'cleaning'",
+    "PASS: generate_booking_tasks function correctly maps staff_role 'co_host' -> task_type 'check_in' and 'check_out'",
+    "PASS: Regenerate endpoint deletes existing pending auto-generated tasks before creating new ones (prevents duplicates)",
+    "PASS: Auto-generated tasks have auto_generated=True flag for frontend badge display",
+    "PASS: Frontend Operations.js correctly shows/hides Sync Tasks button based on isAdmin check"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_auto_task_generation.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (8/8 features verified)"
+  },
+  "test_credentials": {
+    "note": "Test data created and cleaned up automatically during testing"
+  },
+  "seed_data_creation": "Created test admin with company, 1 property, 1 housekeeper staff, 1 co-host staff, and 1 future booking for testing auto-task generation",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Auto-task generation bug is FIXED and verified. Key findings: (1) Tasks ARE auto-generated when bookings are created - if no tasks appeared before, it was because there were no staff assigned to properties or bookings were past checkout date (2) Sync Tasks button works for regenerating tasks for existing bookings (3) Task types are correct: 'cleaning' for housekeepers, 'check_in'/'check_out' for co-hosts (4) Auto badge displays correctly on auto-generated tasks"
+}
