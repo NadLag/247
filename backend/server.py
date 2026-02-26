@@ -1209,6 +1209,11 @@ async def create_staff(data: StaffCreate, user=Depends(require_admin)):
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.staff.insert_one(staff)
+    
+    # Auto-generate tasks for existing bookings on assigned properties
+    if staff.get("assigned_properties") and staff.get("staff_role") in ["housekeeper", "co_host", "cohost"]:
+        await auto_generate_tasks_for_staff(user["company_id"], staff)
+    
     return await db.staff.find_one({"id": staff["id"]}, {"_id": 0})
 
 @api_router.get("/staff/cohosts")
