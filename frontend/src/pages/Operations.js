@@ -380,9 +380,22 @@ export default function Operations() {
             </div>
             
             {isAdmin && (
-              <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-task-btn" className="shadow-sm">
-                <Plus className="mr-2 h-4 w-4" />Add Task
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRegenerateTasks} 
+                  disabled={regenerating}
+                  data-testid="regenerate-tasks-btn" 
+                  className="shadow-sm"
+                  title="Auto-generate tasks for all upcoming bookings based on team assignments"
+                >
+                  <RefreshCw className={`mr-2 h-4 w-4 ${regenerating ? 'animate-spin' : ''}`} />
+                  {regenerating ? "Generating..." : "Sync Tasks"}
+                </Button>
+                <Button onClick={() => { setForm(empty); setEditing(null); setDialogOpen(true); }} data-testid="add-task-btn" className="shadow-sm">
+                  <Plus className="mr-2 h-4 w-4" />Add Task
+                </Button>
+              </>
             )}
           </div>
         </div>
