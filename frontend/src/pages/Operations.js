@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, CheckCircle, Clock, Home, User, Calendar, Sparkles, ChevronRight, AlertCircle } from "lucide-react";
+import { Plus, CheckCircle, Clock, Home, User, Calendar, Sparkles, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
