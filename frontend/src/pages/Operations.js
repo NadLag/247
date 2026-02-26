@@ -158,6 +158,7 @@ export default function Operations() {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [viewDate, setViewDate] = useState("today");
+  const [regenerating, setRegenerating] = useState(false);
 
   useEffect(() => { if (!authLoading && !user) navigate("/"); }, [user, authLoading, navigate]);
 
