@@ -1121,14 +1121,20 @@ async def list_properties(user=Depends(get_current_user)):
 
 @api_router.post("/properties", status_code=201)
 async def create_property(data: PropertyCreate, user=Depends(require_admin)):
+    company_id = user["company_id"]
     prop = {
         "id": f"prop_{uuid.uuid4().hex[:12]}",
-        "company_id": user["company_id"],
+        "company_id": company_id,
         **data.model_dump(),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.properties.insert_one(prop)
+    
+    # Auto-link co-host to this property and generate tasks
+    if prop.get("assigned_cohost"):
+        await link_cohost_to_property(company_id, prop["assigned_cohost"], prop["id"])
+    
     return await db.properties.find_one({"id": prop["id"]}, {"_id": 0})
 
 @api_router.get("/properties/{prop_id}")
