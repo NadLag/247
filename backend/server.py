@@ -1178,7 +1178,7 @@ async def update_property(prop_id: str, data: PropertyUpdate, user=Depends(requi
     new_cohost = update_data.get("assigned_cohost")
     if new_cohost and new_cohost != old_cohost:
         # Auto-link new co-host to this property and generate tasks
-        await link_cohost_to_property(company_id, new_cohost, prop_id)
+        await link_staff_to_property(company_id, new_cohost, prop_id)
     
     return await db.properties.find_one({"id": prop_id}, {"_id": 0})
 
