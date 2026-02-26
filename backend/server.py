@@ -1245,6 +1245,15 @@ async def list_cohosts(user=Depends(get_current_user)):
         return []
     return await db.staff.find({"company_id": company_id, "staff_role": "co_host", "active": True}, {"_id": 0}).to_list(1000)
 
+
+@api_router.get("/staff/housekeepers")
+async def list_housekeepers(user=Depends(get_current_user)):
+    company_id = user.get("company_id")
+    if not company_id:
+        return []
+    return await db.staff.find({"company_id": company_id, "staff_role": "housekeeper", "active": True}, {"_id": 0}).to_list(1000)
+
+
 @api_router.put("/staff/{staff_id}")
 async def update_staff(staff_id: str, data: StaffUpdate, user=Depends(require_admin)):
     # Get current staff to check property assignment changes
