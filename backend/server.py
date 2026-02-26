@@ -1204,6 +1204,12 @@ async def delete_property(prop_id: str, user=Depends(require_admin)):
     await db.tasks.delete_many({"property_id": prop_id, "company_id": company_id})
     await db.ota_feeds.delete_many({"property_id": prop_id, "company_id": company_id})
     
+    # Remove property from all staff's assigned_properties arrays
+    await db.staff.update_many(
+        {"company_id": company_id, "assigned_properties": prop_id},
+        {"$pull": {"assigned_properties": prop_id}}
+    )
+    
     logger.info(f"Deleted property {prop_id} and all related data")
     return {"message": "Property deleted"}
 
