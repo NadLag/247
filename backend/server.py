@@ -1159,11 +1159,27 @@ async def get_property(prop_id: str, user=Depends(get_current_user)):
 
 @api_router.put("/properties/{prop_id}")
 async def update_property(prop_id: str, data: PropertyUpdate, user=Depends(require_admin)):
+    company_id = user["company_id"]
+    
+    # Get current property to check cohost change
+    current_prop = await db.properties.find_one({"id": prop_id, "company_id": company_id}, {"_id": 0})
+    if not current_prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    old_cohost = current_prop.get("assigned_cohost")
+    
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
-    result = await db.properties.update_one({"id": prop_id, "company_id": user["company_id"]}, {"$set": update_data})
+    result = await db.properties.update_one({"id": prop_id, "company_id": company_id}, {"$set": update_data})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Check if assigned_cohost changed
+    new_cohost = update_data.get("assigned_cohost")
+    if new_cohost and new_cohost != old_cohost:
+        # Auto-link new co-host to this property and generate tasks
+        await link_cohost_to_property(company_id, new_cohost, prop_id)
+    
     return await db.properties.find_one({"id": prop_id}, {"_id": 0})
 
 @api_router.delete("/properties/{prop_id}")
