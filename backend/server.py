@@ -1165,12 +1165,13 @@ async def get_property(prop_id: str, user=Depends(get_current_user)):
 async def update_property(prop_id: str, data: PropertyUpdate, user=Depends(require_admin)):
     company_id = user["company_id"]
     
-    # Get current property to check cohost change
+    # Get current property to check staff assignment changes
     current_prop = await db.properties.find_one({"id": prop_id, "company_id": company_id}, {"_id": 0})
     if not current_prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
     old_cohost = current_prop.get("assigned_cohost")
+    old_housekeeper = current_prop.get("assigned_housekeeper")
     
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -1178,11 +1179,15 @@ async def update_property(prop_id: str, data: PropertyUpdate, user=Depends(requi
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Property not found")
     
-    # Check if assigned_cohost changed
+    # Check if assigned_cohost changed - auto-link and generate tasks
     new_cohost = update_data.get("assigned_cohost")
     if new_cohost and new_cohost != old_cohost:
-        # Auto-link new co-host to this property and generate tasks
         await link_staff_to_property(company_id, new_cohost, prop_id)
+    
+    # Check if assigned_housekeeper changed - auto-link and generate tasks
+    new_housekeeper = update_data.get("assigned_housekeeper")
+    if new_housekeeper and new_housekeeper != old_housekeeper:
+        await link_staff_to_property(company_id, new_housekeeper, prop_id)
     
     return await db.properties.find_one({"id": prop_id}, {"_id": 0})
 
