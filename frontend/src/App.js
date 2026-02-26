@@ -34,7 +34,6 @@ function AppRouter() {
       <Route path="/team" element={<Team />} />
       <Route path="/expenses" element={<Expenses />} />
       <Route path="/bookings" element={<Bookings />} />
-      <Route path="/services" element={<Services />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/operations" element={<Operations />} />
       <Route path="/reports" element={<Navigate to="/analytics" replace />} />
