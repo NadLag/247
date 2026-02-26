@@ -1225,12 +1225,29 @@ async def list_cohosts(user=Depends(get_current_user)):
 
 @api_router.put("/staff/{staff_id}")
 async def update_staff(staff_id: str, data: StaffUpdate, user=Depends(require_admin)):
+    # Get current staff to check property assignment changes
+    current_staff = await db.staff.find_one({"id": staff_id, "company_id": user["company_id"]}, {"_id": 0})
+    if not current_staff:
+        raise HTTPException(status_code=404, detail="Staff not found")
+    
+    old_properties = set(current_staff.get("assigned_properties", []))
+    
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.staff.update_one({"id": staff_id, "company_id": user["company_id"]}, {"$set": update_data})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Staff not found")
-    return await db.staff.find_one({"id": staff_id}, {"_id": 0})
+    
+    # Check if property assignments changed - auto-generate tasks for new properties
+    updated_staff = await db.staff.find_one({"id": staff_id}, {"_id": 0})
+    new_properties = set(updated_staff.get("assigned_properties", []))
+    newly_assigned = new_properties - old_properties
+    
+    if newly_assigned and updated_staff.get("staff_role") in ["housekeeper", "co_host", "cohost"]:
+        # Generate tasks only for newly assigned properties
+        await auto_generate_tasks_for_staff(user["company_id"], updated_staff, list(newly_assigned))
+    
+    return updated_staff
 
 @api_router.delete("/staff/{staff_id}")
 async def delete_staff(staff_id: str, user=Depends(require_admin)):
