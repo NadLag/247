@@ -188,6 +188,7 @@ export default function Properties() {
         suites: parseInt(form.suites) || 0,
         bathrooms: parseInt(form.bathrooms) || 0,
         assigned_cohost: form.assigned_cohost || null,
+        assigned_housekeeper: form.assigned_housekeeper || null,
       };
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) });
       if (res.ok) {
