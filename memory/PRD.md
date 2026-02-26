@@ -66,9 +66,16 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Auto-Task Generation (Full Automation)** - Tasks auto-generated on:
   - Staff creation with assigned properties (housekeeper/co-host roles)
   - Staff update adding new properties
+  - **Property assignment** - assigning co-host or housekeeper to property auto-links both ways
   - Booking creation (existing)
   - Housekeepers get "Cleaning" task on checkout date
   - Co-hosts get "Check-in" task on check-in date and "Check-out" task on checkout date
+- [x] **Bidirectional Staff-Property Linking** - When assigning staff to a property:
+  - Property's assigned_cohost/assigned_housekeeper is saved
+  - Staff's assigned_properties array is auto-updated
+  - Tasks auto-generated for existing bookings on that property
+- [x] **Housekeeper Assignment on Properties** - Added "Assigned Housekeeper" dropdown in property form
+- [x] **GET /api/staff/housekeepers Endpoint** - Returns active housekeepers for dropdown
 - [x] **Sync Tasks Button REMOVED** - No manual sync needed, fully automatic
 - [x] **Operations Page Overhaul**:
   - Today tab selected by default
