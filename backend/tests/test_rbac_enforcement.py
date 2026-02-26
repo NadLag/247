@@ -28,7 +28,7 @@ except Exception:
     BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 if not BASE_URL:
-    BASE_URL = "https://property-hub-dev-1.preview.emergentagent.com"
+    BASE_URL = "https://property-team-1.preview.emergentagent.com"
 
 # Generate unique test prefix to avoid conflicts
 TEST_PREFIX = f"TEST_RBAC_{int(time.time())}"

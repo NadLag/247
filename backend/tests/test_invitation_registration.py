@@ -10,7 +10,7 @@ import time
 import subprocess
 import json
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://property-hub-dev-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://property-team-1.preview.emergentagent.com').rstrip('/')
 
 # Test data setup - will be created before running tests
 TEST_SESSION_TOKEN = None
