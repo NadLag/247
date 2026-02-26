@@ -28,7 +28,7 @@ const OTA_SOURCES = [
 
 const empty = {
   name: "", address: "", property_type: "", rooms: 1, suites: 0, bathrooms: 1,
-  city: "", country: "", notes: "", assigned_cohost: "",
+  city: "", country: "", notes: "", assigned_cohost: "", assigned_housekeeper: "",
   owner_first_name: "", owner_last_name: "", owner_phone: "", owner_email: "",
   units: 1, active: true,
 };
