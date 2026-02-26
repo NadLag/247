@@ -1133,9 +1133,11 @@ async def create_property(data: PropertyCreate, user=Depends(require_admin)):
     }
     await db.properties.insert_one(prop)
     
-    # Auto-link co-host to this property and generate tasks
+    # Auto-link assigned team members to this property and generate tasks
     if prop.get("assigned_cohost"):
         await link_staff_to_property(company_id, prop["assigned_cohost"], prop["id"])
+    if prop.get("assigned_housekeeper"):
+        await link_staff_to_property(company_id, prop["assigned_housekeeper"], prop["id"])
     
     return await db.properties.find_one({"id": prop["id"]}, {"_id": 0})
 
