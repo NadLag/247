@@ -1971,38 +1971,43 @@ async def auto_generate_tasks_for_staff(company_id: str, staff: dict, property_i
         logger.info(f"Auto-generated {len(tasks_to_create)} tasks for staff {staff_id}")
 
 
-async def link_cohost_to_property(company_id: str, cohost_id: str, property_id: str):
+async def link_staff_to_property(company_id: str, staff_id: str, property_id: str):
     """
-    When a co-host is assigned to a property, automatically:
-    1. Add the property to the co-host's assigned_properties
+    When a staff member (co-host or housekeeper) is assigned to a property, automatically:
+    1. Add the property to the staff's assigned_properties
     2. Generate tasks for existing bookings on that property
     """
-    if not cohost_id or not property_id:
+    if not staff_id or not property_id or staff_id == "none":
         return
     
-    # Get the co-host staff record
-    cohost = await db.staff.find_one({"id": cohost_id, "company_id": company_id}, {"_id": 0})
-    if not cohost:
-        logger.warning(f"Co-host {cohost_id} not found for property assignment")
+    # Get the staff record
+    staff = await db.staff.find_one({"id": staff_id, "company_id": company_id}, {"_id": 0})
+    if not staff:
+        logger.warning(f"Staff {staff_id} not found for property assignment")
         return
     
-    # Add property to co-host's assigned_properties if not already there
-    current_properties = cohost.get("assigned_properties", [])
+    # Only process if staff has a task-generating role
+    staff_role = staff.get("staff_role", "").lower()
+    if staff_role not in ["housekeeper", "co_host", "cohost"]:
+        return
+    
+    # Add property to staff's assigned_properties if not already there
+    current_properties = staff.get("assigned_properties", [])
     if property_id not in current_properties:
         new_properties = current_properties + [property_id]
         await db.staff.update_one(
-            {"id": cohost_id, "company_id": company_id},
+            {"id": staff_id, "company_id": company_id},
             {"$set": {
                 "assigned_properties": new_properties,
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }}
         )
-        logger.info(f"Added property {property_id} to co-host {cohost_id}")
+        logger.info(f"Added property {property_id} to staff {staff_id}")
         
         # Generate tasks for existing bookings on this property
-        updated_cohost = await db.staff.find_one({"id": cohost_id}, {"_id": 0})
-        if updated_cohost:
-            await auto_generate_tasks_for_staff(company_id, updated_cohost, [property_id])
+        updated_staff = await db.staff.find_one({"id": staff_id}, {"_id": 0})
+        if updated_staff:
+            await auto_generate_tasks_for_staff(company_id, updated_staff, [property_id])
 
 
 @api_router.post("/tasks/regenerate-for-bookings")
