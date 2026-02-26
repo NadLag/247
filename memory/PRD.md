@@ -74,8 +74,9 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
   - Property's assigned_cohost/assigned_housekeeper is saved
   - Staff's assigned_properties array is auto-updated
   - Tasks auto-generated for existing bookings on that property
-- [x] **Housekeeper Assignment on Properties** - Added "Assigned Housekeeper" dropdown in property form
-- [x] **GET /api/staff/housekeepers Endpoint** - Returns active housekeepers for dropdown
+- [x] **Property Deletion Cascade** - When deleting property:
+  - Removes property from all staff's assigned_properties arrays (prevents orphaned IDs on Team page)
+  - Deletes related bookings, expenses, tasks, OTA feeds
 - [x] **Sync Tasks Button REMOVED** - No manual sync needed, fully automatic
 - [x] **Operations Page Overhaul**:
   - Today tab selected by default
