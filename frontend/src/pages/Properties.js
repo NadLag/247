@@ -651,6 +651,18 @@ export default function Properties() {
                 </Select>
                 {cohosts.length === 0 && <p className="text-xs text-muted-foreground">No co-hosts available. Add staff with the Co-Host role first.</p>}
               </div>
+              {/* Housekeeper */}
+              <div className="space-y-2">
+                <Label>Assigned Housekeeper</Label>
+                <Select value={form.assigned_housekeeper} onValueChange={v => set("assigned_housekeeper", v)}>
+                  <SelectTrigger data-testid="prop-housekeeper-select"><SelectValue placeholder="Select housekeeper..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Housekeeper</SelectItem>
+                    {housekeepers.map(hk => <SelectItem key={hk.id} value={hk.id}>{hk.first_name} {hk.last_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {housekeepers.length === 0 && <p className="text-xs text-muted-foreground">No housekeepers available. Add staff with the Housekeeper role first.</p>}
+              </div>
               {/* Notes */}
               <div className="space-y-2">
                 <Label>Notes</Label>
