@@ -57,6 +57,13 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 
 ### System-Wide UI/UX Updates (Feb 25, 2026)
 
+#### Major UX Restructure (Feb 26, 2026)
+- [x] **Navigation Bug Fix (P0)** - Fixed routes in App.js: /tasks → /operations, /staff → /team
+- [x] **Renamed "Staff" to "Team"** - Sidebar and page renamed for better clarity
+- [x] **Renamed "Tasks" to "Operations"** - Sidebar and page renamed for better UX
+- [x] **Removed Services Page** - Services route removed from App.js as per UX simplification
+- [x] **Team Page Created** - New Team.js page with staff members and payouts tabs
+
 #### Experience Design Overhaul (Feb 25, 2026)
 - [x] **Simplified Sidebar Navigation** - Max 8 items for admin, 5 for owner, 4 for staff
 - [x] **Onboarding Wizard** - 3-step setup for new admins (Add Properties → Invite Team → Financial Setup)
