@@ -186,6 +186,28 @@ export default function Operations() {
 
   useEffect(() => { if (user?.company_id) fetchData(); }, [user]); // eslint-disable-line
 
+  const handleRegenerateTasks = async () => {
+    setRegenerating(true);
+    try {
+      const res = await fetch(`${API}/api/tasks/regenerate-for-bookings`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(data.message || "Tasks regenerated successfully");
+        fetchData();
+      } else {
+        const err = await res.json();
+        toast.error(err.detail || "Failed to regenerate tasks");
+      }
+    } catch (err) {
+      toast.error("Error regenerating tasks");
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!form.task_type) { toast.error("Please select a task type"); return; }
     if (!form.property_id) { toast.error("Please select a property"); return; }
