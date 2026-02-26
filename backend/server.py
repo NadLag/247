@@ -1754,14 +1754,14 @@ async def generate_booking_tasks(company_id: str, booking_id: str, property_id: 
         staff_role = s.get("staff_role", "").lower()
         staff_id = s["id"]
         
-        # Housekeepers get a housekeeping task on check-out day
+        # Housekeepers get a cleaning task on check-out day
         if staff_role == "housekeeper":
             tasks_to_create.append({
                 "id": f"task_{uuid.uuid4().hex[:12]}",
                 "company_id": company_id,
-                "title": "Housekeeping - Checkout",
+                "title": "Cleaning",
                 "description": "Clean and prepare property after guest checkout",
-                "task_type": "housekeeping",
+                "task_type": "cleaning",
                 "property_id": property_id,
                 "booking_id": booking_id,
                 "assigned_staff_id": staff_id,
