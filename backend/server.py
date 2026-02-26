@@ -1815,6 +1815,51 @@ async def generate_booking_tasks(company_id: str, booking_id: str, property_id: 
         logger.info(f"Auto-generated {len(tasks_to_create)} tasks for booking {booking_id}")
 
 
+@api_router.post("/tasks/regenerate-for-bookings")
+async def regenerate_tasks_for_bookings(user=Depends(require_admin)):
+    """
+    Admin endpoint to regenerate auto-tasks for all existing bookings.
+    This is useful when staff assignments change or after initial setup.
+    Only creates tasks for future bookings (checkout >= today).
+    """
+    company_id = user.get("company_id")
+    if not company_id:
+        raise HTTPException(status_code=400, detail="No company associated")
+    
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Find all bookings with checkout >= today (excluding blocked dates)
+    bookings = await db.bookings.find({
+        "company_id": company_id,
+        "booking_type": {"$ne": "blocked"},
+        "check_out": {"$gte": today}
+    }, {"_id": 0}).to_list(1000)
+    
+    tasks_created = 0
+    for booking in bookings:
+        booking_id = booking.get("id")
+        property_id = booking.get("property_id")
+        check_in = booking.get("check_in")
+        check_out = booking.get("check_out")
+        
+        if not property_id or not check_in or not check_out:
+            continue
+        
+        # Delete existing auto-generated pending tasks for this booking
+        await db.tasks.delete_many({
+            "company_id": company_id,
+            "booking_id": booking_id,
+            "auto_generated": True,
+            "status": "pending"
+        })
+        
+        # Generate new tasks
+        await generate_booking_tasks(company_id, booking_id, property_id, check_in, check_out)
+        tasks_created += 1
+    
+    return {"message": f"Regenerated tasks for {tasks_created} bookings"}
+
+
 # ===== TASK ROUTES =====
 @api_router.get("/tasks")
 async def list_tasks(
