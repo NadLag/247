@@ -123,6 +123,7 @@ export default function Properties() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [cohosts, setCohosts] = useState([]);
+  const [housekeepers, setHousekeepers] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Dialog states
@@ -149,12 +150,14 @@ export default function Properties() {
 
   const fetchData = async () => {
     try {
-      const [propRes, cohostRes] = await Promise.all([
+      const [propRes, cohostRes, hkRes] = await Promise.all([
         fetch(`${API}/api/properties`, { credentials: "include" }),
         fetch(`${API}/api/staff/cohosts`, { credentials: "include" }),
+        fetch(`${API}/api/staff/housekeepers`, { credentials: "include" }),
       ]);
       if (propRes.ok) setProperties(await propRes.json());
       if (cohostRes.ok) setCohosts(await cohostRes.json());
+      if (hkRes.ok) setHousekeepers(await hkRes.json());
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
   
