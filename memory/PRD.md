@@ -63,6 +63,11 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 - [x] **Renamed "Tasks" to "Operations"** - Sidebar and page renamed for better UX
 - [x] **Removed Services Page** - Services route removed from App.js as per UX simplification
 - [x] **Team Page Created** - New Team.js page with staff members and payouts tabs
+- [x] **Auto-Task Generation** - Tasks auto-generated based on staff roles and booking dates:
+  - Housekeepers get "Cleaning" task on checkout date
+  - Co-hosts get "Check-in" task on check-in date and "Check-out" task on checkout date
+- [x] **Sync Tasks Button** - Admin can regenerate tasks for all existing bookings with future checkout dates
+- [x] **Task Type Consistency** - Fixed task_type from "housekeeping" to "cleaning" for frontend consistency
 
 #### Experience Design Overhaul (Feb 25, 2026)
 - [x] **Simplified Sidebar Navigation** - Max 8 items for admin, 5 for owner, 4 for staff
