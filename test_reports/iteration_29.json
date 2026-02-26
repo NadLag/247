@@ -1,0 +1,88 @@
+{
+  "summary": "Tested two bug fixes: (1) Onboarding wizard simplified to single step with Add/Sync Property options (Manual and OTA via iCal) - VERIFIED WORKING. (2) DELETE /api/properties/{id} now cascades to remove property_id from staff's assigned_properties using MongoDB $pull - VERIFIED WORKING. Team page will no longer show orphaned property IDs after property deletion.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_onboarding_delete_property.py",
+    "/app/test_reports/pytest/pytest_onboard_delete.xml"
+  ],
+  "passed_tests": [
+    "BACKEND: POST /api/properties creates property manually (onboarding wizard flow)",
+    "BACKEND: POST /api/ota/import-property endpoint exists for OTA sync",
+    "BACKEND: PUT /api/companies/me updates onboarding_completed flag",
+    "BACKEND: GET /api/staff returns assigned_properties field for each staff",
+    "BACKEND: DELETE /api/properties/{id} removes property_id from staff's assigned_properties via $pull",
+    "BACKEND: Delete cascade works for single staff member",
+    "BACKEND: Delete cascade works for multiple staff members assigned to same property",
+    "FRONTEND: Onboarding wizard shows single step 'Add / Sync Property'",
+    "FRONTEND: Onboarding wizard shows 'Add Manually' option with property name input",
+    "FRONTEND: Onboarding wizard shows 'Sync from OTA' option with iCal URL input",
+    "FRONTEND: Onboarding wizard 'Get Started' button disabled until property added",
+    "FRONTEND: Onboarding wizard 'Get Started' button enables after adding property",
+    "FRONTEND: Onboarding wizard allows adding multiple properties with 'Add Another' button",
+    "FRONTEND: Properties page Add Property shows same two options (Sync from OTA, Add Manually)",
+    "FRONTEND: Team page Add Member form shows 'Assign Properties' with checkboxes",
+    "FRONTEND: Team page displays property names (not raw IDs) in Properties column"
+  ],
+  "features_verified": {
+    "onboarding_wizard_single_step": {
+      "status": "WORKING",
+      "details": "Wizard has only ONE step titled 'Add / Sync Property' with two options: Add Manually and Sync from OTA (iCal)"
+    },
+    "onboarding_manual_property_add": {
+      "status": "WORKING",
+      "details": "Manual option shows Property Name input only, creates property via POST /api/properties"
+    },
+    "onboarding_ota_sync": {
+      "status": "WORKING", 
+      "details": "OTA option shows Property Name + iCal URL inputs, creates property via POST /api/ota/import-property"
+    },
+    "onboarding_multiple_properties": {
+      "status": "WORKING",
+      "details": "After adding a property, 'Add Another' button appears allowing multiple properties before Get Started"
+    },
+    "onboarding_get_started_button": {
+      "status": "WORKING",
+      "details": "Get Started button disabled until at least 1 property added, then enables"
+    },
+    "delete_property_cascade": {
+      "status": "WORKING",
+      "details": "DELETE /api/properties/{id} uses MongoDB $pull to remove property_id from ALL staff's assigned_properties arrays"
+    },
+    "no_orphaned_ids_on_team_page": {
+      "status": "WORKING",
+      "details": "After property deletion, staff's assigned_properties no longer contains deleted property_id, so Team page won't show raw IDs"
+    }
+  },
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PASS: OnboardingWizard.js correctly implements single-step wizard with propertyMethod state for Manual/OTA toggle",
+    "PASS: OnboardingWizard.js propertiesAdded array tracks added properties, enables Get Started when length > 0",
+    "PASS: server.py delete_property endpoint (line 1194) correctly uses $pull operator to cascade remove property from staff",
+    "PASS: MongoDB $pull syntax correctly updates all matching staff documents in single operation",
+    "PASS: Team.js getPropName function has fallback to show raw ID only if property not found (prevents errors)",
+    "PASS: All interactive elements have proper data-testid attributes for testing"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_onboarding_delete_property.py"
+  ],
+  "success_rate": {
+    "backend": "100% (7/7 tests passed)",
+    "frontend": "100% (all UI features verified via Playwright)"
+  },
+  "test_credentials": {
+    "delete_test_session": "session_del_1772132239235",
+    "onboard_test_session": "session_onboard_1772132298325"
+  },
+  "seed_data_creation": "Created test admin users and companies for both onboarding and delete property testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Both fixes verified: (1) Onboarding wizard is now single step with Add Manually/Sync from OTA options. (2) Property deletion cascades to staff.assigned_properties using $pull - prevents orphaned IDs on Team page. All 7 backend pytest tests pass. Frontend UI verified with screenshots showing correct wizard flow and Team page behavior."
+}
