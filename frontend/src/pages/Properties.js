@@ -305,6 +305,7 @@ export default function Properties() {
       rooms: prop.rooms || 0, suites: prop.suites || 0, bathrooms: prop.bathrooms || 0,
       city: prop.city || "", country: prop.country || "", notes: prop.notes || "",
       assigned_cohost: prop.assigned_cohost || "",
+      assigned_housekeeper: prop.assigned_housekeeper || "",
       owner_first_name: prop.owner_first_name || "", owner_last_name: prop.owner_last_name || "",
       owner_phone: prop.owner_phone || "", owner_email: prop.owner_email || "",
       units: prop.units || 1, active: prop.active ?? true,
