@@ -58,6 +58,7 @@ class PropertyCreate(BaseModel):
     country: str = ""
     notes: str = ""
     assigned_cohost: Optional[str] = None
+    assigned_housekeeper: Optional[str] = None
     owner_first_name: str
     owner_last_name: str
     owner_phone: str
@@ -76,6 +77,7 @@ class PropertyUpdate(BaseModel):
     country: Optional[str] = None
     notes: Optional[str] = None
     assigned_cohost: Optional[str] = None
+    assigned_housekeeper: Optional[str] = None
     owner_first_name: Optional[str] = None
     owner_last_name: Optional[str] = None
     owner_phone: Optional[str] = None
