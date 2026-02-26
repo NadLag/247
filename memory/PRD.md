@@ -87,7 +87,10 @@ Multi-tenant Property & Hospitality Management SaaS with Google OAuth, RBAC (Adm
 
 #### Experience Design Overhaul (Feb 25, 2026)
 - [x] **Simplified Sidebar Navigation** - Max 8 items for admin, 5 for owner, 4 for staff
-- [x] **Onboarding Wizard** - 3-step setup for new admins (Add Properties → Invite Team → Financial Setup)
+- [x] **Onboarding Wizard** - Simplified to 1 step:
+  - Step 1: Add/Sync Property (Manual entry OR OTA via iCal URL)
+  - Allows adding multiple properties before "Get Started"
+  - "Get Started" only enables after at least 1 property added
 - [x] **Role-Based Dashboards**:
   - Admin: Full KPIs + missing amount alerts + check-ins/outs today
   - Owner: Simple KPIs (properties, revenue, profit) + chart + properties list
